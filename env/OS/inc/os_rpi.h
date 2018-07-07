@@ -1,10 +1,14 @@
+#pragma once
+
 #include <stdio.h>
 
+#if 0
 #include <asm-generic/mman.h>
 #include <asm-generic/types.h>
 #include <asm-generic/stat.h>
+#endif
 
-#include <unistd.h>
+//#include <unistd.h>
 
 #define BCM2708_PERI_BASE       0x20000000
 #define GPIO_BASE               (BCM2708_PERI_BASE + 0x2000000) // GPIO controller

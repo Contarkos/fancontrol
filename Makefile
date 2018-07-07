@@ -4,8 +4,10 @@
 include ./tools/libs.mk
 
 # Variables d'environnement
-#CROSS_COMPILE = /opt/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-
+CROSS_COMPILE = /opt/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-
 ARCH = arm
+LIB_ROOTFS = /opt/rootfs/lib
+BIN_ROOTFS = /opt/rootfs/usr
 
 BIN = sw_local.bin
 
@@ -19,6 +21,9 @@ export PWD
 export SUBDIRS_ENV
 export SUBDIRS_MOD
 export SUBDIR_DATA
+
+export LIB_ROOTFS
+export BIN_ROOTFS
 
 # Mode de compilation
 all: main

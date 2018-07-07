@@ -1,23 +1,45 @@
-// Inlcudes locaux
-#include "fan.h"
-#include "fan_class.h"
-
 // Includes globaux
 #include <stdio.h>
 
+// Inlcudes locaux
+#include "os.h"
+#include "fan.h"
+#include "fan_class.h"
+
+
 // Variables globales
+FAN* instances_fan[NB_INSTANCES_FAN];
 
 // Fonctions
 
-int FAN_start(void)
+int FAN_start(std::mutex *m)
 {
-    int ret = 0;
-    std::mutex m;
+    int ret = 0, ii = 0;
 
-    FAN *myFan (new FAN("FAN", &m));
+    instances_fan[ii] = new FAN("FAN", m);
 
-    myFan->init_and_wait();
+    // Creation du thread
+    OS_create_thread(instances_fan[ii]->MOD_getThread(),(void *) instances_fan[ii]);
 
-    myFan->~FAN();
+    // Init des instances
+    return ret;
+}
+
+int FAN_stop(void)
+{
+    int ret = 0, ii;
+
+    for (ii = 0; ii < NB_INSTANCES_FAN; ii++)
+    {
+        // On coupe l'execution
+        instances_fan[ii]->stop_module();
+
+        // On réattache le thread
+        OS_joint_thread(instances_fan[ii]->MOD_getThread(), NULL);
+
+        // Clean des instances
+        instances_fan[ii]->~FAN();
+    }
+
     return ret;
 }

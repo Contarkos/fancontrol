@@ -8,7 +8,7 @@ class FAN : public MODULE
         int speed;
 
     public:
-        FAN(char *mod_name, std::mutex *m);
+        FAN(char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m);
         ~FAN();
 
         int start_module(void);
