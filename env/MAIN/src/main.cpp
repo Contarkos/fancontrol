@@ -1,7 +1,9 @@
 // Include globaux
 #include <stdio.h>
+#include <unistd.h>
 
 // Include locaux
+#include "main_handler.h"
 #include "main_factory.h"
 
 // Include à virer plus tard
@@ -29,6 +31,9 @@ static int main_config(int argc, char *argv[])
         printf("No args here...");
     }
 
+    // Ajout des handlers pour les signaux systemes
+    main_add_handlers();
+
     return 0;
 }
 
@@ -48,6 +53,8 @@ int main(int argc, char *argv[])
     {
         printf("MAIN : erreur de démarrage. EXIT (code %d)\n", ret);
     }
+
+    ret = main_stop_factory();
 
     return ret;
 }

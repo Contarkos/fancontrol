@@ -1,3 +1,12 @@
 #pragma once
 
-#include "module.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int CMD_read(void);
+
+#ifdef __cplusplus
+}
+#endif
+
