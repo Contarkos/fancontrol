@@ -9,6 +9,7 @@
 #include "cmd.h"
 
 // Variables globales
+std::mutex t_mutex[NB_MODULE];
 
 mod_type t_start[NB_MODULE] = {
         {&FAN_start, &FAN_stop}
@@ -20,29 +21,41 @@ int main_start_factory()
 
     ret = 0;
 
-    // On démarre les modules.
-    for (ii = 0; ii < NB_MODULE; ii++)
+    // Init des librairies
+    ret_temp = OS_init();
+
+    if (0 != ret_temp)
     {
-        // On bloque les mutex de tout le monde
-        t_start[ii].mod_mutex.lock();
-
-        ret_temp = t_start[ii].mod_start(&(t_start[ii].mod_mutex));
-
-        if (0 != ret_temp)
+        printf("MAIN : erreur à l'init de l'OS, code : %d\n", ret_temp);
+        ret = 1;
+    }
+    else
+    {
+        // On démarre les modules.
+        for (ii = 0; ii < NB_MODULE; ii++)
         {
-            ret = 1;
-            printf("[MAIN] : Erreur pendant le lancement du module n°%d\n", ii);
+            // On bloque les mutex de tout le monde
+            t_mutex[ii].lock();
+
+            ret_temp = t_start[ii].mod_start(&(t_mutex[ii]));
+
+            if (0 != ret_temp)
+            {
+                ret = 1;
+                printf("[MAIN] : Erreur pendant le lancement du module n°%d\n", ii);
+            }
         }
-    }
 
-    // Tous les threads sont lancés on peut démarrer
-    for (ii = 0; ii < NB_MODULE; ii++)
-    {
-        t_start[ii].mod_mutex.unlock();
-    }
+        // Tous les threads sont lancés on peut démarrer
+        for (ii = 0; ii < NB_MODULE; ii++)
+        {
+            t_mutex[ii].unlock();
+        }
 
-    // On va chercher des commandes rentrées par l'utilisateur
-    CMD_read();
+        // On va chercher des commandes rentrées par l'utilisateur
+        CMD_read();
+
+    }
 
     return ret;
 }
@@ -62,8 +75,11 @@ int main_stop_factory()
     // On attend que tous les threads soient terminés
     for (ii = 0; ii < NB_MODULE; ii++)
     {
-        t_start[ii].mod_mutex.lock();
+        t_mutex[ii].lock();
     }
+
+    // Arret des éléments du système
+    ret += OS_stop();
 
     return ret;
 }

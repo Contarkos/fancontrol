@@ -7,15 +7,17 @@ INCLUDES = \
 
 LIBS_PATH += $(patsubst %, -L$(PWD)/%/lib, $(SUBDIRS_ENV))
 LIBS_PATH += $(patsubst %, -L$(PWD)/%/lib, $(SUBDIRS_MOD))
+LIBS_PATH += -L/usr/local/lib -L/opt/arm-bcm2708/arm-linux-gnueabihf/lib
 #LIBS_PATH += -L$(BIN_ROOTFS)/lib
 
 LIBS += $(patsubst modules/%, -l%, $(SUBDIRS_MOD))
 LIBS += $(patsubst env/%, -l%, $(SUBDIRS_ENV))
-LIBS += -lpthread
+LIBS += -lpthread -lwiringPi -lwiringPiDev
 
 INCLUDES += $(patsubst %, -I$(PWD)/%/api, $(SUBDIRS_MOD))
 INCLUDES += $(patsubst %, -I$(PWD)/%/api, $(SUBDIRS_ENV))
 INCLUDES += -I$(PWD)/tools/api
+INCLUDES += -I/usr/local/include -I/opt/arm-bcm2708/arm-linux-gnueabihf/include
 
 C_CPLUS_FLAGS = -Wextra -Wall -Wundef -Wfloat-equal -Wshadow -Wpointer-arith -Wcast-align -Wstrict-overflow=5
 C_CPLUS_FLAGS += -O2 -pedantic

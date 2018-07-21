@@ -2,13 +2,16 @@
 
 #include "module.h"
 
+#define FAN_MODULE_NAME "FAN"
+#define FAN_PIN_OUT     17
+
 class FAN : public MODULE
 {
     private:
         int speed;
 
     public:
-        FAN(char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m);
+        FAN(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m);
         ~FAN();
 
         int start_module(void);

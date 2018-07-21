@@ -6,7 +6,7 @@
 // Include locaux
 #include "module.h"
 
-MODULE::MODULE(char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m)
+MODULE::MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m)
 {
     // Copie du nom
     strncpy(this->name, mod_name, MAX_LENGTH_MOD_NAME);

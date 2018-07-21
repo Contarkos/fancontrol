@@ -4,7 +4,7 @@
 include ./tools/libs.mk
 
 # Variables d'environnement
-CROSS_COMPILE = /opt/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-
+CROSS_COMPILE = /opt/arm-bcm2708/arm-linux-gnueabihf/bin/arm-linux-gnueabihf-
 ARCH = arm
 LIB_ROOTFS = /opt/rootfs/lib
 BIN_ROOTFS = /opt/rootfs/usr

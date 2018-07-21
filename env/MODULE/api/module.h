@@ -23,7 +23,7 @@ class MODULE {
         void set_running(bool isRunning);
 
     public:
-        MODULE(char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m);
+        MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m);
         virtual ~MODULE();
 
         // Fonction de démarrage spécifique au module

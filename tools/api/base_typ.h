@@ -11,5 +11,4 @@ typedef struct
 {
     start_func mod_start;
     stop_func mod_stop;
-    std::mutex mod_mutex;
 } mod_type;
