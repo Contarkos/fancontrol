@@ -27,6 +27,9 @@ int FAN::start_module()
     // Set de la diode en sortie
     OS_set_gpio(FAN_PIN_OUT, OS_GPIO_FUNC_OUT);
 
+    // Init à 0 de la pin
+    OS_write_gpio(FAN_PIN_OUT, OS_GPIO_LOW);
+
     return ret;
 }
 
@@ -46,11 +49,15 @@ int FAN::exec_loop()
     static int is_onoff = 0;
     const int max = 100000;
 
+#if 1
     // Allumage de la diode
-//    printf("FAN : écriture dans la pin %d = %d, result = %d\n", FAN_PIN_OUT, is_onoff, OS_write_gpio(FAN_PIN_OUT, is_onoff) );
+    printf("FAN : écriture dans la pin %d = %d, result = %d\n", FAN_PIN_OUT, is_onoff, OS_write_gpio(FAN_PIN_OUT, is_onoff) );
 
     // Sleep pour ne pas aller trop vite
+    usleep(5000000);
+#else
     usleep(20);
+#endif
     is_onoff = 1 - is_onoff;
 
     // Condition de sortie

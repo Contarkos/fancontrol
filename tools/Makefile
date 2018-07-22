@@ -12,7 +12,7 @@ OBJ = $(patsubst %,$(OBJ_DIR)/%,$(L_OBJ))
 LIBS = $(shell pkg-config libxml-2.0 --libs)
 
 CFLAGS = -I$(INC_DIR) -Wextra -Wall -Wundef -Wfloat-equal -Wshadow -Wpointer-arith -Wcast-align -Wstrict-prototypes -Wstrict-overflow=5
-CFLAGS += -O -pedantic -std=c99
+CFLAGS += -O -pedantic -std=c89
 CFLAGS += -Wswitch-default -Wswitch-enum
 CFLAGS += -Wunreachable-code -Wconversion -Wcast-qual
 CFLAGS += $(shell pkg-config libxml-2.0 --cflags)

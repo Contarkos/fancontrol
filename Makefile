@@ -84,5 +84,8 @@ main: env modules
 	@echo "-----------------------------------\n"
 	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(SUBDIR_MAIN) -f module.mk bin
 
+print-%:
+	@echo $* = $($(*))
+
 .PHONY: all main modules env clean
 

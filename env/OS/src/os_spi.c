@@ -1,13 +1,11 @@
 #include <fcntl.h>                //Needed for SPI port
 #include <sys/ioctl.h>            //Needed for SPI port
-#include <linux/spi/spidev.h>    //Needed for SPI port
-#include <unistd.h>            //Needed for SPI port
+#include <linux/spi/spidev.h>     //Needed for SPI port
+#include <unistd.h>               //Needed for SPI port
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <iostream>
 #include <unistd.h>
-//#include <cstring>
 
 // Local includes
 #include "os.h"
@@ -128,8 +126,6 @@ int OS_spiClosePort (int spi_device)
     }
     return(status_value);
 }
-
-
 
 /*******************************************/
 /********** SPI WRITE & READ DATA **********/

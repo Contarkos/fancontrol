@@ -3,7 +3,7 @@
 #include "module.h"
 
 #define FAN_MODULE_NAME "FAN"
-#define FAN_PIN_OUT     17
+#define FAN_PIN_OUT     18
 
 class FAN : public MODULE
 {
@@ -18,7 +18,7 @@ class FAN : public MODULE
         int stop_module(void);
 
         void fan_setSpeed(int s);
-        int fan_getSpeed(void);
+        int fan_getSpeed(void) { return speed; }
 
         int exec_loop(void);
 };

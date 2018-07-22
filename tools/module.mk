@@ -24,9 +24,10 @@ C_CPLUS_FLAGS += -O2 -pedantic
 C_CPLUS_FLAGS += -Wswitch-default -Wswitch-enum
 C_CPLUS_FLAGS += -Wunreachable-code -Wconversion -Wcast-qual
 
-C_FLAGS += $(C_CPLUS_FLAGS) -Wstrict-prototypes -std=c99
-
+C_FLAGS 	+= $(C_CPLUS_FLAGS) -Wstrict-prototypes -std=c99
+C_FLAGS 	+= -D_POSIX_C_SOURCE=199309L
 CPLUS_FLAGS += $(C_CPLUS_FLAGS) -std=c++11
+
 # Le fichier qui contient les dépendances dans chaque module
 include include.mk
 

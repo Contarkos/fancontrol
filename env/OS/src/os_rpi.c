@@ -1,100 +1,64 @@
 
 // Global includes
-#include "wiringPi.h"
-#include <unistd.h>
-#include <fcntl.h>
+#include <stdio.h>
 
 // Local includes
 #include "os.h"
 #include "os_rpi.h"
 
-struct bcm2835_peripheral gpio = {GPIO_BASE, 0, NULL, NULL};
+// Initialisation de la zone mémoire GPIO
+struct bcm2835_peripheral os_periph_gpio = {GPIO_BASE, 0, NULL, NULL};
 
-// Exposes the physical address defined in the passed structure using mmap on /dev/mem
-int map_peripheral(struct bcm2835_peripheral *p)
+// Init des variables d'environnement
+os_ret_okko is_init_gpio = OS_RET_KO;
+
+int os_init_gpio(void)
 {
     int ret = 0;
-#if 1
-    // Open /dev/mem
-    if ((p->mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0)
+
+    if (OS_RET_OK == is_init_gpio)
     {
-        printf("Failed to open /dev/mem, try checking permissions.\n");
-        ret = -1;
+        printf("OS : init GPIO déjà effectué\n");
+        ret = 1;
     }
     else
     {
-        // On va mapper le composant mémoire
-        p->map = mmap(
-                NULL,
-                BLOCK_SIZE,
-                PROT_READ|PROT_WRITE,
-                MAP_SHARED,
-                p->mem_fd,      // File descriptor to physical memory virtual file '/dev/mem'
-                p->addr_p       // Address in physical map that we want this memory block to expose
-                );
+        // Mapping du fichier mémoire
+        ret += os_map_peripheral(&os_periph_gpio);
 
-        if (p->map == MAP_FAILED)
+        if (0 != ret)
         {
-            perror("mmap");
-            ret = -2;
+            printf("OS : Erreur à l'init des GPIO, code : %d\n", ret);
         }
         else
         {
-            p->addr = (volatile unsigned int *)p->map;
+            printf("OS : Init GPIO ok\n");
+            is_init_gpio = OS_RET_OK;
         }
-
-    }
-#else
-    UNUSED_PARAMS(p);
-#endif
-    return ret;
-}
-
-void unmap_peripheral(struct bcm2835_peripheral *p)
-{
-#if 1
-    munmap(p->map, BLOCK_SIZE);
-    close(p->mem_fd);
-#else
-    UNUSED_PARAMS(p);
-#endif
-}
-
-int OS_init_gpio(void)
-{
-    int ret = 0;
-
-    // Mapping du fichier mémoire
-    ret += map_peripheral(&gpio);
-
-    if (0 != ret)
-    {
-        printf("OS : Erreur à l'init des GPIO, code : %d\n", ret);
-    }
-    else
-    {
-        printf("OS : Init GPIO ok\n");
     }
 
     return ret;
 }
 
-int OS_stop_gpio(void)
+int os_stop_gpio(void)
 {
     int ret = 0;
+
+    // Reset des GPIO
+//    GPIO_CLR_REGISTER = 0xFFFFFFFF;
 
     // Demapping du gpio
-    unmap_peripheral(&gpio);
+    os_unmap_peripheral(&os_periph_gpio);
 
     return ret;
 }
 
 // Choix de la direction pour une GPIO
-int OS_set_gpio(int i_pin, int i_inout)
+int OS_set_gpio(t_uint32 i_pin, t_uint32 i_inout)
 {
     int ret = 0;
 
-    if (i_pin <= GPIO_MAX_NB || i_pin >= 0)
+    if (i_pin <= GPIO_MAX_NB)
     {
         if (i_inout)
         {
@@ -115,11 +79,11 @@ int OS_set_gpio(int i_pin, int i_inout)
 }
 
 // Ecriture dans une GPIO avec wiringPi
-int OS_write_gpio(int i_pin, int bool_active)
+int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active)
 {
     int ret = 0;
 
-    if (i_pin <= GPIO_MAX_NB || i_pin >= 0)
+    if (i_pin <= GPIO_MAX_NB)
     {
         if (bool_active)
         {
