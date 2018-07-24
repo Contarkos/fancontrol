@@ -58,22 +58,26 @@ typedef enum
     OS_CLOCK_SRC_HDMI = 7
 } os_clock_source;
 
+/*********************************************************************/
+/*                         Fonctions API                             */
+/*********************************************************************/
+
 // Init des modules disponibles
 int OS_init(void);
 int OS_stop(void);
 
 int OS_create_timer(void);
+int OS_start_timer(int i_timer_id);
 
 // Gestion des threads
 int OS_create_thread(OS_thread_t * p_o_thread,
                      void * args);
 
 int OS_joint_thread(OS_thread_t * p_i_thread, void **retval);
-
 int OS_detach_thread(OS_thread_t * p_i_thread);
 
 // Pour GPIO
-int OS_set_gpio(t_uint32 i_pin, t_uint32 i_inout);
+int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout);
 int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active);
 
 // Pour SPI
@@ -90,6 +94,7 @@ int OS_pwm_set_mode(os_pwm_mode i_mode);
 
 // Pour CLOCK
 int OS_clock_set_source(os_clock_source i_source);
+int OS_clock_set_freq(t_uint32 i_freq);
 
 #ifdef __cplusplus
 }

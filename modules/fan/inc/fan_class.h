@@ -3,7 +3,8 @@
 #include "module.h"
 
 #define FAN_MODULE_NAME "FAN"
-#define FAN_PIN_OUT     18
+#define FAN_PIN_OUT     17
+#define FAN_PIN_IN      4
 
 class FAN : public MODULE
 {

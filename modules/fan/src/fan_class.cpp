@@ -22,13 +22,23 @@ int FAN::start_module()
 {
     int ret = 0;
 
-    printf("Démarrage de la classe du module\n");
+    printf("[IS] FAN : Démarrage de la classe du module\n");
 
-    // Set de la diode en sortie
-    OS_set_gpio(FAN_PIN_OUT, OS_GPIO_FUNC_OUT);
+    // Set de la diode en sortie en PWM
+    ret += OS_set_gpio(FAN_PIN_OUT, OS_GPIO_FUNC_ALT1);
 
-    // Init à 0 de la pin
-    OS_write_gpio(FAN_PIN_OUT, OS_GPIO_LOW);
+    // Set de la diode en entrée pour lire la vitesse
+    ret += OS_set_gpio(FAN_PIN_IN, OS_GPIO_FUNC_IN);
+
+    if (0 != ret)
+    {
+        printf("[ER] FAN : erreur au set de la pin\n");
+    }
+    else
+    {
+        // Init à 0 de la pin
+        OS_write_gpio(FAN_PIN_OUT, OS_GPIO_LOW);
+    }
 
     return ret;
 }

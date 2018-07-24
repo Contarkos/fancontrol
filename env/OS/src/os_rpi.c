@@ -12,6 +12,80 @@ struct bcm2835_peripheral os_periph_gpio = {GPIO_BASE, 0, NULL, NULL};
 // Init des variables d'environnement
 os_ret_okko is_init_gpio = OS_RET_KO;
 
+/*********************************************************************/
+/*                         Fonctions API                             */
+/*********************************************************************/
+
+// Choix de la direction pour une GPIO
+int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout)
+{
+    int ret = 0;
+
+    if (i_pin <= GPIO_MAX_NB)
+    {
+        switch (i_inout)
+        {
+            case OS_GPIO_FUNC_IN:
+                {
+                    INP_GPIO(i_pin);
+                }
+                break;
+            case OS_GPIO_FUNC_OUT:
+                {
+                    OUT_GPIO(i_pin);
+                }
+                break;
+            case OS_GPIO_FUNC_ALT1:
+            case OS_GPIO_FUNC_ALT2:
+            case OS_GPIO_FUNC_ALT3:
+                {
+                    SET_GPIO_ALT(i_pin, i_inout);
+                }
+                break;
+            default:
+                printf("[ER] OS : mauvaise fonction pour GPIO, func = %d\n", i_inout);
+                ret = -2;
+                break;
+        }
+    }
+    else
+    {
+        printf("[ER] OS : Erreur numéro de pin, GPIO = %d\n", i_pin);
+        ret = -1;
+    }
+
+    return ret;
+}
+
+// Ecriture dans une GPIO avec wiringPi
+int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active)
+{
+    int ret = 0;
+
+    if (i_pin <= GPIO_MAX_NB)
+    {
+        if (bool_active)
+        {
+            GPIO_SET(i_pin);
+        }
+        else
+        {
+            GPIO_CLR(i_pin);
+        }
+    }
+    else
+    {
+        printf("[ER] OS : mauvaise valeur de pin GPIO, pin = %d\n", i_pin);
+        ret = -1;
+    }
+
+    return ret;
+}
+
+/*********************************************************************/
+/*                       Fonctions locales                           */
+/*********************************************************************/
+
 int os_init_gpio(void)
 {
     int ret = 0;
@@ -44,60 +118,9 @@ int os_stop_gpio(void)
 {
     int ret = 0;
 
-    // Reset des GPIO
-//    GPIO_CLR_REGISTER = 0xFFFFFFFF;
-
     // Demapping du gpio
     os_unmap_peripheral(&os_periph_gpio);
 
     return ret;
 }
 
-// Choix de la direction pour une GPIO
-int OS_set_gpio(t_uint32 i_pin, t_uint32 i_inout)
-{
-    int ret = 0;
-
-    if (i_pin <= GPIO_MAX_NB)
-    {
-        if (i_inout)
-        {
-            OUT_GPIO(i_pin);
-        }
-        else
-        {
-            INP_GPIO(i_pin);
-        }
-    }
-    else
-    {
-        printf("OS : Erreur numéro de pin GPIO : %d\n", i_pin);
-        ret = -1;
-    }
-
-    return ret;
-}
-
-// Ecriture dans une GPIO avec wiringPi
-int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active)
-{
-    int ret = 0;
-
-    if (i_pin <= GPIO_MAX_NB)
-    {
-        if (bool_active)
-        {
-            GPIO_SET(i_pin);
-        }
-        else
-        {
-            GPIO_CLR(i_pin);
-        }
-    }
-    else
-    {
-        ret = -1;
-    }
-
-    return ret;
-}
