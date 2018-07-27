@@ -30,7 +30,8 @@ typedef enum e_os_gpio_func
     OS_GPIO_FUNC_OUT = 1,
     OS_GPIO_FUNC_ALT1 = 2,
     OS_GPIO_FUNC_ALT2 = 3,
-    OS_GPIO_FUNC_ALT3 = 4
+    OS_GPIO_FUNC_ALT3 = 4,
+    OS_GPIO_FUNC_ALT4 = 5
 } t_os_gpio_func;
 
 typedef enum

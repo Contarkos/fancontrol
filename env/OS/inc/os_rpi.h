@@ -71,7 +71,7 @@
 #define CLOCK_DIVI_MASK         ((t_uint32) 0x00FFF000)
 #define CLOCK_DIVI_SHIFT        12U
 
-#define CLOCK_PASSWD_MASK       ((t_uint32) 0x0000005a)
+#define CLOCK_PASSWD_MASK       ((t_uint32) 0x5a000000)
 #define CLOCK_PASSWD_SHIFT      24U
 
 #define CLOCK_MAX_DIVISOR       0xFFF

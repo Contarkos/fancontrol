@@ -2,9 +2,13 @@
 
 #include "module.h"
 
-#define FAN_MODULE_NAME "FAN"
-#define FAN_PIN_OUT     17
-#define FAN_PIN_IN      4
+#define FAN_MODULE_NAME         "FAN"
+#define FAN_PIN_OUT             (18)
+#define FAN_PIN_IN              (4)
+#define FAN_DEFAULT_PREC        (1000)
+#define FAN_DEFAULT_CYCLE       (50.0F)
+
+#define FAN_PWM_FREQ            25000
 
 class FAN : public MODULE
 {

@@ -38,6 +38,7 @@ int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout)
             case OS_GPIO_FUNC_ALT1:
             case OS_GPIO_FUNC_ALT2:
             case OS_GPIO_FUNC_ALT3:
+            case OS_GPIO_FUNC_ALT4:
                 {
                     SET_GPIO_ALT(i_pin, i_inout);
                 }
@@ -92,7 +93,7 @@ int os_init_gpio(void)
 
     if (OS_RET_OK == is_init_gpio)
     {
-        printf("OS : init GPIO déjà effectué\n");
+        printf("[WG] OS : init GPIO déjà effectué\n");
         ret = 1;
     }
     else
@@ -102,11 +103,11 @@ int os_init_gpio(void)
 
         if (0 != ret)
         {
-            printf("OS : Erreur à l'init des GPIO, code : %d\n", ret);
+            printf("[ER] OS : Erreur à l'init des GPIO, code : %d\n", ret);
         }
         else
         {
-            printf("OS : Init GPIO ok\n");
+            printf("[IS] OS : Init GPIO ok\n");
             is_init_gpio = OS_RET_OK;
         }
     }

@@ -27,13 +27,13 @@ int OS_clock_set_source(os_clock_source i_source)
     // Prise de mutex pour la clock
 
     // Arret de la CLOCK le temps de changer les paramètres
-    CLOCK_GP0_CTL_REGISTER |= CLOCK_PASSWD_MASK & ~(CLOCK_ENAB_MASK);
+    CLOCK_GP0_CTL_REGISTER = (CLOCK_GP0_CTL_REGISTER | CLOCK_PASSWD_MASK) & ~(CLOCK_ENAB_MASK);
 
     // Attente de la descente du flag BUSY
     while ( CLOCK_GP0_CTL_REGISTER & CLOCK_BUSY_MASK ) {}
 
     // Set de la source
-    CLOCK_GP0_CTL_REGISTER  = CLOCK_PASSWD_MASK | (CLOCK_GP0_CTL_REGISTER & ~(CLOCK_SRC_MASK));
+    CLOCK_GP0_CTL_REGISTER  = (CLOCK_PASSWD_MASK | CLOCK_GP0_CTL_REGISTER) & ~(CLOCK_SRC_MASK);
     CLOCK_GP0_CTL_REGISTER |= CLOCK_PASSWD_MASK | (CLOCK_SRC_MASK & i_source);
 
     // Reactivation de la clock
@@ -64,7 +64,7 @@ int os_init_clock(void)
 
     if (OS_RET_OK == is_init_clock)
     {
-        printf("OS : init CLOCK déjà effectué\n");
+        printf("[WG] OS : init CLOCK déjà effectué\n");
         ret = 1;
     }
     else
@@ -74,11 +74,11 @@ int os_init_clock(void)
 
         if (0 != ret)
         {
-            printf("OS : Erreur à l'init des CLOCK, code : %d\n", ret);
+            printf("[ER] OS : Erreur à l'init des CLOCK, code : %d\n", ret);
         }
         else
         {
-            printf("OS : Init CLOCK ok\n");
+            printf("[IS] OS : Init CLOCK ok\n");
             is_init_clock = OS_RET_OK;
         }
     }

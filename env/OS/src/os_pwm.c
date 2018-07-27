@@ -35,7 +35,7 @@ int OS_pwn_enable(os_ret_okko i_enable)
             PWM_CTL_REGISTER &= PWM_CTL_PWEN1_MASK;
             break;
         default:
-            printf("OS : wrong state for PWM\n");
+            printf("[ER] OS : wrong state for PWM\n");
             ret = -1;
             break;
     }
@@ -83,7 +83,7 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
             }
 
             // Arret de la CLOCK le temps de changer les paramètres
-            CLOCK_GP0_CTL_REGISTER |= CLOCK_PASSWD_MASK & ~(CLOCK_ENAB_MASK);
+            CLOCK_GP0_CTL_REGISTER = (CLOCK_GP0_CTL_REGISTER | CLOCK_PASSWD_MASK) & ~(CLOCK_ENAB_MASK);
 
             // Attente de la descente du flag BUSY
             while ( CLOCK_GP0_CTL_REGISTER & CLOCK_BUSY_MASK ) {}
@@ -130,7 +130,7 @@ int OS_pwm_set_precision(t_uint32 i_prec)
 {
     int ret = 0;
 
-    if ( (i_prec <= 0) || (i_prec > MAX_UINT_16) )
+    if ( i_prec > MAX_UINT_16 )
     {
         printf("[ER] OS | Valeur pour la précision PWM erronée : prec = %d\n", i_prec);
         ret = -1;
@@ -160,7 +160,7 @@ int OS_pwm_set_mode(os_pwm_mode i_mode)
             PWM_CTL_REGISTER &= ~PWM_CTL_MSEN1_MASK;
             break;
         default:
-            printf("OS : wrong mode for PWM\n");
+            printf("[WG] OS : wrong mode for PWM\n");
             ret = -1;
             break;
     }
@@ -174,7 +174,7 @@ int os_init_pwm(void)
 
     if (OS_RET_OK == is_init_pwm)
     {
-        printf("OS : init PWM déjà effectué\n");
+        printf("[WG] OS : init PWM déjà effectué\n");
         ret = 1;
     }
     else
@@ -184,11 +184,11 @@ int os_init_pwm(void)
 
         if (0 != ret)
         {
-            printf("OS : Erreur à l'init des PWM, code : %d\n", ret);
+            printf("[ER] OS : Erreur à l'init des PWM, code : %d\n", ret);
         }
         else
         {
-            printf("OS : Init PWM ok\n");
+            printf("[IS] OS : Init PWM ok\n");
             is_init_pwm = OS_RET_OK;
         }
     }

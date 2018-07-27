@@ -61,18 +61,18 @@ distclean: clean
 
 # Compilation des modules d'environnement sauf le main
 env:
-	@echo "###################################"
-	@echo "Compiling environment..."
-	@echo "-----------------------------------\n"
+	@echo "###################################\n" \
+	      "Compiling environment...\n" \
+	      "-----------------------------------\n"
 	@for directory in ${SUBDIRS_ENV} ; do \
 		$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $$directory -f module.mk ; \
 	done
 
 # Compilation des modules utilisateur
 modules:
-	@echo "###################################"
-	@echo "Compiling modules..."
-	@echo "-----------------------------------\n"
+	@echo "###################################\n" \
+	      "Compiling modules...\n" \
+	      "-----------------------------------\n"
 	@for directory in ${SUBDIRS_MOD} ; do \
 		$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $$directory -f module.mk ; \
 	done
