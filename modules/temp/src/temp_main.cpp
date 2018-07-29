@@ -21,15 +21,26 @@ TEMP* instances_temp[NB_INSTANCES_TEMP];
 
 int TEMP_start(std::mutex *m)
 {
-    int ret = 0, ii = 0;
+    int ret = 0;
+    static int ii = 0;
 
-    // Création de l'instance
-    instances_temp[ii] = new TEMP(TEMP_MODULE_NAME, m);
+    if (ii < NB_INSTANCES_TEMP)
+    {
+        // Création de l'instance
+        instances_temp[ii] = new TEMP(TEMP_MODULE_NAME, m);
 
-    // Creation du thread
-    OS_create_thread(instances_temp[ii]->MOD_getThread(),(void *) instances_temp[ii]);
+        // Creation du thread
+        OS_create_thread(instances_temp[ii]->MOD_getThread(),(void *) instances_temp[ii]);
 
-    // Init des instances
+        // Init des instances
+        ii++;
+    }
+    else
+    {
+        printf("[ER] TEMP : plus d'instances disponibles, %d > %d\n", ii, NB_INSTANCES_TEMP);
+        ret = -1;
+    }
+
     return ret;
 }
 
@@ -40,7 +51,7 @@ int TEMP_stop(void)
     for (ii = 0; ii < NB_INSTANCES_TEMP; ii++)
     {
         // On coupe l'execution
-        instances_temp[ii]->stop_module();
+        instances_temp[ii]->stop_and_exit();
 
         // On réattache le thread pour éviter les zombies
         OS_joint_thread(instances_temp[ii]->MOD_getThread(), NULL);

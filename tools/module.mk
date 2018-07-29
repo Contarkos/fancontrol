@@ -12,7 +12,7 @@ LIBS_PATH += -L/usr/local/lib -L/opt/arm-bcm2708/arm-linux-gnueabihf/lib
 
 LIBS += $(patsubst modules/%, -l%, $(SUBDIRS_MOD))
 LIBS += $(patsubst env/%, -l%, $(SUBDIRS_ENV))
-LIBS += -lpthread -lwiringPi -lwiringPiDev
+LIBS += -lpthread #-lwiringPi -lwiringPiDev
 
 INCLUDES += $(patsubst %, -I$(PWD)/%/api, $(SUBDIRS_MOD))
 INCLUDES += $(patsubst %, -I$(PWD)/%/api, $(SUBDIRS_ENV))

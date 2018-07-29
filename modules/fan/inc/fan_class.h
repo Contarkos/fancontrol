@@ -3,10 +3,10 @@
 #define FAN_MODULE_NAME         "FAN"
 #define FAN_PIN_OUT             (18)
 #define FAN_PIN_IN              (25)
-#define FAN_DEFAULT_PREC        (1024)
+#define FAN_DEFAULT_PREC        (4096)
 #define FAN_DEFAULT_CYCLE       (0.0F)
 
-#define FAN_PWM_FREQ            25000
+#define FAN_PWM_FREQ            (2)
 
 class FAN : public MODULE
 {

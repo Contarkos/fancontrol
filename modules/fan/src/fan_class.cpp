@@ -39,7 +39,7 @@ int FAN::start_module()
         ret += OS_set_gpio(FAN_PIN_IN, OS_GPIO_FUNC_IN);
 
         // Reglage source Clock sur PLL D
-        ret += OS_clock_set_source(OS_CLOCK_SRC_PLLD);
+        ret += OS_clock_set_source(OS_CLOCK_SRC_OSC);
 
         // Set de la diode en sortie en PWM
         ret += OS_set_gpio(FAN_PIN_OUT, OS_GPIO_FUNC_ALT5);
@@ -60,12 +60,10 @@ int FAN::start_module()
     return ret;
 }
 
+// Arret spécifique à ce module
 int FAN::stop_module()
 {
     int ret = 0;
-
-    // Arret de la boucle
-    this->set_running(false);
 
     return ret;
 }
@@ -102,7 +100,7 @@ int FAN::exec_loop()
     // Condition de sortie
     if (n > max)
     {
-        printf("FAN : fin du module\n");
+        printf("[IS] FAN : fin du module\n");
         this->set_running(false);
     }
     else

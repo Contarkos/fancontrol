@@ -41,12 +41,10 @@ int TEMP::start_module()
     return ret;
 }
 
+// Arret spécifique pour le module
 int TEMP::stop_module()
 {
     int ret = 0;
-
-    // Arret de la boucle
-    this->set_running(false);
 
     return ret;
 }
@@ -55,17 +53,22 @@ int TEMP::exec_loop()
 {
     int ret = 0;
     static int n = 0;
-    const int max = 100;
+    const int max = 1000;
 
     // Condition de sortie
     if (n > max)
     {
-        printf("FAN : fin du module\n");
+        printf("[IS] TEMP : fin du module\n");
         this->set_running(false);
     }
     else
     {
         n++;
+    }
+
+    if ( n % 10 )
+    {
+        printf("[IS] TEMP : alive !\n");
     }
 
     OS_usleep(100000);

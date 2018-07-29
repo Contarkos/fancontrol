@@ -85,7 +85,15 @@ int MODULE::init_and_wait(void)
 
 int MODULE::stop_and_exit(void)
 {
-    return 0;
+    int ret = 0;
+
+    // Arret specifique du module
+    ret = this->stop_module();
+
+    // Arret générique
+    this->set_running(false);
+
+    return ret;
 }
 
 // Accesseurs

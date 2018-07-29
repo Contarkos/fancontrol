@@ -21,15 +21,25 @@ FAN* instances_fan[NB_INSTANCES_FAN];
 
 int FAN_start(std::mutex *m)
 {
-    int ret = 0, ii = 0;
+    int ret = 0;
+    static int ii = 0;
 
-    // Création de l'instance
-    instances_fan[ii] = new FAN(FAN_MODULE_NAME, m);
+    if (ii < NB_INSTANCES_FAN)
+    {
+        // Création de l'instance
+        instances_fan[ii] = new FAN(FAN_MODULE_NAME, m);
 
-    // Creation du thread
-    OS_create_thread(instances_fan[ii]->MOD_getThread(),(void *) instances_fan[ii]);
+        // Creation du thread
+        OS_create_thread(instances_fan[ii]->MOD_getThread(),(void *) instances_fan[ii]);
 
-    // Init des instances
+        // Init des instances
+        ii++;
+    }
+    else
+    {
+        printf("[ER] FAN : plus d'instances disponibles, %d > %d\n", ii, NB_INSTANCES_FAN);
+        ret = -1;
+    }
     return ret;
 }
 

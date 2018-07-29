@@ -73,20 +73,19 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
             os_pwm_freq = i_freq;
 
             // Calcul du diviseur
-#if 0
-            divi = (CLOCK_MAX_FREQ / os_pwm_freq);
-            divr = (CLOCK_MAX_FREQ % os_pwm_freq);
-#else
             divi = os_clock_max_freq[os_clock_source] / (os_pwm_freq * os_pwm_prec);
             divr = os_clock_max_freq[os_clock_source] % (os_pwm_freq * os_pwm_prec);
-#endif
             divf = (t_uint32) ((float) (divr * CLOCK_MAX_DIVISOR) / (float) os_clock_max_freq[os_clock_source]);
 
             printf("[IS] OS : diviseur pour PWM = %d\n", divi);
 
             if (divi > CLOCK_MAX_DIVISOR)
             {
-               divi = CLOCK_MAX_DIVISOR;
+                printf("[WG] OS : la fréquence sera plus haute qu'attendue. Diviseur max atteint\n");
+                ret = 1;
+
+                // Maximum possible pour le diviseur
+                divi = CLOCK_MAX_DIVISOR;
             }
 
             // Mise en forme de la donnée pour le registre de clock

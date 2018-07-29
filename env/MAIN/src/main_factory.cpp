@@ -83,6 +83,7 @@ int main_stop_factory()
     }
 
     // Arret des éléments du système
+    printf("[IS] MAIN : Arret des modules systemes\n");
     ret += OS_stop();
 
     return ret;
