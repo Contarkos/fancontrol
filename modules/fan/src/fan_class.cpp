@@ -1,8 +1,10 @@
 // Includes globaux
 #include <stdio.h>
 #include <unistd.h>
+#include <mutex>
 
 // Includes locaux
+#include "base.h"
 #include "os.h"
 #include "module.h"
 #include "fan_class.h"
@@ -33,26 +35,26 @@ int FAN::start_module()
     }
     else
     {
-        // Reglage source Clock sur oscillateur (19.2Mhz)
-        ret += OS_clock_set_source(OS_CLOCK_SRC_OSC);
-
-        // Set de la diode en sortie en PWM
-        ret += OS_set_gpio(FAN_PIN_OUT, OS_GPIO_FUNC_ALT4);
-
         // Set de la diode en entrée pour lire la vitesse
         ret += OS_set_gpio(FAN_PIN_IN, OS_GPIO_FUNC_IN);
+
+        // Reglage source Clock sur PLL D
+        ret += OS_clock_set_source(OS_CLOCK_SRC_PLLD);
+
+        // Set de la diode en sortie en PWM
+        ret += OS_set_gpio(FAN_PIN_OUT, OS_GPIO_FUNC_ALT5);
 
         // Mode MS pour le PWM
         ret += OS_pwm_set_mode(OS_PWM_MODE_MSMODE);
 
-        // Cycle par défaut : 1000
+        // Cycle par défaut : 1024
         ret += OS_pwm_set_precision(FAN_DEFAULT_PREC);
-
-        // Reglage du duty cycle par defaut : 50%
-        ret += OS_pwm_set_dutycycle(FAN_DEFAULT_CYCLE);
 
         // Reglage de la fréquence PWM
         ret += OS_pwm_set_frequency(FAN_PWM_FREQ);
+
+        // Reglage du duty cycle par defaut : 50%
+        ret += OS_pwm_set_dutycycle(FAN_DEFAULT_CYCLE);
     }
 
     return ret;
@@ -73,7 +75,7 @@ int FAN::exec_loop()
     int ret = 0;
     static int n = 0;
     static int is_onoff = 0;
-    const int max = 100000;
+    const int max = 100;
 
 #if 0
     // Allumage de la diode
@@ -84,7 +86,16 @@ int FAN::exec_loop()
     // Sleep pour ne pas aller trop vite
     usleep(5000000);
 #else
-    usleep(20);
+    if (is_onoff)
+    {
+        OS_pwm_set_dutycycle((float) 50);
+    }
+    else
+    {
+        OS_pwm_set_dutycycle((float) 100);
+    }
+
+    usleep(10000000);
 #endif
     is_onoff = 1 - is_onoff;
 

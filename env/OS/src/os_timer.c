@@ -6,6 +6,8 @@
 #include "base.h"
 #include "os.h"
 
+#define OS_USEC2NSEC        (1000)
+
 /*********************************************************************/
 /*                       Variables globales                          */
 /*********************************************************************/
@@ -29,4 +31,10 @@ int OS_start_timer(int i_timer_id)
    UNUSED_PARAMS(i_timer_id);
 
    return ret;
+}
+
+void OS_usleep(int i_usec)
+{
+        struct timespec timer_enbl = {.tv_sec = 0, .tv_nsec = i_usec * OS_USEC2NSEC};
+        nanosleep(&timer_enbl, NULL);
 }

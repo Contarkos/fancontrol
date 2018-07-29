@@ -2,8 +2,6 @@
 
 #include <pthread.h>
 
-#include "base.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,12 +24,14 @@ typedef enum
 // Fonction pour les GPIO
 typedef enum e_os_gpio_func
 {
-    OS_GPIO_FUNC_IN = 0,
-    OS_GPIO_FUNC_OUT = 1,
-    OS_GPIO_FUNC_ALT1 = 2,
-    OS_GPIO_FUNC_ALT2 = 3,
-    OS_GPIO_FUNC_ALT3 = 4,
-    OS_GPIO_FUNC_ALT4 = 5
+    OS_GPIO_FUNC_ALT0 = 0,
+    OS_GPIO_FUNC_ALT1 = 1,
+    OS_GPIO_FUNC_ALT2 = 2,
+    OS_GPIO_FUNC_ALT3 = 3,
+    OS_GPIO_FUNC_ALT4 = 4,
+    OS_GPIO_FUNC_ALT5 = 5,
+    OS_GPIO_FUNC_IN = 6,
+    OS_GPIO_FUNC_OUT = 7
 } t_os_gpio_func;
 
 typedef enum
@@ -57,7 +57,7 @@ typedef enum
     OS_CLOCK_SRC_PLLC = 5,
     OS_CLOCK_SRC_PLLD = 6,
     OS_CLOCK_SRC_HDMI = 7
-} os_clock_source;
+} t_os_clock_source;
 
 /*********************************************************************/
 /*                         Fonctions API                             */
@@ -67,8 +67,11 @@ typedef enum
 int OS_init(void);
 int OS_stop(void);
 
+// Gestion du temps
 int OS_create_timer(void);
 int OS_start_timer(int i_timer_id);
+
+void OS_usleep(int i_usec);
 
 // Gestion des threads
 int OS_create_thread(OS_thread_t * p_o_thread,
@@ -94,7 +97,7 @@ int OS_pwm_set_precision(t_uint32 i_prec);
 int OS_pwm_set_mode(os_pwm_mode i_mode);
 
 // Pour CLOCK
-int OS_clock_set_source(os_clock_source i_source);
+int OS_clock_set_source(t_os_clock_source i_source);
 int OS_clock_set_freq(t_uint32 i_freq);
 
 #ifdef __cplusplus

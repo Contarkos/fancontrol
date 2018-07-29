@@ -1,8 +1,8 @@
 // Global includes
 #include <stdio.h>
-#include <time.h>
 
 // Local includes
+#include "base.h"
 #include "os.h"
 #include "os_rpi.h"
 
@@ -43,9 +43,7 @@ int OS_pwn_enable(os_ret_okko i_enable)
     if (0 == ret)
     {
         // Petit temps d'arret pour éviter un crash du module PWM
-        struct timespec timer_enbl = {.tv_sec = 0, .tv_nsec = 10000};
-
-        nanosleep(&timer_enbl, NULL);
+        OS_usleep(10);
     }
 
     return ret;
@@ -55,7 +53,7 @@ int OS_pwn_enable(os_ret_okko i_enable)
 int OS_pwm_set_frequency(t_uint32 i_freq)
 {
     int ret = 0;
-    t_uint32 divisor = 1;
+    t_uint32 divi = 1, divr = 0, divf = 0, data;
 
     if (OS_RET_KO == is_init_clock)
     {
@@ -64,7 +62,7 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
     }
     else
     {
-        if (i_freq > CLOCK_MAX_FREQ)
+        if (i_freq > os_clock_max_freq[os_clock_source] || i_freq == 0)
         {
             printf("[ER] OS : Fréquence d'horloge trop haute, freq = %d\n", i_freq);
             ret = -2;
@@ -75,12 +73,24 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
             os_pwm_freq = i_freq;
 
             // Calcul du diviseur
-            divisor = CLOCK_MAX_FREQ / (os_pwm_freq * os_pwm_prec);
+#if 0
+            divi = (CLOCK_MAX_FREQ / os_pwm_freq);
+            divr = (CLOCK_MAX_FREQ % os_pwm_freq);
+#else
+            divi = os_clock_max_freq[os_clock_source] / (os_pwm_freq * os_pwm_prec);
+            divr = os_clock_max_freq[os_clock_source] % (os_pwm_freq * os_pwm_prec);
+#endif
+            divf = (t_uint32) ((float) (divr * CLOCK_MAX_DIVISOR) / (float) os_clock_max_freq[os_clock_source]);
 
-            if (divisor > CLOCK_MAX_DIVISOR)
+            printf("[IS] OS : diviseur pour PWM = %d\n", divi);
+
+            if (divi > CLOCK_MAX_DIVISOR)
             {
-               divisor = CLOCK_MAX_DIVISOR;
+               divi = CLOCK_MAX_DIVISOR;
             }
+
+            // Mise en forme de la donnée pour le registre de clock
+            data = ( CLOCK_DIVI_MASK & (divi << CLOCK_DIVI_SHIFT) ) | ( CLOCK_DIVF_MASK & (divf << CLOCK_DIVF_SHIFT) );
 
             // Arret de la CLOCK le temps de changer les paramètres
             CLOCK_GP0_CTL_REGISTER = (CLOCK_GP0_CTL_REGISTER | CLOCK_PASSWD_MASK) & ~(CLOCK_ENAB_MASK);
@@ -89,7 +99,7 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
             while ( CLOCK_GP0_CTL_REGISTER & CLOCK_BUSY_MASK ) {}
 
             // Set de la fréquence
-            CLOCK_GP0_DIV_REGISTER = CLOCK_PASSWD_MASK | ( CLOCK_DIVI_MASK & (divisor << CLOCK_DIVI_SHIFT) );
+            CLOCK_GP0_DIV_REGISTER = CLOCK_PASSWD_MASK | data;
 
             // Reactivation de la clock
             CLOCK_GP0_CTL_REGISTER |= CLOCK_PASSWD_MASK | CLOCK_ENAB_MASK;
@@ -116,6 +126,8 @@ int OS_pwm_set_dutycycle(float i_duty)
 
         // Ecriture de la valeur dans le registre
         PWM_DAT1_REGISTER = ((t_uint32) ((os_pwm_duty / MAX_PERCENT_PWM) * (float) os_pwm_prec) );
+
+        printf("[IS] OS : dutycycle value = %d\n", PWM_DAT1_REGISTER);
     }
 
     return ret;
@@ -142,6 +154,9 @@ int OS_pwm_set_precision(t_uint32 i_prec)
 
         // Configuration du registre RNG1
         PWM_RNG1_REGISTER = os_pwm_prec;
+
+        // Reconfiguration de la frequence de la clock
+        ret = OS_pwm_set_frequency(os_pwm_freq);
     }
 
     return ret;
@@ -200,8 +215,16 @@ int os_stop_pwm(void)
 {
     int ret = 0;
 
-    // Demapping du PWM
-    os_unmap_peripheral(&os_periph_pwm);
+    if (OS_RET_KO == is_init_pwm)
+    {
+        printf("[WG] OS : init PWM non effectué\n");
+        ret = 1;
+    }
+    else
+    {
+        // Demapping du PWM
+        os_unmap_peripheral(&os_periph_pwm);
+    }
 
     return ret;
 }

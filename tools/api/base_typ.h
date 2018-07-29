@@ -1,8 +1,5 @@
 #pragma once
 
-// Includes
-#include <mutex>
-
 // Définition des types pour l'ensemble du soft
 typedef int (*start_func)(std::mutex *p_i_mutex);
 typedef int (*stop_func)(void);

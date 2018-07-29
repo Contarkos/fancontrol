@@ -1,18 +1,22 @@
 // Includes globaux
+#include <mutex>
 
 // Includes locaux
 #include "base.h"
 #include "base_typ.h"
+#include "os.h"
 #include "main_factory.h"
 #include "module.h"
 #include "fan.h"
+#include "temp.h"
 #include "cmd.h"
 
 // Variables globales
 std::mutex t_mutex[NB_MODULE];
 
 mod_type t_start[NB_MODULE] = {
-        {&FAN_start, &FAN_stop}
+        {&FAN_start, &FAN_stop},
+        {&TEMP_start, &TEMP_stop}
 };
 
 int main_start_factory()
@@ -26,7 +30,7 @@ int main_start_factory()
 
     if (0 != ret_temp)
     {
-        printf("MAIN : erreur à l'init de l'OS, code : %d\n", ret_temp);
+        printf("[ER] MAIN : erreur à l'init de l'OS, code : %d\n", ret_temp);
         ret = 1;
     }
     else
@@ -42,7 +46,7 @@ int main_start_factory()
             if (0 != ret_temp)
             {
                 ret = 1;
-                printf("[MAIN] : Erreur pendant le lancement du module n°%d\n", ii);
+                printf("[ER] MAIN : Erreur pendant le lancement du module n°%d\n", ii);
             }
         }
 
@@ -64,7 +68,7 @@ int main_stop_factory()
 {
     int ret = 0, ii;
 
-    printf("MAIN : extinction des modules\n");
+    printf("[IS] MAIN : extinction des modules\n");
 
     // On lance les demandes d'arrets
     for (ii = 0; ii < NB_MODULE; ii++)

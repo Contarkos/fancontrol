@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 
 // Local includes
+#include "base.h"
 #include "os.h"
 #include "os_rpi.h"
 

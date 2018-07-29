@@ -2,8 +2,11 @@
 
 // Include globaux
 #include <string.h>
+#include <mutex>
 
 // Include locaux
+#include "base.h"
+#include "os.h"
 #include "module.h"
 
 MODULE::MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m)

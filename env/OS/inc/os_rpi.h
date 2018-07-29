@@ -1,7 +1,5 @@
 #pragma once
 
-#include "base.h"
-
 // Adresse des zones de la mémoire pour BCM2835. A verifier pour 2708
 #define BCM2708_PERI_BASE       0x20000000
 #define GPIO_BASE               (BCM2708_PERI_BASE + 0x200000) // GPIO controller
@@ -53,6 +51,15 @@
 #define PWM_CTL_MSEN1_MASK      ((t_uint32) 0x00000080)
 #define PWM_CTL_MSEN1_SHIFT     7U
 
+#define PWM_STA_FULL_MASK
+#define PWM_STA_FULL_SHIFT
+//#define PWM_STA_
+//#define PWM_STA_
+//#define PWM_STA_
+//#define PWM_STA_
+//#define PWM_STA_
+//#define PWM_STA_
+
 // Macros pour les registres de CLOCK
 #define CLOCK_GP0_CTL_OFFSET    0x70
 #define CLOCK_GP0_CTL_REGISTER  *( os_periph_clock.addr + CLOCK_GP0_CTL_OFFSET )
@@ -100,6 +107,10 @@ extern os_ret_okko is_init_gpio;
 extern os_ret_okko is_init_pwm;
 extern os_ret_okko is_init_clock;
 extern os_ret_okko is_init_spi;
+
+// Variables globales
+extern t_os_clock_source os_clock_source;
+extern t_uint32 os_clock_max_freq[];
 
 // Init des GPIO
 int os_init_gpio(void);

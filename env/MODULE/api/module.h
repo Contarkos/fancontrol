@@ -1,11 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <mutex>
-
-// Include locaux
-#include "os.h"
-
 // Macro
 
 // Define variables

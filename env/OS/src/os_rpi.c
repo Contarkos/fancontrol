@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 // Local includes
+#include "base.h"
 #include "os.h"
 #include "os_rpi.h"
 
@@ -35,12 +36,18 @@ int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout)
                     OUT_GPIO(i_pin);
                 }
                 break;
+            case OS_GPIO_FUNC_ALT0:
             case OS_GPIO_FUNC_ALT1:
             case OS_GPIO_FUNC_ALT2:
             case OS_GPIO_FUNC_ALT3:
             case OS_GPIO_FUNC_ALT4:
+            case OS_GPIO_FUNC_ALT5:
                 {
                     SET_GPIO_ALT(i_pin, i_inout);
+                    printf("[IS] OS : valeur de la fonction pour %d = %x, valeur : %x\n",
+                           i_pin,
+                           *(os_periph_gpio.addr + ((i_pin)/10) ),
+                           (((i_inout)<=3?(i_inout) + 4:(i_inout)==4?3:2)<<(((i_pin)%10)*3)));
                 }
                 break;
             default:
@@ -48,6 +55,7 @@ int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout)
                 ret = -2;
                 break;
         }
+
     }
     else
     {
@@ -79,6 +87,14 @@ int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active)
         printf("[ER] OS : mauvaise valeur de pin GPIO, pin = %d\n", i_pin);
         ret = -1;
     }
+
+    return ret;
+}
+
+// Lecture de la valeur d'une pin
+int OS_read_gpio(t_uint32 i_pin)
+{
+    int ret = 0;
 
     return ret;
 }

@@ -5,6 +5,7 @@
 #include <pthread.h>
 
 // Includes locaux
+#include "base.h"
 #include "os.h"
 
 

@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 // Local includes
+#include "base.h"
 #include "os.h"
 
 int spi_cs0_fd;                //file descriptor for the SPI device

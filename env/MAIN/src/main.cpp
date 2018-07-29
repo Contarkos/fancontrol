@@ -1,14 +1,15 @@
 // Include globaux
 #include <stdio.h>
 #include <unistd.h>
+#include <mutex>
+
+// Include de base
+#include "base.h"
+#include "base_typ.h"
 
 // Include locaux
 #include "main_handler.h"
 #include "main_factory.h"
-
-// Include à virer plus tard
-#include "base.h"
-#include "fan.h"
 
 static int main_config(int argc, char *argv[])
 {
@@ -17,14 +18,14 @@ static int main_config(int argc, char *argv[])
 
     if (argc > 0)
     {
-        printf("There is %d args which are : ", argc);
+        printf("[IS] MAIN : There is %d args which are : ", argc);
 
         for (ii = 0, a = argv[0]; ii < argc; ii++, a = argv[ii])
         {
             printf("%s, ", a);
         }
 
-        printf(" you ! WOAW.\n");
+        printf(" WOAW.\n");
     }
     else
     {
@@ -51,7 +52,7 @@ int main(int argc, char *argv[])
 
     if (BASE_OK != ret)
     {
-        printf("MAIN : erreur de démarrage. EXIT (code %d)\n", ret);
+        printf("[ER] MAIN : erreur de démarrage. EXIT (code %d)\n", ret);
     }
 
     ret = main_stop_factory();

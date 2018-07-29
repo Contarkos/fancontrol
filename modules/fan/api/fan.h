@@ -1,11 +1,5 @@
 #pragma once
 
-// Global includes
-#include <mutex>
-
-// Local includes
-#include "base_typ.h"
-
 // Defines
 #define NB_INSTANCES_FAN 1
 
