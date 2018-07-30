@@ -61,10 +61,14 @@
 //#define PWM_STA_
 
 // Macros pour les registres de CLOCK
-#define CLOCK_GP0_CTL_OFFSET    0x70
+#define CLOCK_GP0_CTL_OFFSET    28
 #define CLOCK_GP0_CTL_REGISTER  *( os_periph_clock.addr + CLOCK_GP0_CTL_OFFSET )
-#define CLOCK_GP0_DIV_OFFSET    0x74
+#define CLOCK_GP0_DIV_OFFSET    29
 #define CLOCK_GP0_DIV_REGISTER  *( os_periph_clock.addr + CLOCK_GP0_DIV_OFFSET )
+#define CLOCK_PWM_CTL_OFFSET    40
+#define CLOCK_PWM_CTL_REGISTER  *( os_periph_clock.addr + CLOCK_PWM_CTL_OFFSET )
+#define CLOCK_PWM_DIV_OFFSET    41
+#define CLOCK_PWM_DIV_REGISTER  *( os_periph_clock.addr + CLOCK_PWM_DIV_OFFSET )
 
 #define CLOCK_SRC_MASK          ((t_uint32) 0x0000000F)
 #define CLOCK_SRC_SHIFT         0U
