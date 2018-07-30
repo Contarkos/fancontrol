@@ -92,16 +92,16 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
             data = ( CLOCK_DIVI_MASK & (divi << CLOCK_DIVI_SHIFT) ) | ( CLOCK_DIVF_MASK & (divf << CLOCK_DIVF_SHIFT) );
 
             // Arret de la CLOCK le temps de changer les paramètres
-            CLOCK_GP0_CTL_REGISTER = (CLOCK_GP0_CTL_REGISTER | CLOCK_PASSWD_MASK) & ~(CLOCK_ENAB_MASK);
+            CLOCK_PWM_CTL_REGISTER = (CLOCK_PWM_CTL_REGISTER | CLOCK_PASSWD_MASK) & ~(CLOCK_ENAB_MASK);
 
             // Attente de la descente du flag BUSY
-            while ( CLOCK_GP0_CTL_REGISTER & CLOCK_BUSY_MASK ) {}
+            while ( CLOCK_PWM_CTL_REGISTER & CLOCK_BUSY_MASK ) {}
 
             // Set de la fréquence
-            CLOCK_GP0_DIV_REGISTER = CLOCK_PASSWD_MASK | data;
+            CLOCK_PWM_DIV_REGISTER = CLOCK_PASSWD_MASK | data;
 
             // Reactivation de la clock
-            CLOCK_GP0_CTL_REGISTER |= CLOCK_PASSWD_MASK | CLOCK_ENAB_MASK;
+            CLOCK_PWM_CTL_REGISTER |= CLOCK_PASSWD_MASK | CLOCK_ENAB_MASK;
         }
     }
 
