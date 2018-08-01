@@ -66,7 +66,7 @@ int TEMP::exec_loop()
         n++;
     }
 
-    if ( n % 10 )
+    if ( !(n % 100) )
     {
         printf("[IS] TEMP : alive !\n");
     }

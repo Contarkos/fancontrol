@@ -47,10 +47,12 @@ int FAN_stop(void)
 {
     int ret = 0, ii;
 
+    printf("[IS] FAN : arrêt du module\n");
+
     for (ii = 0; ii < NB_INSTANCES_FAN; ii++)
     {
         // On coupe l'execution
-        instances_fan[ii]->stop_module();
+        instances_fan[ii]->stop_and_exit();
 
         // On réattache le thread pour éviter les zombies
         OS_joint_thread(instances_fan[ii]->MOD_getThread(), NULL);

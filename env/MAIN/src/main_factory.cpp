@@ -13,6 +13,7 @@
 
 // Variables globales
 std::mutex t_mutex[NB_MODULE];
+int main_is_running = 0;
 
 mod_type t_start[NB_MODULE] = {
         {&FAN_start, &FAN_stop},
@@ -56,6 +57,9 @@ int main_start_factory()
             t_mutex[ii].unlock();
         }
 
+        // C'est parti
+        main_is_running = 1;
+
         // On va chercher des commandes rentrées par l'utilisateur
         CMD_read();
 
@@ -75,6 +79,8 @@ int main_stop_factory()
     {
         t_start[ii].mod_stop();
     }
+
+    printf("[IS] MAIN : Attente des locks à libérer pour les modules\n");
 
     // On attend que tous les threads soient terminés
     for (ii = 0; ii < NB_MODULE; ii++)

@@ -3,20 +3,22 @@
 // Global includes
 #include <stdio.h>
 #include <string.h>
+#include <regex.h>
 
 // Local includes
+#include "main.h"
 #include "cmd.h"
 #include "cmd_parse.h"
 
 // Variables globales
-int isRunning = 1;
 
+// Fonctions
 int CMD_read(void)
 {
    int ret = 0;
    char line[MAX_SIZE_CMD];
 
-   while(isRunning)
+   while(main_is_running)
    {
       // Affichage du prompt
       printf("fan-app>");
@@ -37,8 +39,9 @@ int cmd_parse_and_exec(char line[MAX_SIZE_CMD])
 
    if (0 == strncmp(line, "quit", 4))
    {
-      isRunning = 0;
+      main_is_running = 0;
    }
 
    return ret;
 }
+

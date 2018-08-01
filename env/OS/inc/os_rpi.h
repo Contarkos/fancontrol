@@ -28,7 +28,7 @@
 #define GPIO_CLR(g)              GPIO_CLR_REGISTER = (unsigned int) 1 << (g) // clears bits which are 1 ignores bits which are 0
  
 #define GPIO_READ_REGISTER       *( os_periph_gpio.addr + 13 )
-#define GPIO_READ(g)             ( (GPIO_READ_REGISTER & (1 << (g))) >> (g) )
+#define GPIO_READ(g)             ( (int) (GPIO_READ_REGISTER & (t_uint32) (1 << (g))) >> (g) )
 
 #define GPIO_MAX_NB             25U
 

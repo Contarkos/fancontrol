@@ -94,9 +94,19 @@ int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active)
 // Lecture de la valeur d'une pin
 int OS_read_gpio(t_uint32 i_pin)
 {
-    int ret = 0;
+    int data = 0;
 
-    return ret;
+    if (i_pin <= GPIO_MAX_NB)
+    {
+        data = GPIO_READ(i_pin);
+    }
+    else
+    {
+        printf("[ER] OS : mauvaise valeur de pin GPIO, pin = %d\n", i_pin);
+        data = -1;
+    }
+
+    return data;
 }
 
 /*********************************************************************/

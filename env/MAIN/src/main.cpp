@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
         printf("[ER] MAIN : erreur de démarrage. EXIT (code %d)\n", ret);
     }
 
+    // Arret du système
     ret = main_stop_factory();
 
     return ret;

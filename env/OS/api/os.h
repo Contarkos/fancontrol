@@ -59,6 +59,17 @@ typedef enum
     OS_CLOCK_SRC_HDMI = 7
 } t_os_clock_source;
 
+// Typedef pour SPI
+typedef enum
+{
+    OS_SPI_DEVICE_0 = 0,
+    OS_SPI_DEVICE_1 = 1
+} t_os_spi_device;
+
+// Defines
+#define OS_MIN_PERCENT_PWM     0.0F
+#define OS_MAX_PERCENT_PWM     100.0F
+
 /*********************************************************************/
 /*                         Fonctions API                             */
 /*********************************************************************/
@@ -85,12 +96,13 @@ int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout);
 int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active);
 
 // Pour SPI
-int OS_spiOpenPort (int spi_device);
-int OS_spiClosePort (int spi_device);
-int OS_spiWriteAndRead (int spi_device, unsigned char *data, int length);
+int OS_spi_open_port (t_os_spi_device spi_device);
+int OS_spi_close_port (t_os_spi_device spi_device);
+int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int length);
 
 // Pour PWM
 int OS_pwn_enable(os_ret_okko i_enable);
+int OS_pwm_set_clock_source(t_os_clock_source i_source);
 int OS_pwm_set_frequency(t_uint32 i_freq);
 int OS_pwm_set_dutycycle(float i_duty);
 int OS_pwm_set_precision(t_uint32 i_prec);

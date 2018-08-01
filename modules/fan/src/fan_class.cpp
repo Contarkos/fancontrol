@@ -7,6 +7,7 @@
 #include "base.h"
 #include "os.h"
 #include "module.h"
+#include "fan.h"
 #include "fan_class.h"
 
 /* Définition des constructeurs */
@@ -39,7 +40,7 @@ int FAN::start_module()
         ret += OS_set_gpio(FAN_PIN_IN, OS_GPIO_FUNC_IN);
 
         // Reglage source Clock sur PLL D
-        ret += OS_clock_set_source(OS_CLOCK_SRC_OSC);
+        ret += OS_pwm_set_clock_source(OS_CLOCK_SRC_PLLC);
 
         // Set de la diode en sortie en PWM
         ret += OS_set_gpio(FAN_PIN_OUT, OS_GPIO_FUNC_ALT5);
@@ -55,6 +56,9 @@ int FAN::start_module()
 
         // Reglage du duty cycle par defaut : 50%
         ret += OS_pwm_set_dutycycle(FAN_DEFAULT_CYCLE);
+
+        // Activation...
+        ret += OS_pwn_enable(OS_RET_OK);
     }
 
     return ret;
@@ -86,7 +90,7 @@ int FAN::exec_loop()
 #else
     if (is_onoff)
     {
-        OS_pwm_set_dutycycle((float) 50);
+        OS_pwm_set_dutycycle((float) 0);
     }
     else
     {
@@ -106,6 +110,54 @@ int FAN::exec_loop()
     else
     {
         n++;
+    }
+
+    return ret;
+}
+
+int FAN::fan_compute_duty(void)
+{
+    int ret = 0;
+    float duty = 0;
+
+    switch (current_mode)
+    {
+        case FAN_MODE_AUTO:
+            {
+                // Recupération de la température extérieure ?
+
+                // Puis asservissement en température
+            }
+            break;
+        case FAN_MODE_TEMP:
+            break;
+            {
+                // Calcul ecart de température
+            }
+        case FAN_MODE_RPM:
+            break;
+            {
+                if (this->consigne_speed > FAN_MAX_SPEED)
+                {
+                    printf("[WG] FAN : vitesse trop haute\n");
+                    this->fan_setSpeed(FAN_MAX_SPEED);
+
+                    ret = 2;
+                }
+
+                duty = ( ((float) this->consigne_speed) * OS_MAX_PERCENT_PWM ) / FAN_MAX_SPEED;
+            }
+        default:
+            {
+                printf("[ER] FAN : Mode de FAN invalide\n");
+                ret = -1;
+            }
+    }
+
+    // En cas d'erreur
+    if (ret >= 0)
+    {
+        OS_pwm_set_dutycycle(duty);
     }
 
     return ret;

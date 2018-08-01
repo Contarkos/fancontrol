@@ -16,6 +16,7 @@ LIBS += -lpthread #-lwiringPi -lwiringPiDev
 
 INCLUDES += $(patsubst %, -I$(PWD)/%/api, $(SUBDIRS_MOD))
 INCLUDES += $(patsubst %, -I$(PWD)/%/api, $(SUBDIRS_ENV))
+INCLUDES += $(patsubst %, -I$(PWD)/%/api, $(SUBDIR_MAIN))
 INCLUDES += -I$(PWD)/tools/api
 INCLUDES += -I/usr/local/include -I/opt/arm-bcm2708/arm-linux-gnueabihf/include
 

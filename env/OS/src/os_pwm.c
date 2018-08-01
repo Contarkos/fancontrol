@@ -6,9 +6,6 @@
 #include "os.h"
 #include "os_rpi.h"
 
-#define MIN_PERCENT_PWM     0.0F
-#define MAX_PERCENT_PWM     100.0F
-
 // Initialisation de la zone mémoire PWM
 struct bcm2835_peripheral os_periph_pwm = {PWM_BASE, 0, NULL, NULL};
 
@@ -19,7 +16,9 @@ os_ret_okko is_init_pwm = OS_RET_KO;
 static t_uint32 os_pwm_freq = 25000;
 static float os_pwm_duty = 0.0F;
 static t_uint32 os_pwm_prec = 255;
+static t_os_clock_source os_pwm_source = OS_CLOCK_SRC_PLLC;
 
+// Activation du PWM
 int OS_pwn_enable(os_ret_okko i_enable)
 {
     int ret = 0;
@@ -45,6 +44,34 @@ int OS_pwn_enable(os_ret_okko i_enable)
         // Petit temps d'arret pour éviter un crash du module PWM
         OS_usleep(10);
     }
+
+    return ret;
+}
+
+// Sélection de la source pour la clock
+int OS_pwm_set_clock_source(t_os_clock_source i_source)
+{
+    int ret = 0;
+
+    // Prise de mutex pour la clock
+
+    // Sauvegarde de la valeur
+    os_pwm_source = i_source;
+
+    // Arret de la CLOCK le temps de changer les paramètres
+    CLOCK_PWM_CTL_REGISTER = (CLOCK_PWM_CTL_REGISTER | CLOCK_PASSWD_MASK) & ~(CLOCK_ENAB_MASK);
+
+    // Attente de la descente du flag BUSY
+    while ( CLOCK_PWM_CTL_REGISTER & CLOCK_BUSY_MASK ) {}
+
+    // Set de la source
+    CLOCK_PWM_CTL_REGISTER  = (CLOCK_PASSWD_MASK | CLOCK_PWM_CTL_REGISTER) & ~(CLOCK_SRC_MASK);
+    CLOCK_PWM_CTL_REGISTER |=  CLOCK_PASSWD_MASK | (CLOCK_SRC_MASK & os_clock_source);
+
+    // Reactivation de la clock
+    CLOCK_PWM_CTL_REGISTER |=  CLOCK_PASSWD_MASK | CLOCK_ENAB_MASK;
+
+    // Libération mutex pour la clock
 
     return ret;
 }
@@ -75,7 +102,7 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
             // Calcul du diviseur
             divi = os_clock_max_freq[os_clock_source] / (os_pwm_freq * os_pwm_prec);
             divr = os_clock_max_freq[os_clock_source] % (os_pwm_freq * os_pwm_prec);
-            divf = (t_uint32) ((float) (divr * CLOCK_MAX_DIVISOR) / (float) os_clock_max_freq[os_clock_source]);
+            divf = (t_uint32) ((float) (divr * CLOCK_MAX_DIVISOR) / (float) (os_pwm_freq * os_pwm_prec));
 
             printf("[IS] OS : diviseur pour PWM = %d\n", divi);
 
@@ -113,7 +140,7 @@ int OS_pwm_set_dutycycle(float i_duty)
 {
     int ret = 0;
 
-    if (i_duty < MIN_PERCENT_PWM || i_duty > MAX_PERCENT_PWM)
+    if (i_duty < OS_MIN_PERCENT_PWM || i_duty > OS_MAX_PERCENT_PWM)
     {
         printf("[ER] OS : mauvais pourcentage PWM, %% = %f\n", i_duty);
         ret = -1;
@@ -124,7 +151,7 @@ int OS_pwm_set_dutycycle(float i_duty)
         os_pwm_duty = i_duty;
 
         // Ecriture de la valeur dans le registre
-        PWM_DAT1_REGISTER = ((t_uint32) ((os_pwm_duty / MAX_PERCENT_PWM) * (float) os_pwm_prec) );
+        PWM_DAT1_REGISTER = ((t_uint32) ((os_pwm_duty / OS_MAX_PERCENT_PWM) * (float) os_pwm_prec) );
 
         printf("[IS] OS : dutycycle value = %d\n", PWM_DAT1_REGISTER);
     }

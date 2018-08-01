@@ -18,6 +18,7 @@ SUBDIRS_MOD = $(wildcard modules/*)
 SUBDIR_DATA = DATA
 
 export PWD
+export SUBDIR_MAIN
 export SUBDIRS_ENV
 export SUBDIRS_MOD
 export SUBDIR_DATA

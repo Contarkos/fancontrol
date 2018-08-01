@@ -1,7 +1,16 @@
 #pragma once
 
 // Defines
-#define NB_INSTANCES_FAN 1
+#define NB_INSTANCES_FAN        1
+#define FAN_MAX_SPEED           1350
+
+// Types
+typedef enum
+{
+    FAN_MODE_AUTO = 0,
+    FAN_MODE_TEMP = 1,
+    FAN_MODE_RPM = 2
+} fan_e_mode;
 
 // API pour module FAN
 int FAN_start(std::mutex *m);
