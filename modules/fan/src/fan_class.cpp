@@ -28,11 +28,12 @@ int FAN::start_module()
     printf("[IS] FAN : Démarrage de la classe du module\n");
 
     // Démarrage du timer pour la boucle
-    ret += OS_create_timer();
+    this->timer_fd += OS_create_timer(FAN_TIMER_USEC, &FAN::fan_timer_handler, OS_TIMER_PERIODIC, (void *) this);
 
-    if (0 != ret)
+    if (0 == this->timer_fd)
     {
         printf("[ER] FAN : erreur création timer de boucle\n");
+        ret = -1;
     }
     else
     {
@@ -115,6 +116,16 @@ int FAN::exec_loop()
     return ret;
 }
 
+void FAN::fan_timer_handler(size_t i_timer_id, void * i_data)
+{
+    FAN *p_this = reinterpret_cast<FAN *> (i_data);
+
+    if (p_this && (p_this->timer_fd == i_timer_id))
+    {
+        p_this->fan_compute_duty();
+    }
+}
+
 int FAN::fan_compute_duty(void)
 {
     int ret = 0;
@@ -127,12 +138,14 @@ int FAN::fan_compute_duty(void)
                 // Recupération de la température extérieure ?
 
                 // Puis asservissement en température
+                duty = 100.0F;
             }
             break;
         case FAN_MODE_TEMP:
             break;
             {
                 // Calcul ecart de température
+                duty = 50.0F;
             }
         case FAN_MODE_RPM:
             break;

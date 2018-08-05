@@ -26,7 +26,11 @@ int OS_init(void)
 
     // Init de la CLOCK
     ret += os_init_clock();
+
     // Init COM
+
+    // Init des timers
+    ret += os_init_timer();
 
     return ret;
 }
@@ -39,11 +43,14 @@ int OS_stop(void)
     // Stop des GPIO
     ret += os_stop_gpio();
 
-    // Stop COM
+    // Stop PWM
     ret += os_stop_pwm();
 
     // Stop CLOCK
     ret += os_stop_clock();
+
+    // Stop timer
+    ret += os_end_timer();
 
     return ret;
 }

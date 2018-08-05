@@ -5,12 +5,14 @@
 #define FAN_PIN_IN              (25)
 #define FAN_DEFAULT_PREC        (1024)
 #define FAN_DEFAULT_CYCLE       (0.0F)
+#define FAN_TIMER_USEC          (40000)
 
 #define FAN_PWM_FREQ            (25000)
 
 class FAN : public MODULE
 {
     private:
+        size_t timer_fd;
         fan_e_mode current_mode;
         int consigne_speed;
         int consigne_temp;
@@ -29,6 +31,7 @@ class FAN : public MODULE
         int exec_loop(void);
 
         // Algorithme de décision pour le dutycycle
+        static void fan_timer_handler(size_t i_timer_id, void * i_data);
         int fan_compute_duty(void);
 };
 

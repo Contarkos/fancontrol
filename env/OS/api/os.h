@@ -6,7 +6,8 @@
 extern "C" {
 #endif
 
-typedef void * (*loop_func)(void *);
+typedef void * (*loop_func) (void *);
+typedef void   (*timer_func)(size_t i_timer_id, void * i_data);
 
 typedef struct
 {
@@ -66,6 +67,13 @@ typedef enum
     OS_SPI_DEVICE_1 = 1
 } t_os_spi_device;
 
+typedef enum
+{
+    OS_TIMER_SINGLE_SHOT = 0,
+    OS_TIMER_PERIODIC
+} t_os_timer_type;
+
+
 // Defines
 #define OS_MIN_PERCENT_PWM     0.0F
 #define OS_MAX_PERCENT_PWM     100.0F
@@ -79,8 +87,9 @@ int OS_init(void);
 int OS_stop(void);
 
 // Gestion du temps
-int OS_create_timer(void);
-int OS_start_timer(int i_timer_id);
+size_t OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_type, void * i_data);
+int OS_start_timer(size_t i_timer_id);
+int OS_stop_timer(size_t i_timer_id);
 
 void OS_usleep(int i_usec);
 

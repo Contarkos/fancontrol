@@ -19,7 +19,7 @@ int OS_create_thread(OS_thread_t *p_o_thread,
 
    if (ret != 0)
    {
-      printf("OS : Erreur pendant la création d'un thread (code = %d) \n", ret);
+      printf("[ER] OS : Erreur pendant la création d'un thread (code = %d)\n", ret);
    }
 
    return ret;
@@ -34,12 +34,13 @@ int OS_joint_thread(OS_thread_t * p_i_thread, void **retval)
 
    if (ret != 0)
    {
-      printf("OS : Erreur pendant la jonction d'un thread (code = %d) \n", ret);
+      printf("[ER] OS : Erreur pendant la jonction d'un thread (code = %d)\n", ret);
    }
 
    return ret;
 }
 
+// Permet de lancer le thread en question en tant que daemon
 int OS_detach_thread(OS_thread_t * p_i_thread)
 {
    int ret = 0;
@@ -49,7 +50,7 @@ int OS_detach_thread(OS_thread_t * p_i_thread)
 
    if (ret != 0)
    {
-      printf("OS : Erreur pendant la jonction d'un thread (code = %d) \n", ret);
+      printf("[ER] OS : Erreur pendant la jonction d'un thread (code = %d)\n", ret);
    }
 
    return ret;
