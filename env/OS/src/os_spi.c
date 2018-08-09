@@ -60,49 +60,49 @@ int OS_spi_open_port (t_os_spi_device spi_device)
         if (*spi_cs_fd < 0)
         {
             perror("Error - Could not open SPI device");
-            exit(1);
+            return(1);
         }
 
         status_value = ioctl(*spi_cs_fd, SPI_IOC_WR_MODE, &spi_mode);
         if(status_value < 0)
         {
             perror("Could not set SPIMode (WR)...ioctl fail");
-            exit(1);
+            return(1);
         }
 
         status_value = ioctl(*spi_cs_fd, SPI_IOC_RD_MODE, &spi_mode);
         if(status_value < 0)
         {
             perror("Could not set SPIMode (RD)...ioctl fail");
-            exit(1);
+            return(1);
         }
 
         status_value = ioctl(*spi_cs_fd, SPI_IOC_WR_BITS_PER_WORD, &spi_bitsPerWord);
         if(status_value < 0)
         {
             perror("Could not set SPI bitsPerWord (WR)...ioctl fail");
-            exit(1);
+            return(1);
         }
 
         status_value = ioctl(*spi_cs_fd, SPI_IOC_RD_BITS_PER_WORD, &spi_bitsPerWord);
         if(status_value < 0)
         {
             perror("Could not set SPI bitsPerWord(RD)...ioctl fail");
-            exit(1);
+            return(1);
         }
 
         status_value = ioctl(*spi_cs_fd, SPI_IOC_WR_MAX_SPEED_HZ, &spi_speed);
         if(status_value < 0)
         {
             perror("Could not set SPI speed (WR)...ioctl fail");
-            exit(1);
+            return(1);
         }
 
         status_value = ioctl(*spi_cs_fd, SPI_IOC_RD_MAX_SPEED_HZ, &spi_speed);
         if(status_value < 0)
         {
             perror("Could not set SPI speed (RD)...ioctl fail");
-            exit(1);
+            return(1);
         }
     }
 
@@ -141,7 +141,6 @@ int OS_spi_close_port (t_os_spi_device spi_device)
         if(status_value < 0)
         {
             perror("[ER] OS : Could not close SPI device");
-            exit(1);
         }
     }
 
@@ -163,37 +162,43 @@ int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int leng
     {
         case OS_SPI_DEVICE_0:
             spi_cs_fd = &spi_cs0_fd;
-            *spi_cs_fd = open("/dev/spidev0.0", O_RDWR);
             break;
         case OS_SPI_DEVICE_1:
             spi_cs_fd = &spi_cs1_fd;
-            *spi_cs_fd = open("/dev/spidev0.1", O_RDWR);
             break;
         default:
             printf("[ER] OS : device SPI inexistant\n");
-            exit(-1);
+            retVal = -1;
     }
-
-    //one spi transfer for each byte
-    for (i = 0 ; i < length ; i++)
+    
+    if ( !spi_cs_fd )
     {
-        memset(&spi[i], 0, sizeof (spi[i]));
-        spi[i].tx_buf        = (unsigned long)(data + i); // transmit from "data"
-        spi[i].rx_buf        = (unsigned long)(data + i) ; // receive into "data"
-        spi[i].len           = sizeof(*(data + i)) ;
-        spi[i].delay_usecs   = 0 ;
-        spi[i].speed_hz      = spi_speed ;
-        spi[i].bits_per_word = spi_bitsPerWord ;
-        spi[i].cs_change = 0;
+        printf("[ER] OS : module SPI non chargé\n");
+        retVal = -2;
     }
-
-    retVal = ioctl(*spi_cs_fd, SPI_IOC_MESSAGE(length), &spi) ;
-
-    if(retVal < 0)
+    else
     {
-        perror("Error - Problem transmitting spi data..ioctl");
-        exit(1);
-    }
+        //one spi transfer for each byte
+        for (i = 0 ; i < length ; i++)
+        {
+            memset(&spi[i], 0, sizeof (spi[i]));
+            spi[i].tx_buf        = (unsigned long)(data + i); // transmit from "data"
+            spi[i].rx_buf        = (unsigned long)(data + i) ; // receive into "data"
+            spi[i].len           = sizeof(*(data + i)) ;
+            spi[i].delay_usecs   = 0 ;
+            spi[i].speed_hz      = spi_speed ;
+            spi[i].bits_per_word = spi_bitsPerWord ;
+            spi[i].cs_change = 0;
+        }
 
+        retVal = ioctl(*spi_cs_fd, SPI_IOC_MESSAGE(length), &spi) ;
+
+        if(retVal < 0)
+        {
+            perror("Error - Problem transmitting spi data..ioctl");
+            retVal = -4;
+        }
+    }
+    
     return retVal;
 }
