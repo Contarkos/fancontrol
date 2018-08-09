@@ -24,7 +24,7 @@ unsigned int spi_speed;
 //spi_device    0=CS0, 1=CS1
 int OS_spi_open_port (t_os_spi_device spi_device)
 {
-    int status_value = -1;
+    int status_value = 0;
     int *spi_cs_fd;
 
     //----- SET SPI MODE -----
@@ -57,51 +57,53 @@ int OS_spi_open_port (t_os_spi_device spi_device)
 
     if (0 == status_value)
     {
+        printf("[IS] OS : ouverture fichier SPI%d\n", spi_device);
+
         if (*spi_cs_fd < 0)
         {
-            perror("Error - Could not open SPI device");
+            printf("[ER] OS : Error - Could not open SPI device\n");
             return(1);
         }
 
         status_value = ioctl(*spi_cs_fd, SPI_IOC_WR_MODE, &spi_mode);
         if(status_value < 0)
         {
-            perror("Could not set SPIMode (WR)...ioctl fail");
+            printf("[ER] OS : Could not set SPIMode (WR)...ioctl fail\n");
             return(1);
         }
 
         status_value = ioctl(*spi_cs_fd, SPI_IOC_RD_MODE, &spi_mode);
         if(status_value < 0)
         {
-            perror("Could not set SPIMode (RD)...ioctl fail");
+            printf("[ER] OS : Could not set SPIMode (RD)...ioctl fail\n");
             return(1);
         }
 
         status_value = ioctl(*spi_cs_fd, SPI_IOC_WR_BITS_PER_WORD, &spi_bitsPerWord);
         if(status_value < 0)
         {
-            perror("Could not set SPI bitsPerWord (WR)...ioctl fail");
+            printf("[ER] OS : Could not set SPI bitsPerWord (WR)...ioctl fail\n");
             return(1);
         }
 
         status_value = ioctl(*spi_cs_fd, SPI_IOC_RD_BITS_PER_WORD, &spi_bitsPerWord);
         if(status_value < 0)
         {
-            perror("Could not set SPI bitsPerWord(RD)...ioctl fail");
+            printf("[ER] OS : Could not set SPI bitsPerWord(RD)...ioctl fail\n");
             return(1);
         }
 
         status_value = ioctl(*spi_cs_fd, SPI_IOC_WR_MAX_SPEED_HZ, &spi_speed);
         if(status_value < 0)
         {
-            perror("Could not set SPI speed (WR)...ioctl fail");
+            printf("[ER] OS : Could not set SPI speed (WR)...ioctl fail\n");
             return(1);
         }
 
         status_value = ioctl(*spi_cs_fd, SPI_IOC_RD_MAX_SPEED_HZ, &spi_speed);
         if(status_value < 0)
         {
-            perror("Could not set SPI speed (RD)...ioctl fail");
+            printf("[ER] OS : Could not set SPI speed (RD)...ioctl fail\n");
             return(1);
         }
     }
@@ -155,7 +157,7 @@ int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int leng
 {
     struct spi_ioc_transfer spi[length];
     int i = 0;
-    int retVal = -1;
+    int retVal = 0;
     int *spi_cs_fd;
 
     switch (spi_device)
@@ -170,8 +172,8 @@ int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int leng
             printf("[ER] OS : device SPI inexistant\n");
             retVal = -1;
     }
-    
-    if ( !spi_cs_fd )
+
+    if ( (retVal < 0) )
     {
         printf("[ER] OS : module SPI non chargé\n");
         retVal = -2;
@@ -199,6 +201,6 @@ int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int leng
             retVal = -4;
         }
     }
-    
+
     return retVal;
 }

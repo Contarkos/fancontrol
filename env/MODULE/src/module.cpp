@@ -37,7 +37,7 @@ void* MODULE::init_module(void* p_this)
 
         if (ret != 0)
         {
-            printf("MODULE : erreur dans l'init_and_wait\n");
+            printf("[ER] MODULE : erreur dans l'init_and_wait\n");
         }
     }
     else
@@ -66,7 +66,7 @@ int MODULE::init_and_wait(void)
         {
             if (0 != exec_loop())
             {
-                printf("[%s] Erreur de boucle. Arrêt en cours pour le thread\n", this->name);
+                printf("[ER] %s : Erreur de boucle. Arrêt en cours pour le thread\n", this->name);
                 this->isRunning = false;
             }
         }
@@ -76,7 +76,7 @@ int MODULE::init_and_wait(void)
     }
     else
     {
-        printf("Erreur lors du démarrage du module %s\n", this->name);
+        printf("[ER] MODULE : Erreur lors du démarrage du module %s\n", this->name);
         ret = -1;
     }
 

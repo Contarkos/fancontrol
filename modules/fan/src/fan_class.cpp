@@ -40,7 +40,7 @@ int FAN::start_module()
         // Set de la diode en entrée pour lire la vitesse
         ret += OS_set_gpio(FAN_PIN_IN, OS_GPIO_FUNC_IN);
 
-        // Reglage source Clock sur PLL D
+        // Reglage source Clock sur PLL C
         ret += OS_pwm_set_clock_source(OS_CLOCK_SRC_PLLC);
 
         // Set de la diode en sortie en PWM
@@ -60,6 +60,18 @@ int FAN::start_module()
 
         // Activation...
         ret += OS_pwn_enable(OS_RET_OK);
+
+        if (ret >= 0)
+        {
+            return ret;
+        }
+        else
+        {
+            // Demarrage du timer
+            //ret = OS_start_timer(this->timer_fd);
+
+            // Ouverture socket UNIX
+        }
     }
 
     return ret;

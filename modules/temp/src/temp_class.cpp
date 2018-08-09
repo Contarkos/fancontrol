@@ -37,10 +37,18 @@ int TEMP::start_module()
     else
     {
         // Configuration du module SPI
-        OS_spi_open_port(OS_SPI_DEVICE_0);
+        ret = OS_spi_open_port(OS_SPI_DEVICE_0);
 
-        // Démarrage du timer pour looper
-        OS_start_timer(this->timer_fd);
+        if ( ret < 0 )
+        {
+            printf("[ER] TEMP : pas de port SPI\n");
+            this->set_running(false);
+        }
+        else
+        {
+            // Démarrage du timer pour looper
+            ret = OS_start_timer(this->timer_fd);
+        }
     }
 
     return ret;
@@ -95,9 +103,35 @@ void TEMP::temp_timer_handler(size_t i_timer_id, void * i_data)
 
 int TEMP::temp_retrieve_data(void)
 {
-    int ret = 0;
+    int ret = 0, ii;
+    const int l = 3;
+    unsigned char data[l];
 
+    // Blablabla
     printf("[IS] TEMP : timer activé !\n");
+
+    // Mise en forme du buffer pour lire le registre de comparaison
+    data[0] = 0x00; // 0b00000000
+    data[1] = 0xB0; // 0b10110000
+    data[2] = 0xB0; // 0b10110000
+
+    // On va récupérer les données
+    ret = OS_spi_write_read(OS_SPI_DEVICE_0, data, l);
+
+    if (ret < 0)
+    {
+        printf("[ER] TEMP : pas de données disponibles...\n");
+    }
+    else
+    {
+        // Affichage
+        for (ii = 0; ii < l; ii++)
+        {
+            printf("[IS] TEMP : octet %d = %d\n", ii, data[ii]);
+        }
+
+        // Envoi des données à FAN via socket
+    }
 
     return ret;
 }
