@@ -36,6 +36,9 @@ int TEMP::start_module()
     }
     else
     {
+        // Configuration du GPIO
+        //ret += OS_set_gpio(TEMP_PIN_OUT, OS_GPIO_FUNC_IN);
+        
         // Configuration du module SPI
         ret = OS_spi_open_port(OS_SPI_DEVICE_0);
 
@@ -109,11 +112,14 @@ int TEMP::temp_retrieve_data(void)
 
     // Blablabla
     printf("[IS] TEMP : timer activé !\n");
+    
+    // Activation de la pin connectée au thermistor
+    //OS_write_gpio(TEMP_PIN_OUT, 1);
 
     // Mise en forme du buffer pour lire le registre de comparaison
     data[0] = 0x00; // 0b00000000
-    data[1] = 0xB0; // 0b10110000
-    data[2] = 0xB0; // 0b10110000
+    data[1] = 0xB8; // 0b10111000
+    data[2] = 0xB8; // 0b10111000
 
     // On va récupérer les données
     ret = OS_spi_write_read(OS_SPI_DEVICE_0, data, l);
@@ -132,6 +138,9 @@ int TEMP::temp_retrieve_data(void)
 
         // Envoi des données à FAN via socket
     }
-
+    
+    // Désactivation de la pin connectée au thermistor
+    //OS_write_gpio(TEMP_PIN_OUT, 0);
+    
     return ret;
 }
