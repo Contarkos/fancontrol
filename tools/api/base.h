@@ -1,6 +1,8 @@
 #pragma once
 
 // Définition de types
+typedef char t_int8;
+typedef unsigned char t_uint8;
 typedef short t_int16;
 typedef unsigned short t_uint16;
 typedef int t_int32;

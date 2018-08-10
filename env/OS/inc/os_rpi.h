@@ -30,7 +30,7 @@
 #define GPIO_READ_REGISTER       *( os_periph_gpio.addr + 13 )
 #define GPIO_READ(g)             ( (int) (GPIO_READ_REGISTER & (t_uint32) (1 << (g))) >> (g) )
 
-#define GPIO_MAX_NB             25U
+#define GPIO_MAX_NB             27U
 
 // Macros de base PWM pour modifier les paramètres
 #define PWM_CTL_OFFSET          0U

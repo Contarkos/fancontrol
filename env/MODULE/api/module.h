@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 // Macro
 
 // Define variables

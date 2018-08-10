@@ -111,8 +111,6 @@ int OS_spi_open_port (t_os_spi_device spi_device)
     return(status_value);
 }
 
-
-
 /************************************/
 /*          SPI CLOSE PORT          */
 /************************************/
@@ -125,11 +123,9 @@ int OS_spi_close_port (t_os_spi_device spi_device)
     {
         case OS_SPI_DEVICE_0:
             spi_cs_fd = &spi_cs0_fd;
-            *spi_cs_fd = open("/dev/spidev0.0", O_RDWR);
             break;
         case OS_SPI_DEVICE_1:
             spi_cs_fd = &spi_cs1_fd;
-            *spi_cs_fd = open("/dev/spidev0.1", O_RDWR);
             break;
         default:
             printf("[ER] OS : device SPI inexistant\n");

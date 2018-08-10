@@ -2,10 +2,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <mutex>
+#include <math.h>
 
 // Includes locaux
 #include "base.h"
 #include "os.h"
+#include "com.h"
 #include "module.h"
 #include "temp_class.h"
 
@@ -37,8 +39,8 @@ int TEMP::start_module()
     else
     {
         // Configuration du GPIO
-        //ret += OS_set_gpio(TEMP_PIN_OUT, OS_GPIO_FUNC_IN);
-        
+        ret += OS_set_gpio(TEMP_PIN_OUT, OS_GPIO_FUNC_IN);
+
         // Configuration du module SPI
         ret = OS_spi_open_port(OS_SPI_DEVICE_0);
 
@@ -62,7 +64,14 @@ int TEMP::stop_module()
 {
     int ret = 0;
 
+    // Arret du timer
     ret = OS_stop_timer(this->timer_fd);
+
+    // Fermeture de la socket
+    // ret += COM_socket_close(this->socket_fd);
+
+    // Fermeture du device SPI
+    ret += OS_spi_close_port(OS_SPI_DEVICE_0);
 
     return ret;
 }
@@ -94,53 +103,4 @@ int TEMP::exec_loop()
     return ret;
 }
 
-void TEMP::temp_timer_handler(size_t i_timer_id, void * i_data)
-{
-    TEMP *p_this = reinterpret_cast<TEMP *> (i_data);
 
-    if (p_this && (p_this->timer_fd == i_timer_id))
-    {
-        p_this->temp_retrieve_data();
-    }
-}
-
-int TEMP::temp_retrieve_data(void)
-{
-    int ret = 0, ii;
-    const int l = 3;
-    unsigned char data[l];
-
-    // Blablabla
-    printf("[IS] TEMP : timer activé !\n");
-    
-    // Activation de la pin connectée au thermistor
-    //OS_write_gpio(TEMP_PIN_OUT, 1);
-
-    // Mise en forme du buffer pour lire le registre de comparaison
-    data[0] = 0x00; // 0b00000000
-    data[1] = 0xB8; // 0b10111000
-    data[2] = 0xB8; // 0b10111000
-
-    // On va récupérer les données
-    ret = OS_spi_write_read(OS_SPI_DEVICE_0, data, l);
-
-    if (ret < 0)
-    {
-        printf("[ER] TEMP : pas de données disponibles...\n");
-    }
-    else
-    {
-        // Affichage
-        for (ii = 0; ii < l; ii++)
-        {
-            printf("[IS] TEMP : octet %d = %d\n", ii, data[ii]);
-        }
-
-        // Envoi des données à FAN via socket
-    }
-    
-    // Désactivation de la pin connectée au thermistor
-    //OS_write_gpio(TEMP_PIN_OUT, 0);
-    
-    return ret;
-}

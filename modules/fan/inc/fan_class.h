@@ -11,6 +11,10 @@
 
 class FAN : public MODULE
 {
+    public:
+        FAN(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m);
+        ~FAN();
+
     private:
         size_t timer_fd;
         fan_e_mode current_mode;
@@ -18,17 +22,19 @@ class FAN : public MODULE
         int consigne_temp;
         int current_temp;
 
-    public:
-        FAN(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m);
-        ~FAN();
-
+        /***********************************************/
+        /*             Methodes virtuelles             */
+        /***********************************************/
         int start_module(void);
         int stop_module(void);
 
+        int exec_loop(void);
+
+        /***********************************************/
+        /*             Methodes spécifiques            */
+        /***********************************************/
         void fan_setSpeed(int s);
         int fan_getSpeed(void) { return consigne_speed; }
-
-        int exec_loop(void);
 
         // Algorithme de décision pour le dutycycle
         static void fan_timer_handler(size_t i_timer_id, void * i_data);
