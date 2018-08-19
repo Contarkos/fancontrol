@@ -14,7 +14,7 @@
 struct bcm2835_peripheral os_periph_clock = {CLOCK_BASE, 0, NULL, NULL};
 
 // Init des variables d'environnement
-os_ret_okko is_init_clock = OS_RET_KO;
+t_os_ret_okko is_init_clock = OS_RET_KO;
 
 // Init source clock
 t_os_clock_source os_clock_source = OS_CLOCK_SRC_PLLC;

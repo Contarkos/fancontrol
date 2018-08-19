@@ -4,11 +4,7 @@
 include ./tools/libs.mk
 
 # Variables d'environnement
-CROSS_COMPILE = /opt/arm-bcm2708/arm-linux-gnueabihf/bin/arm-linux-gnueabihf-
-ARCH = arm
 PARALLEL= -j6
-LIB_ROOTFS = /opt/arm-bcm2708/arm-linux-gnueabihf/lib
-BIN_ROOTFS = /opt/arm-bcm2708/arm-linux-gnueabihf/include
 
 BIN = sw_local.bin
 
@@ -24,10 +20,7 @@ export SUBDIRS_ENV
 export SUBDIRS_MOD
 export SUBDIR_DATA
 
-export LIB_ROOTFS
-export BIN_ROOTFS
-
-# Mode de compilation
+# Modes de compilation
 all: main
 	@echo "###################################"
 	@echo "Copie des fichiers dans le serveur TFTP..."
@@ -42,22 +35,22 @@ all: main
 clean:
 	@echo "Cleaning env..."
 	@for directory in ${SUBDIRS_ENV} ; do \
-		$(MAKE) $(PARALLEL) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $$directory -f module.mk clean ; \
+		$(MAKE) $(PARALLEL) -C $$directory -f module.mk clean ; \
 	done
 	@echo "Cleaning modules...."
 	@for directory in ${SUBDIRS_MOD} ; do \
-		$(MAKE) $(PARALLEL) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $$directory -f module.mk clean ; \
+		$(MAKE) $(PARALLEL) -C $$directory -f module.mk clean ; \
 	done
 	@$(MAKE) $(PARALLEL) -C $(SUBDIR_MAIN) -f module.mk clean
 
 distclean: clean
 	@echo "Cleaning env..."
 	@for directory in ${SUBDIRS_ENV} ; do \
-		$(MAKE) $(PARALLEL) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $$directory -f module.mk libclean ; \
+		$(MAKE) $(PARALLEL) -C $$directory -f module.mk libclean ; \
 	done
 	@echo "Cleaning modules...."
 	@for directory in ${SUBDIRS_MOD} ; do \
-		$(MAKE) $(PARALLEL) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $$directory -f module.mk libclean ; \
+		$(MAKE) $(PARALLEL) -C $$directory -f module.mk libclean ; \
 	done
 	$(MAKE) $(PARALLEL) -C $(SUBDIR_MAIN) -f module.mk distclean
 
@@ -67,7 +60,7 @@ env:
 	      "Compiling environment...\n" \
 	      "-----------------------------------\n"
 	@for directory in ${SUBDIRS_ENV} ; do \
-		$(MAKE) $(PARALLEL) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $$directory -f module.mk ; \
+		$(MAKE) $(PARALLEL) -C $$directory -f module.mk ; \
 	done
 
 # Compilation des modules utilisateur
@@ -76,7 +69,7 @@ modules:
 	      "Compiling modules...\n" \
 	      "-----------------------------------\n"
 	@for directory in ${SUBDIRS_MOD} ; do \
-		$(MAKE) $(PARALLEL) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $$directory -f module.mk ; \
+		$(MAKE) $(PARALLEL) -C $$directory -f module.mk ; \
 	done
 
 # Compilation du main puis executable
@@ -84,10 +77,10 @@ main: env modules
 	@echo "###################################"
 	@echo "Linking..."
 	@echo "-----------------------------------\n"
-	$(MAKE) $(PARALLEL) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(SUBDIR_MAIN) -f module.mk bin
+	$(MAKE) $(PARALLEL) -C $(SUBDIR_MAIN) -f module.mk bin
 
 print-%:
 	@echo $* = $($(*))
 
-.PHONY: all main modules env clean
+.PHONY: all main modules env clean distclean
 

@@ -24,6 +24,7 @@ MODULE::~MODULE()
     ;
 }
 
+// Fonction principale du thread du module
 void* MODULE::init_module(void* p_this)
 {
     int ret = 0;
@@ -33,23 +34,27 @@ void* MODULE::init_module(void* p_this)
     {
         MODULE * p_module = reinterpret_cast<MODULE *> (p_this);
 
-        ret = p_module->init_and_wait();
+        // Lancement des démarrages spécifiques et de la boucle
+        ret = p_module->wait_and_loop();
 
         if (ret != 0)
         {
-            printf("[ER] MODULE : erreur dans l'init_and_wait\n");
+            printf("[ER] MODULE : erreur dans le wait_and_loop, ret = %d\n", ret);
+
+            // Arret du module proprement
+            p_module->stop_and_exit();
         }
     }
     else
     {
+        printf("[ER] MODULE : pas de pointeur vers l'instance\n");
         ret = -1;
     }
 
     return (void *) NULL;
 }
 
-
-int MODULE::init_and_wait(void)
+int MODULE::wait_and_loop(void)
 {
     int ret = 0;
 
@@ -59,12 +64,15 @@ int MODULE::init_and_wait(void)
         // Demande de blocage du thread pour attendre que MAIN rende la main
         this->m_init->lock();
 
-        this->isRunning = true;
+        // Initialisation d'objets spécifiques (ex : connexion aux sockets)
+        ret = this->init_after_wait();
 
         // Démarrage de la boucle
+        this->isRunning = true;
+
         while (isRunning)
         {
-            if (0 != exec_loop())
+            if (0 > this->exec_loop())
             {
                 printf("[ER] %s : Erreur de boucle. Arrêt en cours pour le thread\n", this->name);
                 this->isRunning = false;
@@ -81,6 +89,33 @@ int MODULE::init_and_wait(void)
     }
 
     return ret;
+}
+
+void* MODULE::exit_module(void* p_this)
+{
+    int ret = 0;
+
+    // On caste l'argument si il existe
+    if (p_this)
+    {
+        MODULE * p_module = reinterpret_cast<MODULE *> (p_this);
+
+        // Arret du module
+        ret = p_module->stop_and_exit();
+
+        if (ret != 0)
+        {
+            printf("[ER] MODULE : erreur dans le stop_and_exit, ret = %d\n", ret);
+        }
+
+    }
+    else
+    {
+        printf("[ER] MODULE : pas de pointeur vers l'instance\n");
+        ret = -1;
+    }
+
+    return (void *) NULL;
 }
 
 int MODULE::stop_and_exit(void)

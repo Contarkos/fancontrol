@@ -28,13 +28,39 @@ void main_sigint_handler(int signum)
             // Arret de MAIN
             main_is_running = 0;
         }
+
+        exit(ret);
     }
     else
     {
         ;
     }
+}
 
-    exit(ret);
+void main_sigkill_handler(int signum)
+{
+    int ret = 0;
+
+    if (SIGKILL == signum)
+    {
+        ret = main_stop_factory();
+
+        if (0 != ret)
+        {
+            printf("[ER] MAIN : Erreur à l'arrêt des modules sur SIGKILL\n");
+        }
+        else
+        {
+            // Arret de MAIN
+            main_is_running = 0;
+        }
+
+        exit(ret);
+    }
+    else
+    {
+        ;
+    }
 }
 
 int main_add_handlers(void)
@@ -46,6 +72,9 @@ int main_add_handlers(void)
 
     // Gestion du <C-c>
     signal(SIGINT, &main_sigint_handler);
+
+    // Gestion du kill
+    signal(SIGKILL, &main_sigkill_handler);
 
     return ret;
 }

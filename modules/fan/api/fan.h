@@ -3,6 +3,7 @@
 // Defines
 #define NB_INSTANCES_FAN        1
 #define FAN_MAX_SPEED           1350
+#define FAN_SOCKET_NAME         "/tmp/fan_socket"
 
 // Types
 typedef enum

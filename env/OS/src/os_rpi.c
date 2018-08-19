@@ -11,7 +11,7 @@
 struct bcm2835_peripheral os_periph_gpio = {GPIO_BASE, 0, NULL, NULL};
 
 // Init des variables d'environnement
-os_ret_okko is_init_gpio = OS_RET_KO;
+t_os_ret_okko is_init_gpio = OS_RET_KO;
 
 /*********************************************************************/
 /*                         Fonctions API                             */
@@ -44,10 +44,6 @@ int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout)
             case OS_GPIO_FUNC_ALT5:
                 {
                     SET_GPIO_ALT(i_pin, i_inout);
-                    printf("[IS] OS : valeur de la fonction pour %d = %x, valeur : %x\n",
-                           i_pin,
-                           *(os_periph_gpio.addr + ((i_pin)/10) ),
-                           (((i_inout)<=3?(i_inout) + 4:(i_inout)==4?3:2)<<(((i_pin)%10)*3)));
                 }
                 break;
             default:

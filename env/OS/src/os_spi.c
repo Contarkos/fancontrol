@@ -17,6 +17,7 @@ unsigned char spi_mode;
 unsigned char spi_bitsPerWord;
 unsigned int spi_speed;
 
+t_os_ret_okko is_init_spi = OS_RET_KO;
 
 /***********************************/
 /*          SPI OPEN PORT          */
@@ -138,7 +139,7 @@ int OS_spi_close_port (t_os_spi_device spi_device)
 
         if(status_value < 0)
         {
-            perror("[ER] OS : Could not close SPI device");
+            printf("[ER] OS : Could not close SPI device");
         }
     }
 

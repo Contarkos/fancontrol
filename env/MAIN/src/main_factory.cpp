@@ -10,6 +10,7 @@
 #include "fan.h"
 #include "temp.h"
 #include "cmd.h"
+#include "com.h"
 
 // Variables globales
 std::mutex t_mutex[NB_MODULE];
@@ -27,11 +28,10 @@ int main_start_factory()
     ret = 0;
 
     // Init des librairies
-    ret_temp = OS_init();
+    ret_temp = main_init();
 
     if (0 != ret_temp)
     {
-        printf("[ER] MAIN : erreur à l'init de l'OS, code : %d\n", ret_temp);
         ret = 1;
     }
     else
@@ -68,6 +68,26 @@ int main_start_factory()
     return ret;
 }
 
+int main_init(void)
+{
+    int ret = 0;
+
+    // Init de l'OS
+    ret = OS_init();
+
+    // Init de COM
+    if (ret != 0)
+    {
+        printf("[ER] MAIN : erreur à l'init de l'OS, code : %d\n", ret);
+    }
+    else
+    {
+        ret = COM_init();
+    }
+
+    return ret;
+}
+
 int main_stop_factory()
 {
     int ret = 0, ii;
@@ -90,7 +110,21 @@ int main_stop_factory()
 
     // Arret des éléments du système
     printf("[IS] MAIN : Arret des modules systemes\n");
+    ret += main_stop();
+
+    return ret;
+}
+
+int main_stop(void)
+{
+    int ret = 0;
+
+    // Arret de la COM exterieure
+    ret += COM_stop();
+
+    // Arret de l'OS
     ret += OS_stop();
 
     return ret;
 }
+

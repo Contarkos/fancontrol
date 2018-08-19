@@ -51,7 +51,7 @@ int TEMP_stop(void)
     for (ii = 0; ii < NB_INSTANCES_TEMP; ii++)
     {
         // On coupe l'execution
-        instances_temp[ii]->stop_and_exit();
+        MODULE::exit_module(instances_temp[ii]);
 
         // On réattache le thread pour éviter les zombies
         OS_joint_thread(instances_temp[ii]->MOD_getThread(), NULL);

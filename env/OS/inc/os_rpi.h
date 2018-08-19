@@ -74,7 +74,7 @@
 #define CLOCK_SRC_SHIFT         0U
 #define CLOCK_ENAB_MASK         ((t_uint32) 0x00000010)
 #define CLOCK_ENAB_SHIFT        4U
-#define CLOCK_BUSY_MASK         ((volatile t_uint32) 0x00000080)
+#define CLOCK_BUSY_MASK         ((v_uint32) 0x00000080)
 #define CLOCK_BUSY_SHIFT        5U
 
 #define CLOCK_DIVF_MASK         ((t_uint32) 0x00000FFF)
@@ -107,10 +107,10 @@ extern struct bcm2835_peripheral os_periph_clock;
 extern struct bcm2835_peripheral os_periph_spi;
 
 // Variables d'initialisation
-extern os_ret_okko is_init_gpio;
-extern os_ret_okko is_init_pwm;
-extern os_ret_okko is_init_clock;
-extern os_ret_okko is_init_spi;
+extern t_os_ret_okko is_init_gpio;
+extern t_os_ret_okko is_init_pwm;
+extern t_os_ret_okko is_init_clock;
+extern t_os_ret_okko is_init_spi;
 
 // Variables globales
 extern t_os_clock_source os_clock_source;

@@ -9,7 +9,7 @@
 #include "fan.h"
 #include "fan_class.h"
 
-void FAN::fan_timer_handler(size_t i_timer_id, void * i_data)
+void FAN::fan_timer_handler(int i_timer_id, void * i_data)
 {
     FAN *p_this = reinterpret_cast<FAN *> (i_data);
 
@@ -21,24 +21,46 @@ void FAN::fan_timer_handler(size_t i_timer_id, void * i_data)
 
 int FAN::fan_compute_duty(void)
 {
-    int ret = 0;
+    int ret = 0, t;
     float duty = 0;
+    static bool hysteresis = true;
 
     switch (current_mode)
     {
         case FAN_MODE_AUTO:
             {
-                // Recupération de la température extérieure ?
+                // Selection de la température de référence
+                t = room_temp;
 
                 // Puis asservissement en température
-                duty = 100.0F;
+                duty = ((float) ( current_temp - t ) * OS_MAX_PERCENT_PWM) / FAN_ECART_MAX_TEMP;
             }
             break;
         case FAN_MODE_TEMP:
             break;
             {
+                // Gestion de l'hysteresis
+                if (hysteresis)
+                {
+                    t = consigne_temp - 1;
+
+                    if ( abs(t - current_temp) < FAN_PWM_ECART )
+                    {
+                        hysteresis = false;
+                    }
+                }
+                else
+                {
+                    t = consigne_temp + 1;
+
+                    if ( current_temp > t )
+                    {
+                        hysteresis = true;
+                    }
+                }
+
                 // Calcul ecart de température
-                duty = 50.0F;
+                duty = ((float) ( current_temp - t ) * OS_MAX_PERCENT_PWM) / FAN_ECART_MAX_TEMP;
             }
         case FAN_MODE_RPM:
             break;
@@ -63,6 +85,9 @@ int FAN::fan_compute_duty(void)
     // En cas d'erreur
     if (ret >= 0)
     {
+        // Borne du dutycycle
+        duty = BASE_BORNE(duty, OS_MIN_PERCENT_PWM, OS_MAX_PERCENT_PWM);
+
         OS_pwm_set_dutycycle(duty);
     }
 

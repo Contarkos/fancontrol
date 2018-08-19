@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 typedef void * (*loop_func) (void *);
-typedef void   (*timer_func)(size_t i_timer_id, void * i_data);
+typedef void   (*timer_func)(int i_timer_id, void * i_data);
 
 typedef struct
 {
@@ -21,7 +21,13 @@ typedef enum
 {
     OS_RET_KO = 0,
     OS_RET_OK = 1
-} os_ret_okko;
+} t_os_ret_okko;
+
+typedef enum
+{
+    OS_STATE_OFF = 0,
+    OS_STATE_ON = 1
+} t_os_state;
 
 // Fonction pour les GPIO
 typedef enum e_os_gpio_func
@@ -129,7 +135,7 @@ int OS_spi_set_bits_per_word(t_os_spi_device i_device, t_os_spi_bpw i_bpw);
 int OS_spi_set_max_speed(t_os_spi_device i_device, t_os_spi_bpw i_bpw);
 
 // Pour PWM
-int OS_pwn_enable(os_ret_okko i_enable);
+int OS_pwn_enable(t_os_state i_enable);
 int OS_pwm_set_clock_source(t_os_clock_source i_source);
 int OS_pwm_set_frequency(t_uint32 i_freq);
 int OS_pwm_set_dutycycle(float i_duty);

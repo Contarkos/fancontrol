@@ -1,11 +1,15 @@
 // Includes globaux
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <mutex>
+#include <poll.h>
 
 // Includes locaux
 #include "base.h"
 #include "os.h"
+#include "com.h"
 #include "module.h"
 #include "fan.h"
 #include "fan_class.h"
@@ -13,7 +17,13 @@
 /* Définition des constructeurs */
 FAN::FAN(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m) : MODULE(mod_name, m)
 {
-    ;
+    int ii;
+
+    for (ii = 0; ii < FAN_FD_NB; ii++)
+    {
+        this->p_fd[ii].fd = -1;
+        this->p_fd[ii].events = POLLIN;
+    }
 }
 
 FAN::~FAN()
@@ -24,11 +34,12 @@ FAN::~FAN()
 int FAN::start_module()
 {
     int ret = 0;
+    char s[] = FAN_SOCKET_NAME;
 
     printf("[IS] FAN : Démarrage de la classe du module\n");
 
     // Démarrage du timer pour la boucle
-    this->timer_fd += OS_create_timer(FAN_TIMER_USEC, &FAN::fan_timer_handler, OS_TIMER_PERIODIC, (void *) this);
+    this->timer_fd = OS_create_timer(FAN_TIMER_USEC, &FAN::fan_timer_handler, OS_TIMER_PERIODIC, (void *) this);
 
     if (0 == this->timer_fd)
     {
@@ -59,7 +70,7 @@ int FAN::start_module()
         ret += OS_pwm_set_dutycycle(FAN_DEFAULT_CYCLE);
 
         // Activation...
-        ret += OS_pwn_enable(OS_RET_OK);
+        ret += OS_pwn_enable(OS_STATE_ON);
 
         if (ret >= 0)
         {
@@ -71,8 +82,22 @@ int FAN::start_module()
             //ret = OS_start_timer(this->timer_fd);
 
             // Ouverture socket UNIX
+            this->socket_fd = COM_create_socket(AF_UNIX, SOCK_STREAM, 0, s);
+
+            if (this->socket_fd >= 0)
+            {
+                this->p_fd[FAN_FD_SOCKET].fd = this->socket_fd;
+            }
         }
     }
+
+    return ret;
+}
+
+// Initialisation après l'init de tous les modules
+int FAN::init_after_wait(void)
+{
+    int ret = 0;
 
     return ret;
 }
@@ -82,24 +107,53 @@ int FAN::stop_module()
 {
     int ret = 0;
 
+    // Arret du timer
+    ret = OS_stop_timer(this->timer_fd);
+
+    // Fermeture de la socket
+    ret = COM_close_socket(this->socket_fd);
+
     return ret;
 }
 
 int FAN::exec_loop()
 {
-    int ret = 0;
+    int ret = 0, read_fd = 0, ii, ss;
     static int n = 0;
     static int is_onoff = 0;
     const int max = 100;
+    t_com_msg m;
 
-#if 0
-    // Allumage de la diode
-    ret = OS_write_gpio(FAN_PIN_OUT, is_onoff);
+#if 1
+    // Ecoute sur les fd
+    read_fd = poll(this->p_fd, FAN_FD_NB, FAN_POLL_TIMEOUT);
 
-    printf("FAN : écriture dans la pin %d = %d, result = %d\n", FAN_PIN_OUT, is_onoff, ret);
+    // Test de non timeout
+    if (read_fd <= 0)
+    {
+        // Timeout expiré
+        ret = 1;
+    }
+    else
+    {
+        for (ii = 0; ii < FAN_FD_NB; ii++)
+        {
+            if (this->p_fd[ii].revents & this->p_fd[ii].events)
+            {
+                ss = read(this->p_fd[ii].fd, &m, sizeof(t_com_msg)); // traitement
 
-    // Sleep pour ne pas aller trop vite
-    usleep(5000000);
+                if (sizeof(t_com_msg) != ss)
+                {
+                    printf("[WG] FAN : mauvaise taille de message pour fd %d\n", ii);
+                    ret = -1;
+                }
+                else
+                {
+                    ret = fan_treat_msg(m);
+                }
+            }
+        }
+    }
 #else
     if (is_onoff)
     {

@@ -6,11 +6,15 @@
 #include "os.h"
 #include "os_rpi.h"
 
+/*********************************************************************/
+/*                       Variables globales                          */
+/*********************************************************************/
+
 // Initialisation de la zone mémoire PWM
 struct bcm2835_peripheral os_periph_pwm = {PWM_BASE, 0, NULL, NULL};
 
 // Init des variables d'environnement
-os_ret_okko is_init_pwm = OS_RET_KO;
+t_os_ret_okko is_init_pwm = OS_RET_KO;
 
 // Variables statiques
 static t_uint32 os_pwm_freq = 25000;
@@ -18,18 +22,22 @@ static float os_pwm_duty = 0.0F;
 static t_uint32 os_pwm_prec = 255;
 static t_os_clock_source os_pwm_source = OS_CLOCK_SRC_PLLC;
 
+/*********************************************************************/
+/*                         Fonctions API                             */
+/*********************************************************************/
+
 // Activation du PWM
-int OS_pwn_enable(os_ret_okko i_enable)
+int OS_pwn_enable(t_os_state i_enable)
 {
     int ret = 0;
 
     switch (i_enable)
     {
-        case OS_RET_OK:
+        case OS_STATE_ON:
             // Activation sans configuration du PWM1
             PWM_CTL_REGISTER |= PWM_CTL_PWEN1_MASK;
             break;
-        case OS_RET_KO:
+        case OS_STATE_OFF:
             // Désactivation du PWM
             PWM_CTL_REGISTER &= PWM_CTL_PWEN1_MASK;
             break;
@@ -135,7 +143,12 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
     return ret;
 }
 
-// Reglage de la valeur du pourcentage de temps où le signal est haut.
+/*
+ * Reglage de la valeur du pourcentage de temps pendant lequel le signal est haut.
+ *
+ * Ce réglage dépend de la fréquence des données et doit être mis à jour quand cette
+ * dernière est modifiée
+ */
 int OS_pwm_set_dutycycle(float i_duty)
 {
     int ret = 0;
@@ -160,7 +173,7 @@ int OS_pwm_set_dutycycle(float i_duty)
 }
 
 /*
- * Réglage de la précision utilisée pour envoyer les données.
+ * Réglage de la précision (range) utilisée pour envoyer les données.
  *
  * Correspond au nombre total de bits envoyés par période (les 0 et les 1)
  */
@@ -183,11 +196,29 @@ int OS_pwm_set_precision(t_uint32 i_prec)
 
         // Reconfiguration de la frequence de la clock
         ret = OS_pwm_set_frequency(os_pwm_freq);
+
+        if (0 != ret)
+        {
+            printf("[ER] OS : Erreur recalibration de la fréquence\n");
+        }
+        else
+        {
+            // Reconfiguration du dutycycle
+            ret = OS_pwm_set_dutycycle(os_pwm_duty);
+        }
     }
 
     return ret;
 }
 
+/*
+ * Régalge du mode de répartition des 0 et des 1 sur la période :
+ *
+ * MS mode : S (range) bits envoyés/période, M (data) bits à 1, le reste à 0
+ *
+ * PWM mode : les bits à 1 (data) sont répartis équitablement sur les bits de
+ * période (range)
+ */
 int OS_pwm_set_mode(os_pwm_mode i_mode)
 {
     int ret = 0;
@@ -208,6 +239,10 @@ int OS_pwm_set_mode(os_pwm_mode i_mode)
 
     return ret;
 }
+
+/*********************************************************************/
+/*                       Fonctions locales                           */
+/*********************************************************************/
 
 int os_init_pwm(void)
 {

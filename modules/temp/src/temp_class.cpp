@@ -1,4 +1,6 @@
 // Includes globaux
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <mutex>
@@ -10,6 +12,7 @@
 #include "com.h"
 #include "module.h"
 #include "temp_class.h"
+#include "fan.h"
 
 /* Définition des constructeurs */
 TEMP::TEMP(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m) : MODULE(mod_name, m)
@@ -53,8 +56,24 @@ int TEMP::start_module()
         {
             // Démarrage du timer pour looper
             ret = OS_start_timer(this->timer_fd);
+
+            if (ret < 0)
+            {
+                printf("[ER] TEMP : erreur démarrage timer, ret = %d\n", ret);
+            }
         }
     }
+
+    return ret;
+}
+
+int TEMP::init_after_wait(void)
+{
+    int ret = 0;
+    char s[] = FAN_SOCKET_NAME;
+
+    // Connexion a la socket de FAN
+    ret = COM_connect_socket(AF_UNIX, SOCK_STREAM, s, &(this->socket_fd));
 
     return ret;
 }
@@ -78,10 +97,40 @@ int TEMP::stop_module()
 
 int TEMP::exec_loop()
 {
-    int ret = 0;
-    static int n = 0;
-    const int max = 1000;
+    int ret = 0, read_fd = 0, ii, ss;
+    t_com_msg m;
 
+#if 1
+    // Lecture des sockets
+    read_fd = poll(this->p_fd, TEMP_FD_NB, TEMP_POLL_TIMEOUT);
+
+    // Test de non timeout
+    if (read_fd <= 0)
+    {
+        // Timeout expiré
+        ret = 1;
+    }
+    else
+    {
+        for (ii = 0; ii < TEMP_FD_NB; ii++)
+        {
+            if (this->p_fd[ii].revents & this->p_fd[ii].events)
+            {
+                ss = read(this->p_fd[ii].fd, &m, sizeof(t_com_msg)); // traitement
+
+                if (sizeof(t_com_msg) != ss)
+                {
+                    printf("[WG] FAN : mauvaise taille de message pour fd %d\n", ii);
+                    ret = -1;
+                }
+                else
+                {
+                    ret = temp_treat_msg(m);
+                }
+            }
+        }
+    }
+#else
     // Condition de sortie
     if (n > max)
     {
@@ -99,7 +148,7 @@ int TEMP::exec_loop()
     }
 
     OS_usleep(100000);
-
+#endif
     return ret;
 }
 

@@ -1,13 +1,29 @@
 #pragma once
 
+// Includes globaux
+#include <poll.h>
+
+// Includes locaux
+#include "com.h"
+#include "temp.h"
+
 #define FAN_MODULE_NAME         "FAN"
 #define FAN_PIN_OUT             (18)
 #define FAN_PIN_IN              (25)
 #define FAN_DEFAULT_PREC        (1024)
 #define FAN_DEFAULT_CYCLE       (0.0F)
 #define FAN_TIMER_USEC          (40000)
+#define FAN_POLL_TIMEOUT        100
 
 #define FAN_PWM_FREQ            (25000)
+#define FAN_PWM_ECART           (0.3F)
+#define FAN_ECART_MAX_TEMP      (10.0F)
+
+typedef enum
+{
+    FAN_FD_SOCKET = 0,
+    FAN_FD_NB = 1
+} t_fan_fd_index;
 
 class FAN : public MODULE
 {
@@ -16,11 +32,15 @@ class FAN : public MODULE
         ~FAN();
 
     private:
-        size_t timer_fd;
+        struct pollfd p_fd[FAN_FD_NB];
+        int timer_fd;
+        int socket_fd;
+
         fan_e_mode current_mode;
-        int consigne_speed;
-        int consigne_temp;
-        int current_temp;
+        int consigne_speed;     // Consigne de vitesse
+        int consigne_temp;      // Température consigne à atteindre
+        int current_temp;       // Température de l'élément à refroidir
+        int room_temp;          // Température de la pièce
 
         /***********************************************/
         /*             Methodes virtuelles             */
@@ -28,6 +48,7 @@ class FAN : public MODULE
         int start_module(void);
         int stop_module(void);
 
+        int init_after_wait(void);
         int exec_loop(void);
 
         /***********************************************/
@@ -37,7 +58,11 @@ class FAN : public MODULE
         int fan_getSpeed(void) { return consigne_speed; }
 
         // Algorithme de décision pour le dutycycle
-        static void fan_timer_handler(size_t i_timer_id, void * i_data);
+        static void fan_timer_handler(int i_timer_id, void * i_data);
         int fan_compute_duty(void);
+
+        // Recuperation des données
+        int fan_treat_msg(t_com_msg i_msg);
+        int fan_update_data(t_temp_data *i_data);
 };
 

@@ -1,4 +1,10 @@
 # Makefile générique pour les modules
+CROSS_COMPILE = /opt/arm-bcm2708/arm-linux-gnueabihf/bin/arm-linux-gnueabihf-
+ARCH = arm
+DEBUG = -g
+LIB_ROOTFS = /opt/arm-bcm2708/arm-linux-gnueabihf/lib
+BIN_ROOTFS = /opt/arm-bcm2708/arm-linux-gnueabihf/include
+
 INCLUDES = \
 	-Iinc \
 	-Iapi
@@ -46,9 +52,11 @@ SRC_DIR = src
 BIN_DIR = bin
 
 # On compile une librairie statique
-all: $(LIB)
-
+all: lib
+	
 bin: $(BIN)
+
+lib: $(LIB)
 
 obj_dir:
 	@mkdir -p $(OBJ_DIR)
@@ -69,11 +77,11 @@ $(BIN): $(OBJ_C) $(OBJ_CXX) | bin_dir
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@echo "cc -c $^ -o $@"
-	@$(CROSS_COMPILE)$(CC) $(INCLUDES) $(C_FLAGS) -g -c $^ -o $@
+	@$(CROSS_COMPILE)$(CC) $(INCLUDES) $(C_FLAGS) $(DEBUG) -c $^ -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@echo "cxx -c $^ -o $@"
-	@$(CROSS_COMPILE)$(CXX) $(INCLUDES) $(CPLUS_FLAGS) -g -c $^ -o $@
+	@$(CROSS_COMPILE)$(CXX) $(INCLUDES) $(CPLUS_FLAGS) $(DEBUG) -c $^ -o $@
 
 $(LIB): $(OBJ_C) $(OBJ_CXX) | lib_dir
 	@echo "Creating $(LIB)..."
@@ -90,3 +98,5 @@ libclean: clean
 distclean: clean
 	$(RM) $(BIN_DIR)/$(BIN)
 	@$(RM) $(BIN_DIR)
+
+.PHONY: all lib bin obj_dir lib_dir bin_dir clean libclean distclean

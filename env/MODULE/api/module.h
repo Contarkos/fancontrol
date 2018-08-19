@@ -18,21 +18,24 @@ class MODULE {
 
         void set_running(bool isRunning);
 
-    public:
-        MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m);
-        virtual ~MODULE();
-
         // Fonction de démarrage spécifique au module
         virtual int start_module(void) = 0;
         virtual int stop_module(void) = 0;
 
-        // Init utilisé par MAIN pour que chaque module attende son tour.
-        static void* init_module(void* p_this);
+        virtual int init_after_wait(void) = 0;
+        virtual int exec_loop(void) = 0;
 
-        int init_and_wait(void);
+        // Démarrage et arret du module
+        int wait_and_loop(void);
         int stop_and_exit(void);
 
-        virtual int exec_loop(void) = 0;
+    public:
+        MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m);
+        virtual ~MODULE();
+
+        // Init utilisé par MAIN pour que chaque module attende son tour.
+        static void* init_module(void* p_this);
+        static void* exit_module(void* p_this);
 
         bool is_running(void);
 

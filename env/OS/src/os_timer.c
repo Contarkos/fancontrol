@@ -80,6 +80,7 @@ size_t OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_
     return (size_t)n;
 }
 
+// L'ID est le file descriptor donc on peut caster directement la structure (bof)
 int OS_start_timer(size_t i_timer_id)
 {
     int ret = 0;
@@ -287,7 +288,10 @@ static void * os_timer_thread(void * data)
                 tmp = _get_timer_from_fd(ufds[ii].fd);
 
                 // Pour ne pas lancer les callbacks qui n'existent plus
-                if(tmp && tmp->callback) tmp->callback((size_t)tmp, tmp->data);
+                if(tmp && tmp->callback) 
+                {
+                    tmp->callback(tmp->fd, tmp->data);
+                }
             }
         }
     }
