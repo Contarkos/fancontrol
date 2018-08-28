@@ -12,20 +12,28 @@
 #include "fan.h"
 #include "fan_class.h"
 
-int FAN::fan_treat_msg(t_com_msg i_msg)
+int FAN::fan_treat_msg(t_com_msg i_msg, int i_size)
 {
     int ret = 0;
 
-    switch (i_msg.id)
+    if (0 == i_size)
     {
-        case MAIN_SHUTDOWN:
-            ret = this->stop_and_exit();
-            break;
-        case TEMP_DATA:
-            ret = this->fan_update_data((t_temp_data *) i_msg.data);
-        default:
-            printf("[ER] FAN : mauvaise ID pour message, id = %d", i_msg.id);
-            ret = 1;
+        printf("[WG] FAN : mauvaise taille de message \n");
+        ret = -1;
+    }
+    else
+    {
+        switch (i_msg.id)
+        {
+            case MAIN_SHUTDOWN:
+                ret = this->stop_and_exit();
+                break;
+            case TEMP_DATA:
+                ret = this->fan_update_data((t_temp_data *) i_msg.data);
+            default:
+                printf("[ER] FAN : mauvaise ID pour message, id = %d", i_msg.id);
+                ret = 1;
+        }
     }
 
     return ret;

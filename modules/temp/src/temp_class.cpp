@@ -15,9 +15,15 @@
 #include "fan.h"
 
 /* Définition des constructeurs */
-TEMP::TEMP(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m) : MODULE(mod_name, m)
+TEMP::TEMP(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod) : MODULE(mod_name, m_main, m_mod)
 {
-    ;
+    int ii;
+
+    for (ii = 0; ii < TEMP_FD_NB; ii++)
+    {
+        this->p_fd[ii].fd = -1;
+        this->p_fd[ii].events = POLLIN;
+    }
 }
 
 TEMP::~TEMP()
@@ -32,7 +38,7 @@ int TEMP::start_module()
     printf("[IS] TEMP : Démarrage de la classe du module\n");
 
     // Démarrage du timer pour la boucle
-    this->timer_fd += OS_create_timer(TEMP_TIMER_USEC, &TEMP::temp_timer_handler, OS_TIMER_PERIODIC, (void *) this);
+    this->timer_fd = OS_create_timer(TEMP_TIMER_USEC, &TEMP::temp_timer_handler, OS_TIMER_PERIODIC, (void *) this);
 
     if (0 == this->timer_fd)
     {
@@ -41,11 +47,13 @@ int TEMP::start_module()
     }
     else
     {
+        printf("[IS] TEMP : timer_fd start = %x\n", timer_fd);
+
         // Configuration du GPIO
         ret += OS_set_gpio(TEMP_PIN_OUT, OS_GPIO_FUNC_IN);
 
         // Configuration du module SPI
-        ret = OS_spi_open_port(OS_SPI_DEVICE_0);
+        ret += OS_spi_open_port(OS_SPI_DEVICE_0);
 
         if ( ret < 0 )
         {
@@ -70,10 +78,17 @@ int TEMP::start_module()
 int TEMP::init_after_wait(void)
 {
     int ret = 0;
-    char s[] = FAN_SOCKET_NAME;
+
+    printf("[IS] TEMP : connexion en cours à la socket UNIX\n");
 
     // Connexion a la socket de FAN
-    ret = COM_connect_socket(AF_UNIX, SOCK_STREAM, s, &(this->socket_fd));
+    this->fan_fd = g_fan_socket;
+    //ret = COM_connect_socket(AF_UNIX, SOCK_STREAM, s, &(this->fan_fd));
+
+    if (0 == ret)
+    {
+        printf("[IS] TEMP : connexion à la socket UNIX OK, fd = %d\n", this->fan_fd);
+    }
 
     return ret;
 }
@@ -86,8 +101,11 @@ int TEMP::stop_module()
     // Arret du timer
     ret = OS_stop_timer(this->timer_fd);
 
-    // Fermeture de la socket
-    // ret += COM_socket_close(this->socket_fd);
+    // Fermeture de la socket d'écoute
+    ret += COM_close_socket(this->socket_fd);
+
+    // Fermeture de la socket d'écoute
+    ret += COM_close_socket(this->fan_fd);
 
     // Fermeture du device SPI
     ret += OS_spi_close_port(OS_SPI_DEVICE_0);
@@ -97,10 +115,12 @@ int TEMP::stop_module()
 
 int TEMP::exec_loop()
 {
-    int ret = 0, read_fd = 0, ii, ss;
-    t_com_msg m;
+    int ret = 0;
 
 #if 1
+    int read_fd = 0, ii, ss;
+    t_com_msg m;
+
     // Lecture des sockets
     read_fd = poll(this->p_fd, TEMP_FD_NB, TEMP_POLL_TIMEOUT);
 
@@ -131,6 +151,8 @@ int TEMP::exec_loop()
         }
     }
 #else
+    int n = 0, max= 1000;
+
     // Condition de sortie
     if (n > max)
     {

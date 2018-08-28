@@ -13,7 +13,8 @@
 #include "com.h"
 
 // Variables globales
-std::mutex t_mutex[NB_MODULE];
+std::mutex t_mod_mutex[NB_MODULE];
+std::mutex t_main_mutex[NB_MODULE];
 int main_is_running = 0;
 
 mod_type t_start[NB_MODULE] = {
@@ -40,9 +41,11 @@ int main_start_factory()
         for (ii = 0; ii < NB_MODULE; ii++)
         {
             // On bloque les mutex de tout le monde
-            t_mutex[ii].lock();
+            printf("[IS] MAIN : lock pour %d\n", ii);
+            t_mod_mutex[ii].lock();
+            t_main_mutex[ii].unlock();
 
-            ret_temp = t_start[ii].mod_start(&(t_mutex[ii]));
+            ret_temp = t_start[ii].mod_start(&(t_main_mutex[ii]), &(t_mod_mutex[ii]));
 
             if (0 != ret_temp)
             {
@@ -51,10 +54,18 @@ int main_start_factory()
             }
         }
 
+        // Attente du retour des threads du module
+        for (ii = 0; ii < NB_MODULE; ii++)
+        {
+            printf("[IS] MAIN : lock d'attente pour %d\n", ii);
+            t_main_mutex[ii].lock();
+        }
+
         // Tous les threads sont lancés on peut démarrer
         for (ii = 0; ii < NB_MODULE; ii++)
         {
-            t_mutex[ii].unlock();
+            printf("[IS] MAIN : unlock pour %d\n", ii);
+            t_mod_mutex[ii].unlock();
         }
 
         // C'est parti
@@ -105,7 +116,7 @@ int main_stop_factory()
     // On attend que tous les threads soient terminés
     for (ii = 0; ii < NB_MODULE; ii++)
     {
-        t_mutex[ii].lock();
+        t_mod_mutex[ii].lock();
     }
 
     // Arret des éléments du système

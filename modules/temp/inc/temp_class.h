@@ -29,13 +29,14 @@ typedef enum
 class TEMP : public MODULE
 {
     public:
-        TEMP(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m);
+        TEMP(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod);
         ~TEMP();
 
     private:
         struct pollfd p_fd[TEMP_FD_NB];
         int timer_fd = -1;
         int socket_fd = -1;
+        int fan_fd = -1;
         float fan_temp;
         bool fan_temp_valid;
         float room_temp;

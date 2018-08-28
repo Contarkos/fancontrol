@@ -19,7 +19,7 @@ TEMP* instances_temp[NB_INSTANCES_TEMP];
 /*                         Fonctions API                             */
 /*********************************************************************/
 
-int TEMP_start(std::mutex *m)
+int TEMP_start(std::mutex *m_main, std::mutex *m_mod)
 {
     int ret = 0;
     static int ii = 0;
@@ -27,7 +27,7 @@ int TEMP_start(std::mutex *m)
     if (ii < NB_INSTANCES_TEMP)
     {
         // Création de l'instance
-        instances_temp[ii] = new TEMP(TEMP_MODULE_NAME, m);
+        instances_temp[ii] = new TEMP(TEMP_MODULE_NAME, m_main, m_mod);
 
         // Creation du thread
         OS_create_thread(instances_temp[ii]->MOD_getThread(),(void *) instances_temp[ii]);

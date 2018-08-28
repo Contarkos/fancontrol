@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include <string.h>
+#include <errno.h>
 
 // Local includes
 #include "com.h"
@@ -29,6 +30,7 @@ int COM_create_socket(int i_family, int i_type, int i_proto, char *i_data)
 {
     int fd = 0, ret = 0;
 
+    // Creation de la socket
     fd = socket(i_family, i_type, i_proto);
 
     if (fd <= 0)
@@ -53,7 +55,7 @@ int COM_create_socket(int i_family, int i_type, int i_proto, char *i_data)
 
         if (ret != 0)
         {
-           printf("[ER] COM : erreur binding de la socket\n");
+           printf("[ER] COM : erreur binding de la socket, erreur = %d\n", errno);
            fd = -1;
         }
         else
@@ -98,6 +100,33 @@ int COM_connect_socket(int i_family, int i_type, char * i_data, int *o_fd)
     return ret;
 }
 
+int COM_socket_listen(int i_fd, int i_backlog)
+{
+    int ret = 0;
+
+    if ( -1 == i_fd )
+    {
+        printf("[ER] COM : mauvais fd pour socket sur listen\n");
+        ret = -2;
+    }
+    else if ( 0 >= i_backlog )
+    {
+        printf("[ER] COM : mauvaise valeur pour le backlog, bl = %d\n", i_backlog);
+        ret = -4;
+    }
+    else
+    {
+        ret = listen(i_fd, i_backlog);
+
+        if (-1 == ret)
+        {
+            printf("[ER] COM : erreur sur listen de la socket, errno = %d\n", errno);
+        }
+    }
+
+    return ret;
+}
+
 // Envoi d'un message avec l'ID définie dans com_msg.h
 int COM_send_data(int i_fd, t_uint32 i_id, void * i_data, size_t i_size, int i_flags)
 {
@@ -127,7 +156,44 @@ int COM_send_data(int i_fd, t_uint32 i_id, void * i_data, size_t i_size, int i_f
 
         if (ret < 0)
         {
-            printf("[ER] COM : erreur d'envoi des données, ret = %d\n", ret);
+            printf("[ER] COM : erreur d'envoi des données, errno = %d\n", errno);
+        }
+    }
+
+    return ret;
+}
+
+// Reception d'un message au travers socket UDP
+int COM_receive_data(int i_sock, t_com_msg *o_m, int *o_size)
+{
+    int ret = 0;
+    char data[COM_MAX_SIZE_DATA];
+
+    if (i_sock < 0)
+    {
+        printf("[ER] COM : pas de socket pour reception de message\n");
+        ret = -1;
+    }
+    else if (!o_m)
+    {
+        printf("[ER] COM : pas de structure de message de sortie\n");
+        ret = -2;
+    }
+    else
+    {
+        ret = recv(i_sock, data, COM_MAX_SIZE_DATA, 0);
+
+        if (-1 == ret)
+        {
+           printf("[ER] COM : erreur à la recupération des données, errno = %d\n", errno);
+           ret = -4;
+        }
+        else
+        {
+            memcpy(o_m, data, COM_MAX_SIZE_DATA);
+            *o_size = ret;
+
+            ret = 0;
         }
     }
 
@@ -187,7 +253,7 @@ int com_bind_socket_unix(int fd, char *data)
     a.sun_family = AF_UNIX;
     strncpy(a.sun_path, data, COM_UNIX_PATH_MAX);
 
-    ret = bind(fd, (struct sockaddr *) &a, sizeof(struct sockaddr));
+    ret = bind(fd, (struct sockaddr *) &a, sizeof(a));
 
     return ret;
 }
@@ -202,7 +268,7 @@ int com_bind_socket_inet(int fd, char *data)
     a.sin_port = ((t_com_inet_data *)data)->port;
     a.sin_addr.s_addr = ((t_com_inet_data *)data)->addr;
 
-    ret = bind(fd, (struct sockaddr *) &a, sizeof(struct sockaddr));
+    ret = bind(fd, (struct sockaddr *) &a, sizeof(a));
 
     return ret;
 }
@@ -216,7 +282,9 @@ int com_connect_unix(int fd, char *data)
     a.sun_family = AF_UNIX;
     strncpy(a.sun_path, data, COM_UNIX_PATH_MAX);
 
-    ret = connect(fd, (struct sockaddr *) &a, sizeof(struct sockaddr));
+    printf("[IS] COM : nom de la socket = %s\n", a.sun_path);
+
+    ret = connect(fd, (struct sockaddr *) &a, sizeof(a));
 
     return ret;
 }
@@ -231,7 +299,7 @@ int com_connect_inet(int fd, char *data)
     a.sin_port = ((t_com_inet_data *)data)->port;
     a.sin_addr.s_addr = ((t_com_inet_data *)data)->addr;
 
-    ret = connect(fd, (struct sockaddr *) &a, sizeof(struct sockaddr));
+    ret = connect(fd, (struct sockaddr *) &a, sizeof(a));
 
     return ret;
 }

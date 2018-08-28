@@ -14,6 +14,7 @@ extern "C" {
 #define COM_ADC_MAXVALUE    (65535)     // Valeur max en sortie de l'ADC
 #define COM_MAX_NB_MSG      256
 #define COM_MAX_SIZE_DATA   1024        // Taille max d'un message à l'envoi des messages
+#define COM_EXTERN_BACKLOG  128
 
 // Typedef
 typedef enum
@@ -115,7 +116,9 @@ int COM_stop(void);
 // Fonctions API
 int COM_create_socket(int i_family, int i_type, int i_proto, char *i_data);
 int COM_connect_socket(int i_family, int i_type, char * i_data, int *o_fd);
+int COM_socket_listen(int i_fd, int i_backlog);
 int COM_send_data(int i_fd, t_uint32 i_id, void * i_data, size_t i_size, int i_flags);
+int COM_receive_data(int i_sock, t_com_msg *o_m, int *o_size);
 int COM_close_socket(int i_fd);
 
 int COM_register_socket(int i_fd, int *i_list, int i_size);

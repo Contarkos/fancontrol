@@ -290,7 +290,7 @@ static void * os_timer_thread(void * data)
                 // Pour ne pas lancer les callbacks qui n'existent plus
                 if(tmp && tmp->callback) 
                 {
-                    tmp->callback(tmp->fd, tmp->data);
+                    tmp->callback((int)tmp, tmp->data);
                 }
             }
         }

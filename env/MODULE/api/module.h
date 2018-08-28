@@ -10,7 +10,8 @@
 class MODULE {
     private:
         bool isRunning = false;
-        std::mutex *m_init;
+        std::mutex *m_mod_init;
+        std::mutex *m_main_init;
 
     protected:
         char name[MAX_LENGTH_MOD_NAME];
@@ -30,7 +31,7 @@ class MODULE {
         int stop_and_exit(void);
 
     public:
-        MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m);
+        MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod);
         virtual ~MODULE();
 
         // Init utilisé par MAIN pour que chaque module attende son tour.

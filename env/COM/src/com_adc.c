@@ -87,6 +87,8 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
     else
     {
         result = (t_uint16) ( (data[1] << COM_BYTE_SHIFT) | data[2]);
+
+        printf("[IS] COM : resultat ADC = %d\n", result);
     }
 
     return result;

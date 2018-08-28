@@ -9,11 +9,15 @@
 #include "os.h"
 #include "module.h"
 
-MODULE::MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m)
+MODULE::MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod)
 {
     // Copie du nom
     strncpy(this->name, mod_name, MAX_LENGTH_MOD_NAME);
-    this->m_init = m;
+    this->m_mod_init = m_mod;
+    this->m_main_init = m_main;
+
+    // Lock de MAIN jusqu'à la fin de l'init
+    this->m_main_init->lock();
 
     // Init du pthread
     this->m_thread.loop = reinterpret_cast<loop_func> (&MODULE::init_module);
@@ -59,10 +63,15 @@ int MODULE::wait_and_loop(void)
     int ret = 0;
 
     // Init des variables
-    if (0 == this->start_module())
+    ret = this->start_module();
+
+    if (0 == ret)
     {
+        // Déblocage du MAIN
+        this->m_main_init->unlock();
+
         // Demande de blocage du thread pour attendre que MAIN rende la main
-        this->m_init->lock();
+        this->m_mod_init->lock();
 
         // Initialisation d'objets spécifiques (ex : connexion aux sockets)
         ret = this->init_after_wait();
@@ -78,15 +87,15 @@ int MODULE::wait_and_loop(void)
                 this->isRunning = false;
             }
         }
-
-        // On débloque le mutex pour que MAIN puisse s'arrêter correctement
-        this->m_init->unlock();
     }
     else
     {
-        printf("[ER] MODULE : Erreur lors du démarrage du module %s\n", this->name);
-        ret = -1;
+        printf("[ER] MODULE : Erreur lors du démarrage du module %s, ret = %d\n", this->name, ret);
+        ret = this->stop_and_exit();
     }
+
+    // On débloque le mutex pour que MAIN puisse s'arrêter correctement
+    this->m_mod_init->unlock();
 
     return ret;
 }

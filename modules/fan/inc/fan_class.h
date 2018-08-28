@@ -13,7 +13,7 @@
 #define FAN_DEFAULT_PREC        (1024)
 #define FAN_DEFAULT_CYCLE       (0.0F)
 #define FAN_TIMER_USEC          (40000)
-#define FAN_POLL_TIMEOUT        100
+#define FAN_POLL_TIMEOUT        1000
 
 #define FAN_PWM_FREQ            (25000)
 #define FAN_PWM_ECART           (0.3F)
@@ -28,7 +28,7 @@ typedef enum
 class FAN : public MODULE
 {
     public:
-        FAN(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m);
+        FAN(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod);
         ~FAN();
 
     private:
@@ -62,7 +62,7 @@ class FAN : public MODULE
         int fan_compute_duty(void);
 
         // Recuperation des données
-        int fan_treat_msg(t_com_msg i_msg);
+        int fan_treat_msg(t_com_msg i_msg, int i_size);
         int fan_update_data(t_temp_data *i_data);
 };
 

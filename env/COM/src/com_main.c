@@ -14,7 +14,7 @@ int com_extern_socket = -1;
 int COM_init(void)
 {
     int ret = 0;
-    t_com_inet_data d = { .addr = 0xC0A80065, .port = 21001 }; // addr = 192.168.0.101
+    t_com_inet_data d = { .addr = INADDR_ANY, .port = 21001 }; // addr = toutes les addresses
 
     // Ouverture de la socket vers l'exterieur
     com_extern_socket = COM_create_socket(AF_INET, SOCK_STREAM, 0, (char *) &d);
@@ -27,6 +27,7 @@ int COM_init(void)
     else
     {
         // Ecoute sur le bon port
+        ret = COM_socket_listen(com_extern_socket, COM_EXTERN_BACKLOG);
     }
 
     return ret;

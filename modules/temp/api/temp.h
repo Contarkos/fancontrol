@@ -19,6 +19,6 @@ typedef struct
 } __attribute__((packed)) t_temp_data;
 
 // API pour module TEMP
-int TEMP_start(std::mutex *m);
+int TEMP_start(std::mutex *m_main, std::mutex *m_mod);
 
 int TEMP_stop(void);

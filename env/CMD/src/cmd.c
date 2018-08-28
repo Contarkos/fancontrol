@@ -21,7 +21,7 @@ int CMD_read(void)
    while(main_is_running)
    {
       // Affichage du prompt
-      printf("fan-app>");
+      printf("fan-app> ");
 
       fgets(line, sizeof(line), stdin);
 

@@ -40,6 +40,7 @@ void main_sigint_handler(int signum)
 void main_sigkill_handler(int signum)
 {
     int ret = 0;
+    printf("[IS] MAIN : Arrêt des modules sur SIGKILL\n");
 
     if (SIGKILL == signum)
     {

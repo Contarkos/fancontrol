@@ -27,9 +27,6 @@ int TEMP::temp_retrieve_data(void)
     t_uint16 d;
     float r = 1;
 
-    // Blablabla
-    printf("[IS] TEMP : timer activé !\n");
-
     // Activation de la pin connectée au thermistor
     ret = OS_write_gpio(TEMP_PIN_OUT, 1);
 
@@ -64,10 +61,10 @@ int TEMP::temp_retrieve_data(void)
 
             // Validité de la température
             this->fan_temp_valid = true;
-
-            // Envoi de la donnée à FAN
-            ret = temp_send_data();
         }
+
+        // Envoi de la donnée à FAN
+        ret = temp_send_data();
     }
 
     return ret;
@@ -78,7 +75,7 @@ int TEMP::temp_send_data(void)
     int ret = 0;
     t_temp_data d;
 
-    if (socket_fd < 0)
+    if (fan_fd < 0)
     {
         printf("[ER] TEMP : pas de socket valide pour envoyer les données\n");
         ret = -1;
@@ -92,7 +89,8 @@ int TEMP::temp_send_data(void)
         d.room_temp_valid = this->room_temp_valid ? TEMP_VALIDITY_VALID : TEMP_VALIDITY_INVALID;
 
         // On envoie le tout
-        ret = COM_send_data(this->socket_fd, TEMP_DATA, &d, sizeof(d), 0);
+        printf("[IS] TEMP : envoi des données\n");
+        ret = COM_send_data(this->fan_fd, TEMP_DATA, &d, sizeof(d), 0);
 
         if (ret < 0)
         {

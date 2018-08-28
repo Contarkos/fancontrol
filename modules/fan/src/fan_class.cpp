@@ -14,8 +14,11 @@
 #include "fan.h"
 #include "fan_class.h"
 
+// Variables globales
+int g_fan_socket = -1;
+
 /* Définition des constructeurs */
-FAN::FAN(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m) : MODULE(mod_name, m)
+FAN::FAN(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod) : MODULE(mod_name, m_main, m_mod)
 {
     int ii;
 
@@ -72,7 +75,7 @@ int FAN::start_module()
         // Activation...
         ret += OS_pwn_enable(OS_STATE_ON);
 
-        if (ret >= 0)
+        if (ret < 0)
         {
             return ret;
         }
@@ -81,12 +84,23 @@ int FAN::start_module()
             // Demarrage du timer
             //ret = OS_start_timer(this->timer_fd);
 
+            // Creation socket
+            printf("[IS] FAN : création de la socket d'écoute\n");
+
             // Ouverture socket UNIX
-            this->socket_fd = COM_create_socket(AF_UNIX, SOCK_STREAM, 0, s);
+            this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s);
 
             if (this->socket_fd >= 0)
             {
                 this->p_fd[FAN_FD_SOCKET].fd = this->socket_fd;
+
+                g_fan_socket = this->socket_fd;
+                //ret = COM_socket_listen(this->socket_fd, COM_EXTERN_BACKLOG);
+            }
+            else
+            {
+                printf("[ER] FAN : erreur à la création de la socket\n");
+                ret = -1;
             }
         }
     }
@@ -132,24 +146,31 @@ int FAN::exec_loop()
     if (read_fd <= 0)
     {
         // Timeout expiré
+        printf("[WG] FAN : timeout poll expiré\n");
         ret = 1;
     }
     else
     {
+        printf("[IS] FAN : poll ok\n");
         for (ii = 0; ii < FAN_FD_NB; ii++)
         {
+            printf("[IS] FAN : poll ii = %d\n", ii);
+
             if (this->p_fd[ii].revents & this->p_fd[ii].events)
             {
-                ss = read(this->p_fd[ii].fd, &m, sizeof(t_com_msg)); // traitement
+                printf("[ER] FAN : revents = %d, event = %d\n", this->p_fd[ii].revents, this->p_fd[ii].events);
 
-                if (sizeof(t_com_msg) != ss)
+                // ss = read(this->p_fd[ii].fd, &m, sizeof(t_com_msg)); // traitement
+                ret = COM_receive_data(this->p_fd[ii].fd, &m, &ss);
+
+                if (0 == ss)
                 {
-                    printf("[WG] FAN : mauvaise taille de message pour fd %d\n", ii);
+                    printf("[WG] FAN : mauvaise taille de message \n");
                     ret = -1;
                 }
                 else
                 {
-                    ret = fan_treat_msg(m);
+                    ret = fan_treat_msg(m, ss);
                 }
             }
         }
