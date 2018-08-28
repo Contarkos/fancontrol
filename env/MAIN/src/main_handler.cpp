@@ -76,6 +76,9 @@ int main_add_handlers(void)
 
     // Gestion du kill
     signal(SIGKILL, &main_sigkill_handler);
+    
+    // Ignore du broken pipe
+    signal(SIGPIPE, SIG_IGN);
 
     return ret;
 }
