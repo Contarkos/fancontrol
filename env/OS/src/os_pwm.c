@@ -3,6 +3,7 @@
 
 // Local includes
 #include "base.h"
+#include "integ_log.h"
 #include "os.h"
 #include "os_rpi.h"
 
@@ -42,7 +43,7 @@ int OS_pwn_enable(t_os_state i_enable)
             PWM_CTL_REGISTER &= PWM_CTL_PWEN1_MASK;
             break;
         default:
-            printf("[ER] OS : wrong state for PWM\n");
+            LOG_ERR("OS : wrong state for PWM");
             ret = -1;
             break;
     }
@@ -92,14 +93,14 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
 
     if (OS_RET_KO == is_init_clock)
     {
-        printf("[ER] OS : pas d'init de la CLOCK\n");
+        LOG_ERR("OS : pas d'init de la CLOCK");
         ret = -1;
     }
     else
     {
         if (i_freq > os_clock_max_freq[os_clock_source] || i_freq == 0)
         {
-            printf("[ER] OS : Fréquence d'horloge trop haute, freq = %d\n", i_freq);
+            LOG_ERR("OS : Fréquence d'horloge trop haute, freq = %d", i_freq);
             ret = -2;
         }
         else
@@ -112,11 +113,11 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
             divr = os_clock_max_freq[os_clock_source] % (os_pwm_freq * os_pwm_prec);
             divf = (t_uint32) ((float) (divr * CLOCK_MAX_DIVISOR) / (float) (os_pwm_freq * os_pwm_prec));
 
-            printf("[IS] OS : diviseur pour PWM = %d\n", divi);
+            LOG_INF1("OS : diviseur pour PWM = %d", divi);
 
             if (divi > CLOCK_MAX_DIVISOR)
             {
-                printf("[WG] OS : la fréquence sera plus haute qu'attendue. Diviseur max atteint\n");
+                LOG_WNG("OS : la fréquence sera plus haute qu'attendue. Diviseur max atteint");
                 ret = 1;
 
                 // Maximum possible pour le diviseur
@@ -155,7 +156,7 @@ int OS_pwm_set_dutycycle(float i_duty)
 
     if (i_duty < OS_MIN_PERCENT_PWM || i_duty > OS_MAX_PERCENT_PWM)
     {
-        printf("[ER] OS : mauvais pourcentage PWM, %% = %f\n", i_duty);
+        LOG_ERR("OS : mauvais pourcentage PWM, %% = %f", i_duty);
         ret = -1;
     }
     else
@@ -166,7 +167,7 @@ int OS_pwm_set_dutycycle(float i_duty)
         // Ecriture de la valeur dans le registre
         PWM_DAT1_REGISTER = ((t_uint32) ((os_pwm_duty / OS_MAX_PERCENT_PWM) * (float) os_pwm_prec) );
 
-        printf("[IS] OS : dutycycle value = %d\n", PWM_DAT1_REGISTER);
+        LOG_INF1("OS : dutycycle value = %d", PWM_DAT1_REGISTER);
     }
 
     return ret;
@@ -183,7 +184,7 @@ int OS_pwm_set_precision(t_uint32 i_prec)
 
     if ( i_prec > MAX_UINT_16 )
     {
-        printf("[ER] OS | Valeur pour la précision PWM erronée : prec = %d\n", i_prec);
+        LOG_ERR("OS | Valeur pour la précision PWM erronée : prec = %d", i_prec);
         ret = -1;
     }
     else
@@ -199,7 +200,7 @@ int OS_pwm_set_precision(t_uint32 i_prec)
 
         if (0 != ret)
         {
-            printf("[ER] OS : Erreur recalibration de la fréquence\n");
+            LOG_ERR("OS : Erreur recalibration de la fréquence");
         }
         else
         {
@@ -232,7 +233,7 @@ int OS_pwm_set_mode(os_pwm_mode i_mode)
             PWM_CTL_REGISTER &= ~PWM_CTL_MSEN1_MASK;
             break;
         default:
-            printf("[WG] OS : wrong mode for PWM\n");
+            LOG_WNG("OS : wrong mode for PWM");
             ret = -1;
             break;
     }
@@ -250,7 +251,7 @@ int os_init_pwm(void)
 
     if (OS_RET_OK == is_init_pwm)
     {
-        printf("[WG] OS : init PWM déjà effectué\n");
+        LOG_WNG("OS : init PWM déjà effectué");
         ret = 1;
     }
     else
@@ -260,11 +261,11 @@ int os_init_pwm(void)
 
         if (0 != ret)
         {
-            printf("[ER] OS : Erreur à l'init des PWM, code : %d\n", ret);
+            LOG_ERR("OS : Erreur à l'init des PWM, code : %d", ret);
         }
         else
         {
-            printf("[IS] OS : Init PWM ok\n");
+            LOG_INF1("OS : Init PWM ok");
             is_init_pwm = OS_RET_OK;
         }
     }
@@ -278,7 +279,7 @@ int os_stop_pwm(void)
 
     if (OS_RET_KO == is_init_pwm)
     {
-        printf("[WG] OS : init PWM non effectué\n");
+        LOG_WNG("OS : init PWM non effectué");
         ret = 1;
     }
     else

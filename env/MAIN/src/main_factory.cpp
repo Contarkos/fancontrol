@@ -4,6 +4,7 @@
 // Includes locaux
 #include "base.h"
 #include "base_typ.h"
+#include "integ_log.h"
 #include "os.h"
 #include "main_factory.h"
 #include "module.h"
@@ -41,7 +42,7 @@ int main_start_factory()
         for (ii = 0; ii < NB_MODULE; ii++)
         {
             // On bloque les mutex de tout le monde
-            printf("[IS] MAIN : lock pour %d\n", ii);
+            LOG_INF1("MAIN : lock pour %d", ii);
             t_mod_mutex[ii].lock();
             t_main_mutex[ii].unlock();
 
@@ -50,21 +51,21 @@ int main_start_factory()
             if (0 != ret_temp)
             {
                 ret = 1;
-                printf("[ER] MAIN : Erreur pendant le lancement du module n°%d\n", ii);
+                LOG_ERR("MAIN : Erreur pendant le lancement du module n°%d", ii);
             }
         }
 
         // Attente du retour des threads du module
         for (ii = 0; ii < NB_MODULE; ii++)
         {
-            printf("[IS] MAIN : lock d'attente pour %d\n", ii);
+            LOG_INF1("MAIN : lock d'attente pour %d", ii);
             t_main_mutex[ii].lock();
         }
 
         // Tous les threads sont lancés on peut démarrer
         for (ii = 0; ii < NB_MODULE; ii++)
         {
-            printf("[IS] MAIN : unlock pour %d\n", ii);
+            LOG_INF1("MAIN : unlock pour %d", ii);
             t_mod_mutex[ii].unlock();
         }
 
@@ -89,7 +90,7 @@ int main_init(void)
     // Init de COM
     if (ret != 0)
     {
-        printf("[ER] MAIN : erreur à l'init de l'OS, code : %d\n", ret);
+        LOG_ERR("MAIN : erreur à l'init de l'OS, code : %d", ret);
     }
     else
     {
@@ -103,7 +104,7 @@ int main_stop_factory()
 {
     int ret = 0, ii;
 
-    printf("[IS] MAIN : extinction des modules\n");
+    LOG_INF1("MAIN : extinction des modules");
 
     // On lance les demandes d'arrets
     for (ii = 0; ii < NB_MODULE; ii++)
@@ -111,7 +112,7 @@ int main_stop_factory()
         t_start[ii].mod_stop();
     }
 
-    printf("[IS] MAIN : Attente des locks à libérer pour les modules\n");
+    LOG_INF1("MAIN : Attente des locks à libérer pour les modules");
 
     // On attend que tous les threads soient terminés
     for (ii = 0; ii < NB_MODULE; ii++)
@@ -120,7 +121,7 @@ int main_stop_factory()
     }
 
     // Arret des éléments du système
-    printf("[IS] MAIN : Arret des modules systemes\n");
+    LOG_INF1("MAIN : Arret des modules systemes");
     ret += main_stop();
 
     return ret;

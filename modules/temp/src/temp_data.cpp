@@ -4,6 +4,7 @@
 
 // Includes locaux
 #include "base.h"
+#include "integ_log.h"
 #include "os.h"
 #include "com.h"
 #include "com_msg.h"
@@ -32,7 +33,7 @@ int TEMP::temp_retrieve_data(void)
 
     if (ret < 0)
     {
-        printf("[ER] TEMP : erreur activation GPIO pour lecture temp, ret = %d\n", ret);
+        LOG_ERR("TEMP : erreur activation GPIO pour lecture temp, ret = %d", ret);
     }
     else
     {
@@ -44,7 +45,7 @@ int TEMP::temp_retrieve_data(void)
 
         if ( (0 == d) || (d == COM_ADC_MAXVALUE) )
         {
-            printf("[WG] TEMP : donnée invalide pour la température, value = %d\n", d);
+            LOG_WNG("TEMP : donnée invalide pour la température, value = %d", d);
             ret = 1;
 
             // Validité fausse pour la température
@@ -77,7 +78,7 @@ int TEMP::temp_send_data(void)
 
     if (fan_fd < 0)
     {
-        printf("[ER] TEMP : pas de socket valide pour envoyer les données\n");
+        LOG_ERR("TEMP : pas de socket valide pour envoyer les données");
         ret = -1;
     }
     else
@@ -89,12 +90,12 @@ int TEMP::temp_send_data(void)
         d.room_temp_valid = this->room_temp_valid ? TEMP_VALIDITY_VALID : TEMP_VALIDITY_INVALID;
 
         // On envoie le tout
-        printf("[IS] TEMP : envoi des données\n");
+        LOG_INF1("TEMP : envoi des données");
         ret = COM_send_data(this->fan_fd, TEMP_DATA, &d, sizeof(d), 0);
 
         if (ret < 0)
         {
-            printf("[ER] TEMP : erreur lors de l'envoi des données, ret = %d\n", ret);
+            LOG_ERR("TEMP : erreur lors de l'envoi des données, ret = %d", ret);
         }
     }
 

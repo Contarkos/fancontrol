@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 
 // Local includes
+#include "integ_log.h"
 #include "com.h"
 #include "com_msg.h"
 #include "com_socket.h"
@@ -21,7 +22,7 @@ int COM_init(void)
 
     if (-1 == com_extern_socket)
     {
-        printf("[ER] COM : erreur création socket externe\n");
+        LOG_ERR("COM : erreur création socket externe\n");
         ret = -1;
     }
     else

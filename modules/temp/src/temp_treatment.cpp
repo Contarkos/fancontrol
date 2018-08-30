@@ -4,6 +4,7 @@
 
 // Includes locaux
 #include "base.h"
+#include "integ_log.h"
 #include "os.h"
 #include "com.h"
 #include "com_msg.h"
@@ -22,7 +23,7 @@ int TEMP::temp_treat_msg(t_com_msg i_msg)
             ret = this->stop_and_exit();
             break;
         default:
-            printf("[ER] FAN : mauvaise ID pour message, id = %d", i_msg.id);
+            LOG_ERR("FAN : mauvaise ID pour message, id = %d", i_msg.id);
             ret = 1;
     }
 

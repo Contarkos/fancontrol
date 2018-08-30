@@ -4,6 +4,7 @@
 
 // Local includes
 #include "base.h"
+#include "integ_log.h"
 #include "os.h"
 #include "os_rpi.h"
 
@@ -47,7 +48,7 @@ int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout)
                 }
                 break;
             default:
-                printf("[ER] OS : mauvaise fonction pour GPIO, func = %d\n", i_inout);
+                LOG_ERR("OS : mauvaise fonction pour GPIO, func = %d", i_inout);
                 ret = -2;
                 break;
         }
@@ -55,7 +56,7 @@ int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout)
     }
     else
     {
-        printf("[ER] OS : Erreur numéro de pin, GPIO = %d\n", i_pin);
+        LOG_ERR("OS : Erreur numéro de pin, GPIO = %d", i_pin);
         ret = -1;
     }
 
@@ -80,7 +81,7 @@ int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active)
     }
     else
     {
-        printf("[ER] OS : mauvaise valeur de pin GPIO, pin = %d\n", i_pin);
+        LOG_ERR("OS : mauvaise valeur de pin GPIO, pin = %d", i_pin);
         ret = -1;
     }
 
@@ -98,7 +99,7 @@ int OS_read_gpio(t_uint32 i_pin)
     }
     else
     {
-        printf("[ER] OS : mauvaise valeur de pin GPIO, pin = %d\n", i_pin);
+        LOG_ERR("OS : mauvaise valeur de pin GPIO, pin = %d", i_pin);
         data = -1;
     }
 
@@ -115,7 +116,7 @@ int os_init_gpio(void)
 
     if (OS_RET_OK == is_init_gpio)
     {
-        printf("[WG] OS : init GPIO déjà effectué\n");
+        LOG_WNG("OS : init GPIO déjà effectué");
         ret = 1;
     }
     else
@@ -125,11 +126,11 @@ int os_init_gpio(void)
 
         if (0 != ret)
         {
-            printf("[ER] OS : Erreur à l'init des GPIO, code : %d\n", ret);
+            LOG_ERR("OS : Erreur à l'init des GPIO, code : %d", ret);
         }
         else
         {
-            printf("[IS] OS : Init GPIO ok\n");
+            LOG_INF1("OS : Init GPIO ok");
             is_init_gpio = OS_RET_OK;
         }
     }

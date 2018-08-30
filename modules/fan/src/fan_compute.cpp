@@ -4,6 +4,7 @@
 
 // Includes locaux
 #include "base.h"
+#include "integ_log.h"
 #include "os.h"
 #include "module.h"
 #include "fan.h"
@@ -67,7 +68,7 @@ int FAN::fan_compute_duty(void)
             {
                 if (this->consigne_speed > FAN_MAX_SPEED)
                 {
-                    printf("[WG] FAN : vitesse trop haute\n");
+                    LOG_WNG("FAN : vitesse trop haute");
                     this->fan_setSpeed(FAN_MAX_SPEED);
 
                     ret = 2;
@@ -77,7 +78,7 @@ int FAN::fan_compute_duty(void)
             }
         default:
             {
-                printf("[ER] FAN : Mode de FAN invalide\n");
+                LOG_ERR("FAN : Mode de FAN invalide");
                 ret = -1;
             }
     }

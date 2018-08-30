@@ -13,6 +13,7 @@
 
 // Includes locaux
 #include "base.h"
+#include "integ_log.h"
 #include "os.h"
 #include "os_rpi.h"
 
@@ -52,7 +53,7 @@ size_t OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_
 
     if (NULL == n)
     {
-        printf("[ER] OS : erreur allocation timer\n");
+        LOG_ERR("OS : erreur allocation timer");
     }
     else
     {
@@ -106,7 +107,7 @@ int OS_start_timer(size_t i_timer_id)
                 t.it_interval.tv_nsec = (long) (n->usec * OS_USEC2NSEC);
                 break;
             default:
-                printf("[ER] OS : erreur de type pour le timer\n");
+                LOG_ERR("OS : erreur de type pour le timer");
                 ret = -2;
         }
 
@@ -117,7 +118,7 @@ int OS_start_timer(size_t i_timer_id)
     }
     else
     {
-        printf("[ER] OS : Demarrage timer, timer inexistant (timer id = %d)\n", i_timer_id);
+        LOG_ERR("OS : Demarrage timer, timer inexistant (timer id = %d)", i_timer_id);
         ret = -1;
     }
 
@@ -166,7 +167,7 @@ int OS_stop_timer(size_t i_timer_id)
     }
     else
     {
-        printf("[ER] OS : Arret timer, timer inexistant (timer id = %d)\n", i_timer_id);
+        LOG_ERR("OS : Arret timer, timer inexistant (timer id = %d)", i_timer_id);
         ret = -1;
     }
 
@@ -193,11 +194,11 @@ int os_init_timer()
 
     if (0 != ret)
     {
-        printf("[ER] OS : pb création thread pour timer facility (code = %d)\n", ret);
+        LOG_ERR("OS : pb création thread pour timer facility (code = %d)", ret);
     }
     else
     {
-       printf("[IS] OS : init TIMER ok\n");
+       LOG_INF1("OS : init TIMER ok");
     }
 
     return ret;

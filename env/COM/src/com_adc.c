@@ -3,6 +3,7 @@
 
 // Local includes
 #include "base.h"
+#include "integ_log.h"
 #include "com.h"
 #include "os.h"
 
@@ -63,7 +64,7 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
             com_device_1_setup.pair = i_pair;
             break;
         default:
-            printf("[ER] COM : device inexistant, device = %d\n", i_device);
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
     }
 
@@ -82,13 +83,13 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
 
     if (ret < 0)
     {
-        printf("[ER] COM : AD7705, pas de données disponibles...\n");
+        LOG_ERR("COM : AD7705, pas de données disponibles...");
     }
     else
     {
         result = (t_uint16) ( (data[1] << COM_BYTE_SHIFT) | data[2]);
 
-        printf("[IS] COM : resultat ADC = %d\n", result);
+        LOG_INF1("COM : resultat ADC = %d", result);
     }
 
     return result;
@@ -107,7 +108,7 @@ int COM_adc_set_filter_sync(t_os_spi_device i_device, t_com_state i_filter_sync)
             com_device_1_setup.filter_sync = i_filter_sync;
             break;
         default:
-            printf("[ER] COM : device inexistant, device = %d\n", i_device);
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
     }
 
@@ -133,7 +134,7 @@ int COM_adc_set_buffer_mode(t_os_spi_device i_device, t_com_state i_buffer_mode)
             com_device_1_setup.buffer_mode = i_buffer_mode;
             break;
         default:
-            printf("[ER] COM : device inexistant, device = %d\n", i_device);
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
     }
 
@@ -159,7 +160,7 @@ int COM_adc_set_bipolarity(t_os_spi_device i_device, t_com_state i_bipolarity)
             com_device_1_setup.bipolarity = i_bipolarity;
             break;
         default:
-            printf("[ER] COM : device inexistant, device = %d\n", i_device);
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
     }
 
@@ -185,7 +186,7 @@ int COM_adc_set_gain(t_os_spi_device i_device, t_com_adc_gain i_gain)
             com_device_1_setup.gain = i_gain;
             break;
         default:
-            printf("[ER] COM : device inexistant, device = %d\n", i_device);
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
     }
 
@@ -211,7 +212,7 @@ int COM_adc_set_mode(t_os_spi_device i_device, t_com_adc_mode i_mode)
             com_device_1_setup.mode = i_mode;
             break;
         default:
-            printf("[ER] COM : device inexistant, device = %d\n", i_device);
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
     }
 
@@ -237,7 +238,7 @@ int COM_adc_enable_clock(t_os_spi_device i_device, t_com_adc_clock i_clock)
             com_device_1_setup.clk_disable = i_clock;
             break;
         default:
-            printf("[ER] COM : device inexistant, device = %d\n", i_device);
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
     }
 
@@ -263,7 +264,7 @@ int COM_adc_set_clock_rate(t_os_spi_device i_device, t_com_adc_clock_rate i_rate
             com_device_1_setup.clk_rate = i_rate;
             break;
         default:
-            printf("[ER] COM : device inexistant, device = %d\n", i_device);
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
     }
 
@@ -289,7 +290,7 @@ int COM_adc_set_clock_div(t_os_spi_device i_device, t_com_state i_div)
             com_device_1_setup.clk_div = i_div;
             break;
         default:
-            printf("[ER] COM : device inexistant, device = %d\n", i_device);
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
     }
 
@@ -315,7 +316,7 @@ int COM_adc_set_clock_filter(t_os_spi_device i_device, t_com_adc_clock_filt i_fi
             com_device_1_setup.clk_filter = i_filter;
             break;
         default:
-            printf("[ER] COM : device inexistant, device = %d\n", i_device);
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
     }
 
@@ -347,7 +348,7 @@ int com_adc_config_setup(t_os_spi_device i_device)
             s = &(com_device_1_setup);
             break;
         default:
-            printf("[ER] COM : device inexistant, device = %d\n", i_device);
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
     }
 
@@ -389,7 +390,7 @@ int com_adc_config_clock(t_os_spi_device i_device)
             s = &(com_device_1_setup);
             break;
         default:
-            printf("[ER] COM : device inexistant, device = %d\n", i_device);
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
     }
 

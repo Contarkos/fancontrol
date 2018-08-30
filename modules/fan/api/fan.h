@@ -14,7 +14,6 @@ typedef enum
 } fan_e_mode;
 
 // Variables globales
-extern int g_fan_socket;
 
 // API pour module FAN
 int FAN_start(std::mutex *m_main, std::mutex *m_mod);

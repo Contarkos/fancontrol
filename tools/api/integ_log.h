@@ -23,14 +23,12 @@
     {                                                                                  \
         (void)printf("### ERR  ### - %-25s line %4d: ", __FILE__ , __LINE__);          \
         (void)printf(__VA_ARGS__); (void)printf("\n"); (void)fflush(stdout);           \
-        (void)usleep(1000); /* to be sure to have enought time to print the message */ \
     }
     #define LOG_ERR_CODE(code, ...)                                         \
     {                                                                                  \
         (void)printf("### ERR  ### - %-25s line %4d: ", __FILE__ , __LINE__);          \
         (void)printf("%s(%d), ", strerror(code), code);                                \
         (void)printf(__VA_ARGS__); (void)printf("\n"); (void)fflush(stdout);           \
-        (void)usleep(1000); /* to be sure to have enought time to print the message */ \
     }
 #else
     #define LOG_ERR(...)

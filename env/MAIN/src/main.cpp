@@ -6,6 +6,7 @@
 // Include de base
 #include "base.h"
 #include "base_typ.h"
+#include "integ_log.h"
 
 // Include locaux
 #include "main_handler.h"
@@ -18,7 +19,7 @@ static int main_config(int argc, char *argv[])
 
     if (argc > 0)
     {
-        printf("[IS] MAIN : There is %d args which are : ", argc);
+        LOG_INF1("MAIN : There is %d args which are : ", argc);
 
         for (ii = 0, a = argv[0]; ii < argc; ii++, a = argv[ii])
         {
@@ -52,7 +53,7 @@ int main(int argc, char *argv[])
 
     if (BASE_OK != ret)
     {
-        printf("[ER] MAIN : erreur de démarrage. EXIT (code %d)\n", ret);
+        LOG_ERR("MAIN : erreur de démarrage. EXIT (code %d)\n", ret);
     }
 
     // Arret du système

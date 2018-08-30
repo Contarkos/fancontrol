@@ -5,6 +5,7 @@
 
 // Inlcudes locaux
 #include "base.h"
+#include "integ_log.h"
 #include "os.h"
 #include "module.h"
 #include "temp.h"
@@ -37,7 +38,7 @@ int TEMP_start(std::mutex *m_main, std::mutex *m_mod)
     }
     else
     {
-        printf("[ER] TEMP : plus d'instances disponibles, %d > %d\n", ii, NB_INSTANCES_TEMP);
+        LOG_ERR("TEMP : plus d'instances disponibles, %d > %d", ii, NB_INSTANCES_TEMP);
         ret = -1;
     }
 

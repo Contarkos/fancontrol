@@ -10,6 +10,7 @@
 #include <errno.h>
 
 // Local includes
+#include "integ_log.h"
 #include "com.h"
 #include "com_msg.h"
 #include "com_socket.h"
@@ -35,7 +36,7 @@ int COM_create_socket(int i_family, int i_type, int i_proto, char *i_data)
 
     if (fd <= 0)
     {
-        printf("[ER] COM : erreur à la création de la socket\n");
+        LOG_ERR("COM : erreur à la création de la socket");
     }
     else
     {
@@ -49,13 +50,13 @@ int COM_create_socket(int i_family, int i_type, int i_proto, char *i_data)
                 ret = com_bind_socket_inet(fd, i_data);
                 break;
             default:
-                printf("[ER] COM : erreur type de socket\n");
+                LOG_ERR("COM : erreur type de socket");
                 ret = -1;
         }
 
         if (ret != 0)
         {
-           printf("[ER] COM : erreur binding de la socket, erreur = %d\n", errno);
+           LOG_ERR("COM : erreur binding de la socket, erreur = %d", errno);
            fd = -1;
         }
         else
@@ -77,7 +78,7 @@ int COM_connect_socket(int i_family, int i_type, char * i_data, int *o_fd)
 
     if ( *o_fd < 0 )
     {
-        printf("[ER] COM : erreur à la création de la socket\n");
+        LOG_ERR("COM : erreur à la création de la socket");
         ret = -1;
     }
     else
@@ -92,7 +93,7 @@ int COM_connect_socket(int i_family, int i_type, char * i_data, int *o_fd)
                 ret = com_connect_inet(*o_fd, i_data);
                 break;
             default:
-                printf("[ER] COM : famille de socket non gérée, famille = %d\n", i_family);
+                LOG_ERR("COM : famille de socket non gérée, famille = %d", i_family);
                 ret = -1;
         }
     }
@@ -106,12 +107,12 @@ int COM_socket_listen(int i_fd, int i_backlog)
 
     if ( -1 == i_fd )
     {
-        printf("[ER] COM : mauvais fd pour socket sur listen\n");
+        LOG_ERR("COM : mauvais fd pour socket sur listen");
         ret = -2;
     }
     else if ( 0 >= i_backlog )
     {
-        printf("[ER] COM : mauvaise valeur pour le backlog, bl = %d\n", i_backlog);
+        LOG_ERR("COM : mauvaise valeur pour le backlog, bl = %d", i_backlog);
         ret = -4;
     }
     else
@@ -120,7 +121,7 @@ int COM_socket_listen(int i_fd, int i_backlog)
 
         if (-1 == ret)
         {
-            printf("[ER] COM : erreur sur listen de la socket, errno = %d\n", errno);
+            LOG_ERR("COM : erreur sur listen de la socket, errno = %d", errno);
         }
     }
 
@@ -136,12 +137,12 @@ int COM_send_data(int i_fd, t_uint32 i_id, void * i_data, size_t i_size, int i_f
 
     if (i_fd < 0)
     {
-        printf("[ER] COM : pas de socket valide pour envoyer les données\n");
+        LOG_ERR("COM : pas de socket valide pour envoyer les données");
         ret = -1;
     }
     else if ( (0 == i_size) || !(i_data) )
     {
-        printf("[ER] COM : données invalides pour socket\n");
+        LOG_ERR("COM : données invalides pour socket");
         ret = -2;
     }
     else
@@ -156,7 +157,7 @@ int COM_send_data(int i_fd, t_uint32 i_id, void * i_data, size_t i_size, int i_f
 
         if (ret < 0)
         {
-            printf("[ER] COM : erreur d'envoi des données, errno = %d\n", errno);
+            LOG_ERR("COM : erreur d'envoi des données, errno = %d", errno);
         }
     }
 
@@ -171,12 +172,12 @@ int COM_receive_data(int i_sock, t_com_msg *o_m, int *o_size)
 
     if (i_sock < 0)
     {
-        printf("[ER] COM : pas de socket pour reception de message\n");
+        LOG_ERR("COM : pas de socket pour reception de message");
         ret = -1;
     }
     else if (!o_m)
     {
-        printf("[ER] COM : pas de structure de message de sortie\n");
+        LOG_ERR("COM : pas de structure de message de sortie");
         ret = -2;
     }
     else
@@ -185,7 +186,7 @@ int COM_receive_data(int i_sock, t_com_msg *o_m, int *o_size)
 
         if (-1 == ret)
         {
-           printf("[ER] COM : erreur à la recupération des données, errno = %d\n", errno);
+           LOG_ERR("COM : erreur à la recupération des données, errno = %d", errno);
            ret = -4;
         }
         else
@@ -206,7 +207,7 @@ int COM_register_socket(int i_fd, int *i_list, int i_size)
 
     if (i_size > COM_MAX_NB_MSG)
     {
-        printf("[ER] COM : Trop de messages à écouter, nb = %d\n", i_size);
+        LOG_ERR("COM : Trop de messages à écouter, nb = %d", i_size);
         ret = -1;
     }
     else
@@ -233,7 +234,7 @@ int COM_close_socket(int i_fd)
     }
     else
     {
-        printf("[ER] COM : mauvaise référence au fichier, fd = %d\n", i_fd);
+        LOG_ERR("COM : mauvaise référence au fichier, fd = %d", i_fd);
         ret = -1;
     }
 
@@ -253,7 +254,11 @@ int com_bind_socket_unix(int fd, char *data)
     a.sun_family = AF_UNIX;
     strncpy(a.sun_path, data, COM_UNIX_PATH_MAX);
 
-    ret = bind(fd, (struct sockaddr *) &a, sizeof(a));
+    // Suppression de l'ancienne socket
+    (void)unlink(a.sun_path);
+
+    // Binding de la socket en fonction de la taille du chemin
+    ret = bind(fd, (struct sockaddr *) &a, sizeof(a.sun_family) + sizeof(a.sun_path));
 
     return ret;
 }
@@ -282,9 +287,9 @@ int com_connect_unix(int fd, char *data)
     a.sun_family = AF_UNIX;
     strncpy(a.sun_path, data, COM_UNIX_PATH_MAX);
 
-    printf("[IS] COM : nom de la socket = %s\n", a.sun_path);
+    LOG_INF1("COM : nom de la socket = %s", a.sun_path);
 
-    ret = connect(fd, (struct sockaddr *) &a, sizeof(a));
+    ret = connect(fd, (struct sockaddr *) &a, sizeof(a.sun_family) + sizeof(a.sun_path));
 
     return ret;
 }

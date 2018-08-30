@@ -6,6 +6,7 @@
 
 // Include locaux
 #include "base.h"
+#include "integ_log.h"
 #include "os.h"
 #include "module.h"
 
@@ -43,7 +44,7 @@ void* MODULE::init_module(void* p_this)
 
         if (ret != 0)
         {
-            printf("[ER] MODULE : erreur dans le wait_and_loop, ret = %d\n", ret);
+            LOG_ERR("MODULE : erreur dans le wait_and_loop, ret = %d", ret);
 
             // Arret du module proprement
             p_module->stop_and_exit();
@@ -51,7 +52,7 @@ void* MODULE::init_module(void* p_this)
     }
     else
     {
-        printf("[ER] MODULE : pas de pointeur vers l'instance\n");
+        LOG_ERR("MODULE : pas de pointeur vers l'instance");
         ret = -1;
     }
 
@@ -83,14 +84,14 @@ int MODULE::wait_and_loop(void)
         {
             if (0 > this->exec_loop())
             {
-                printf("[ER] %s : Erreur de boucle. Arrêt en cours pour le thread\n", this->name);
+                LOG_ERR("%s : Erreur de boucle. Arrêt en cours pour le thread", this->name);
                 this->isRunning = false;
             }
         }
     }
     else
     {
-        printf("[ER] MODULE : Erreur lors du démarrage du module %s, ret = %d\n", this->name, ret);
+        LOG_ERR("MODULE : Erreur lors du démarrage du module %s, ret = %d", this->name, ret);
         ret = this->stop_and_exit();
     }
 
@@ -114,13 +115,13 @@ void* MODULE::exit_module(void* p_this)
 
         if (ret != 0)
         {
-            printf("[ER] MODULE : erreur dans le stop_and_exit, ret = %d\n", ret);
+            LOG_ERR("MODULE : erreur dans le stop_and_exit, ret = %d", ret);
         }
 
     }
     else
     {
-        printf("[ER] MODULE : pas de pointeur vers l'instance\n");
+        LOG_ERR("MODULE : pas de pointeur vers l'instance");
         ret = -1;
     }
 

@@ -9,6 +9,7 @@
 
 // Local includes
 #include "base.h"
+#include "integ_log.h"
 #include "os.h"
 #include "os_rpi.h"
 
@@ -63,7 +64,7 @@ int os_map_peripheral(struct bcm2835_peripheral *p)
     // Open /dev/mem
     if ((p->mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0)
     {
-        printf("[ER] OS : Failed to open /dev/mem, try checking permissions.\n");
+        LOG_ERR("OS : Failed to open /dev/mem, try checking permissions.");
         ret = -1;
     }
     else

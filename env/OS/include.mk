@@ -1,3 +1,3 @@
 # Fichier d'include pour OS
 
-CPATH += /usr/include/
+INTEG_LOG_LEVEL = -DINTEGRATION_LOG_LEVEL=6

@@ -1,7 +1,8 @@
 #pragma once
 
 // Defines
-#define NB_INSTANCES_TEMP 1
+#define NB_INSTANCES_TEMP       1
+#define TEMP_SOCKET_NAME        "/tmp/temp_sock"
 
 // Typedef
 typedef enum

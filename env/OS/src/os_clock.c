@@ -3,6 +3,7 @@
 
 // Includes locaux
 #include "base.h"
+#include "integ_log.h"
 #include "os.h"
 #include "os_rpi.h"
 
@@ -84,7 +85,7 @@ int os_init_clock(void)
 
     if (OS_RET_OK == is_init_clock)
     {
-        printf("[WG] OS : init CLOCK déjà effectué\n");
+        LOG_WNG("OS : init CLOCK déjà effectué");
         ret = 1;
     }
     else
@@ -94,11 +95,11 @@ int os_init_clock(void)
 
         if (0 != ret)
         {
-            printf("[ER] OS : Erreur à l'init des CLOCK, code : %d\n", ret);
+            LOG_ERR("OS : Erreur à l'init des CLOCK, code : %d", ret);
         }
         else
         {
-            printf("[IS] OS : Init CLOCK ok\n");
+            LOG_INF1("OS : Init CLOCK ok");
             is_init_clock = OS_RET_OK;
         }
     }
@@ -112,7 +113,7 @@ int os_stop_clock(void)
 
     if (OS_RET_KO == is_init_clock)
     {
-        printf("[WG] OS : init CLOCK non effectué\n");
+        LOG_WNG("OS : init CLOCK non effectué");
         ret = 1;
     }
     else

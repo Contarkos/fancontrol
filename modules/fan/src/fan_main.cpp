@@ -5,6 +5,7 @@
 
 // Inlcudes locaux
 #include "base.h"
+#include "integ_log.h"
 #include "os.h"
 #include "module.h"
 #include "fan.h"
@@ -37,7 +38,7 @@ int FAN_start(std::mutex *m_main, std::mutex *m_mod)
     }
     else
     {
-        printf("[ER] FAN : plus d'instances disponibles, %d > %d\n", ii, NB_INSTANCES_FAN);
+        LOG_ERR("FAN : plus d'instances disponibles, %d > %d", ii, NB_INSTANCES_FAN);
         ret = -1;
     }
     return ret;
@@ -47,7 +48,7 @@ int FAN_stop(void)
 {
     int ret = 0, ii;
 
-    printf("[IS] FAN : arrêt du module\n");
+    LOG_INF1("FAN : arrêt du module");
 
     for (ii = 0; ii < NB_INSTANCES_FAN; ii++)
     {

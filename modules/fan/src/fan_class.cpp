@@ -8,6 +8,7 @@
 
 // Includes locaux
 #include "base.h"
+#include "integ_log.h"
 #include "os.h"
 #include "com.h"
 #include "module.h"
@@ -15,7 +16,6 @@
 #include "fan_class.h"
 
 // Variables globales
-int g_fan_socket = -1;
 
 /* Définition des constructeurs */
 FAN::FAN(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod) : MODULE(mod_name, m_main, m_mod)
@@ -39,14 +39,14 @@ int FAN::start_module()
     int ret = 0;
     char s[] = FAN_SOCKET_NAME;
 
-    printf("[IS] FAN : Démarrage de la classe du module\n");
+    LOG_INF1("FAN : Démarrage de la classe du module");
 
     // Démarrage du timer pour la boucle
     this->timer_fd = OS_create_timer(FAN_TIMER_USEC, &FAN::fan_timer_handler, OS_TIMER_PERIODIC, (void *) this);
 
     if (0 == this->timer_fd)
     {
-        printf("[ER] FAN : erreur création timer de boucle\n");
+        LOG_ERR("FAN : erreur création timer de boucle");
         ret = -1;
     }
     else
@@ -85,7 +85,7 @@ int FAN::start_module()
             //ret = OS_start_timer(this->timer_fd);
 
             // Creation socket
-            printf("[IS] FAN : création de la socket d'écoute\n");
+            LOG_INF1("FAN : création de la socket d'écoute");
 
             // Ouverture socket UNIX
             this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s);
@@ -93,13 +93,10 @@ int FAN::start_module()
             if (this->socket_fd >= 0)
             {
                 this->p_fd[FAN_FD_SOCKET].fd = this->socket_fd;
-
-                g_fan_socket = this->socket_fd;
-                //ret = COM_socket_listen(this->socket_fd, COM_EXTERN_BACKLOG);
             }
             else
             {
-                printf("[ER] FAN : erreur à la création de la socket\n");
+                LOG_ERR("FAN : erreur à la création de la socket");
                 ret = -1;
             }
         }
@@ -127,6 +124,7 @@ int FAN::stop_module()
     // Fermeture de la socket
     ret = COM_close_socket(this->socket_fd);
 
+    LOG_INF3("FAN : fin du stop_module, ret = %d", ret);
     return ret;
 }
 
@@ -146,26 +144,21 @@ int FAN::exec_loop()
     if (read_fd <= 0)
     {
         // Timeout expiré
-        printf("[WG] FAN : timeout poll expiré\n");
+        LOG_WNG("FAN : timeout poll expiré");
         ret = 1;
     }
     else
     {
-        printf("[IS] FAN : poll ok\n");
         for (ii = 0; ii < FAN_FD_NB; ii++)
         {
-            printf("[IS] FAN : poll ii = %d\n", ii);
-
             if (this->p_fd[ii].revents & this->p_fd[ii].events)
             {
-                printf("[ER] FAN : revents = %d, event = %d\n", this->p_fd[ii].revents, this->p_fd[ii].events);
-
                 // ss = read(this->p_fd[ii].fd, &m, sizeof(t_com_msg)); // traitement
                 ret = COM_receive_data(this->p_fd[ii].fd, &m, &ss);
 
                 if (0 == ss)
                 {
-                    printf("[WG] FAN : mauvaise taille de message \n");
+                    LOG_WNG("FAN : mauvaise taille de message ");
                     ret = -1;
                 }
                 else
@@ -192,7 +185,7 @@ int FAN::exec_loop()
     // Condition de sortie
     if (n > max)
     {
-        printf("[IS] FAN : fin du module\n");
+        LOG_INF1("FAN : fin du module");
         this->set_running(false);
     }
     else

@@ -8,9 +8,11 @@
 
 // Includes locaux
 #include "base.h"
+#include "integ_log.h"
 #include "os.h"
 #include "com.h"
 #include "module.h"
+#include "temp.h"
 #include "temp_class.h"
 #include "fan.h"
 
@@ -34,20 +36,24 @@ TEMP::~TEMP()
 int TEMP::start_module()
 {
     int ret = 0;
+    char s[] = TEMP_SOCKET_NAME;
 
-    printf("[IS] TEMP : Démarrage de la classe du module\n");
+    LOG_INF1("TEMP : Démarrage de la classe du module");
 
     // Démarrage du timer pour la boucle
     this->timer_fd = OS_create_timer(TEMP_TIMER_USEC, &TEMP::temp_timer_handler, OS_TIMER_PERIODIC, (void *) this);
 
+    // Ouverture socket UNIX
+    this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s);
+
     if (0 == this->timer_fd)
     {
-        printf("[ER] TEMP : erreur création timer de boucle\n");
+        LOG_ERR("TEMP : erreur création timer de boucle");
         ret = -1;
     }
     else
     {
-        printf("[IS] TEMP : timer_fd start = %x\n", timer_fd);
+        LOG_INF1("TEMP : timer_fd start = %x", timer_fd);
 
         // Configuration du GPIO
         ret += OS_set_gpio(TEMP_PIN_OUT, OS_GPIO_FUNC_IN);
@@ -55,9 +61,12 @@ int TEMP::start_module()
         // Configuration du module SPI
         ret += OS_spi_open_port(OS_SPI_DEVICE_0);
 
+        // Configuration de la clock de l'ADC
+//        ret += COM_adc_set_clock_rate(OS_SPI_DEVICE_0, COM_ADC_CLOCK_1MHZ);
+
         if ( ret < 0 )
         {
-            printf("[ER] TEMP : pas de port SPI\n");
+            LOG_ERR("TEMP : pas de port SPI");
             this->set_running(false);
         }
         else
@@ -67,7 +76,7 @@ int TEMP::start_module()
 
             if (ret < 0)
             {
-                printf("[ER] TEMP : erreur démarrage timer, ret = %d\n", ret);
+                LOG_ERR("TEMP : erreur démarrage timer, ret = %d", ret);
             }
         }
     }
@@ -78,16 +87,16 @@ int TEMP::start_module()
 int TEMP::init_after_wait(void)
 {
     int ret = 0;
+    char s[] = FAN_SOCKET_NAME;
 
-    printf("[IS] TEMP : connexion en cours à la socket UNIX\n");
+    LOG_INF1("TEMP : connexion en cours à la socket UNIX");
 
     // Connexion a la socket de FAN
-    this->fan_fd = g_fan_socket;
-    //ret = COM_connect_socket(AF_UNIX, SOCK_STREAM, s, &(this->fan_fd));
+    ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, s, &(this->fan_fd));
 
     if (0 == ret)
     {
-        printf("[IS] TEMP : connexion à la socket UNIX OK, fd = %d\n", this->fan_fd);
+        LOG_INF1("TEMP : connexion à la socket UNIX OK, fd = %d", this->fan_fd);
     }
 
     return ret;
@@ -109,6 +118,8 @@ int TEMP::stop_module()
 
     // Fermeture du device SPI
     ret += OS_spi_close_port(OS_SPI_DEVICE_0);
+
+    LOG_INF3("TEMP : fin du stop_module, ret = %d", ret);
 
     return ret;
 }
@@ -140,7 +151,7 @@ int TEMP::exec_loop()
 
                 if (sizeof(t_com_msg) != ss)
                 {
-                    printf("[WG] FAN : mauvaise taille de message pour fd %d\n", ii);
+                    LOG_WNG("FAN : mauvaise taille de message pour fd %d", ii);
                     ret = -1;
                 }
                 else
@@ -156,7 +167,7 @@ int TEMP::exec_loop()
     // Condition de sortie
     if (n > max)
     {
-        printf("[IS] TEMP : fin du module\n");
+        LOG_INF1("TEMP : fin du module");
         this->set_running(false);
     }
     else
@@ -166,7 +177,7 @@ int TEMP::exec_loop()
 
     if ( !(n % 100) )
     {
-        printf("[IS] TEMP : alive !\n");
+        LOG_INF1("TEMP : alive !\n");
     }
 
     OS_usleep(100000);
