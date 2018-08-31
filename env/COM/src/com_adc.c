@@ -69,9 +69,9 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
     }
 
     // Mise en forme du buffer pour lire le registre de comparaison
-    data[0] = (t_uint8)  (  COM_ADC_WRITE_MASK                          // Ecriture dans le registre de com
+    data[0] = (t_uint8)  (  (0 << COM_ADC_WRITE_SHIFT)                  // Ecriture dans le registre de com
                           | (COM_ADC_REG_DATA << COM_ADC_REG_SHIFT)     // Selection du registre de données
-                          | COM_ADC_RW_MASK                             // Lecture des données
+                          | (COM_ADC_RW_MASK)                           // Lecture des données
                           | (i_pair << COM_ADC_CHAN_SHIFT) );           // Selection de la paire a ecouter
 
     // Vide pour ne pas bloquer la lecture
@@ -355,7 +355,7 @@ int com_adc_config_setup(t_os_spi_device i_device)
     if (0 == ret)
     {
         // Mise en forme du buffer pour écrire dans le registre de configuration
-        data[0] = (t_uint8)  (   COM_ADC_WRITE_MASK                             // Ecriture dans le registre de com
+        data[0] = (t_uint8)  (   (0 << COM_ADC_WRITE_SHIFT)                     // Ecriture dans le registre de com
                                | (COM_ADC_REG_SETUP << COM_ADC_REG_SHIFT)       // Selection du registre de données
                                | (0 << COM_ADC_RW_MASK)                         // Ecriture des données
                                | (s->pair << COM_ADC_CHAN_SHIFT));              // On reste sur la dernière paire demandée
@@ -397,7 +397,7 @@ int com_adc_config_clock(t_os_spi_device i_device)
     if (0 == ret)
     {
         // Mise en forme du buffer pour écrire dans le registre de configuration
-        data[0] = (t_uint8)  (   COM_ADC_WRITE_MASK                             // Ecriture dans le registre de com
+        data[0] = (t_uint8)  (   (0 << COM_ADC_WRITE_SHIFT)                     // Ecriture dans le registre de com
                                | (COM_ADC_REG_CLOCK << COM_ADC_REG_SHIFT)       // Selection du registre de données
                                | (0 << COM_ADC_RW_MASK)                         // Ecriture des données
                                | (s->pair << COM_ADC_CHAN_SHIFT));              // On reste sur la dernière paire demandée
