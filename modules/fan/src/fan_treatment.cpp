@@ -29,6 +29,12 @@ int FAN::fan_treat_msg(t_com_msg i_msg, int i_size)
             case MAIN_SHUTDOWN:
                 ret = this->stop_and_exit();
                 break;
+            case FAN_MODE:
+                ret = this->fan_update_mode((t_fan_mode *) i_msg.data);
+                break;
+            case FAN_POWER:
+                ret = this->fan_update_power((t_fan_power_mode *) i_msg.data);
+                break;
             case TEMP_DATA:
                 ret = this->fan_update_data((t_temp_data *) i_msg.data);
                 break;
@@ -70,3 +76,65 @@ int FAN::fan_update_data(t_temp_data *i_data)
 
     return ret;
 }
+
+int FAN::fan_update_mode(t_fan_mode *i_data)
+{
+    int ret = 0;
+
+    if (NULL == i_data)
+    {
+        LOG_ERR("FAN : pas de données pour MaJ du mode");
+        ret = -1;
+    }
+    else
+    {
+        switch (i_data->mode)
+        {
+            case FAN_MODE_AUTO:
+            case FAN_MODE_TEMP:
+            case FAN_MODE_RPM:
+                this->current_mode = i_data->mode;
+                break;
+            default:
+                LOG_ERR("FAN : mauvaise valeur pour MaJ mode, mode = %d", i_data->mode);
+                ret = -2;
+                break;
+        }
+    }
+
+    return ret;
+}
+
+int FAN::fan_update_power(t_fan_power_mode *i_data)
+{
+    int ret = 0;
+
+    if (NULL == i_data)
+    {
+        LOG_ERR("FAN : pas de données pour MaJ du power mode");
+        ret = -1;
+    }
+    else
+    {
+        switch (i_data->power_mode)
+        {
+            case FAN_POWER_MODE_OFF:
+            case FAN_POWER_MODE_ON:
+                // Sauvegarde de l'état
+                this->current_power_mode = i_data->power_mode;
+
+                // Set de pin selon l'etat en cours
+                ret = OS_write_gpio(FAN_PIN_OUT, this->current_power_mode);
+
+                break;
+            default:
+                LOG_ERR("FAN : mauvaise valeur pour MaJ power mode, power mode = %d", i_data->power_mode);
+                ret = -2;
+                break;
+        }
+    }
+
+    return ret;
+}
+
+

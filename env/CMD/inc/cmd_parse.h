@@ -1,6 +1,12 @@
 #pragma once
 
-#define MAX_SIZE_CMD 128
+// Defines
+#define CMD_MAX_SIZE        128
+#define CMD_NB_FD           1
+#define CMD_POLL_TIMEOUT    100
 
+#define CMD_REGEX_QUIT      "^quit$"
+#define CMD_REGEX_MSG       "^s [a-zA-Z_]+"
 
-int cmd_parse_and_exec(char line[MAX_SIZE_CMD]);
+// Fonctions locales
+int cmd_parse_and_exec(char line[CMD_MAX_SIZE]);

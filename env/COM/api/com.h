@@ -126,12 +126,14 @@ int COM_register_socket(int i_fd, int *i_list, int i_size);
 // Gestion de l'AD7705
 t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair);
 
+int COM_adc_read_setup(t_os_spi_device i_device, t_uint8 *o_setup);
 int COM_adc_set_filter_sync(t_os_spi_device i_device, t_com_state i_filter_sync);
 int COM_adc_set_buffer_mode(t_os_spi_device i_device, t_com_state i_buffer_mode);
 int COM_adc_set_bipolarity(t_os_spi_device i_device, t_com_state i_bipolarity);
 int COM_adc_set_gain(t_os_spi_device i_device, t_com_adc_gain i_gain);
 int COM_adc_set_mode(t_os_spi_device i_device, t_com_adc_mode i_mode);
 
+int COM_adc_read_clock(t_os_spi_device i_device, t_uint8 *o_clock);
 int COM_adc_enable_clock(t_os_spi_device i_device, t_com_adc_clock i_clock);
 int COM_adc_set_clock_rate(t_os_spi_device i_device, t_com_adc_clock_rate i_rate);
 int COM_adc_set_clock_div(t_os_spi_device i_device, t_com_state i_div);

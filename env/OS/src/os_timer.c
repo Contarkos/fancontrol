@@ -49,6 +49,7 @@ size_t OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_
 {
     t_os_timer_node * n = NULL;
 
+    // Allocation de la memoire pour le nouveau timer
     n = (t_os_timer_node *) malloc(sizeof(t_os_timer_node));
 
     if (NULL == n)
@@ -62,6 +63,7 @@ size_t OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_
         n->usec = i_usec;
         n->type = i_type;
 
+        // Tentative de création du timer
         n->fd = timerfd_create(CLOCK_REALTIME, 0);
 
         // Si le timer n'a pas pu être crée on sort en libérant la mémoire du malloc

@@ -69,7 +69,7 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
     }
 
     // Mise en forme du buffer pour lire le registre de comparaison
-    data[0] = (t_uint8)  (  (0 << COM_ADC_WRITE_SHIFT)                  // Ecriture dans le registre de com
+    data[0] = (t_uint8)  (  (1 << COM_ADC_WRITE_SHIFT)                  // Ecriture dans le registre de com
                           | (COM_ADC_REG_DATA << COM_ADC_REG_SHIFT)     // Selection du registre de données
                           | (COM_ADC_RW_MASK)                           // Lecture des données
                           | (i_pair << COM_ADC_CHAN_SHIFT) );           // Selection de la paire a ecouter
@@ -77,9 +77,11 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
     // Vide pour ne pas bloquer la lecture
     data[1] = COM_ADC_NULL;
     data[2] = COM_ADC_NULL;
+    LOG_INF3("COM : valeur requete = 0x%x", data[0]);
 
     // On va récupérer les données
-    ret = OS_spi_write_read(i_device, data, COM_DATA_LENGTH + 1);
+    ret = OS_spi_write_read(i_device, data, 1);
+    LOG_INF3("COM : valeur result = 0x%x & 0x%x", data[1], data[2]);
 
     if (ret < 0)
     {
@@ -151,17 +153,28 @@ int COM_adc_set_bipolarity(t_os_spi_device i_device, t_com_state i_bipolarity)
 {
     int ret = 0;
 
-    switch (i_device)
+    switch (i_bipolarity)
     {
-        case OS_SPI_DEVICE_0:
-            com_device_0_setup.bipolarity = i_bipolarity;
-            break;
-        case OS_SPI_DEVICE_1:
-            com_device_1_setup.bipolarity = i_bipolarity;
-            break;
-        default:
-            LOG_ERR("COM : device inexistant, device = %d", i_device);
-            ret = -1;
+       case COM_STATE_ON:
+       case COM_STATE_OFF:
+          switch (i_device)
+          {
+             case OS_SPI_DEVICE_0:
+                com_device_0_setup.bipolarity = i_bipolarity;
+                break;
+             case OS_SPI_DEVICE_1:
+                com_device_1_setup.bipolarity = i_bipolarity;
+                break;
+             default:
+                LOG_ERR("COM : device inexistant, device = %d", i_device);
+                ret = -2;
+                break;
+          }
+          break;
+       default:
+          LOG_ERR("COM : mauvaise valeur de bipolarité");
+          ret = -1;
+          break;
     }
 
     // Reconfig du setup
@@ -329,6 +342,97 @@ int COM_adc_set_clock_filter(t_os_spi_device i_device, t_com_adc_clock_filt i_fi
     return ret;
 }
 
+int COM_adc_read_setup(t_os_spi_device i_device, t_uint8 *o_setup)
+{
+    int ret = 0;
+    t_uint8 data[COM_SETUP_LENGTH + 1];
+    t_com_adc_setup *s;
+
+    switch (i_device)
+    {
+        case OS_SPI_DEVICE_0:
+            s = &(com_device_0_setup);
+            break;
+        case OS_SPI_DEVICE_1:
+            s = &(com_device_1_setup);
+            break;
+        default:
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
+            ret = -1;
+    }
+
+    if (0 == ret)
+    {
+        // Mise en forme du buffer pour écrire dans le registre de configuration
+        data[0] = (t_uint8)  (   (0 << COM_ADC_WRITE_SHIFT)                     // Ecriture dans le registre de com
+                               | (COM_ADC_REG_SETUP << COM_ADC_REG_SHIFT)       // Selection du registre de données
+                               | (1 << COM_ADC_RW_SHIFT)                        // Lecture des données
+                               | (s->pair << COM_ADC_CHAN_SHIFT));              // On reste sur la dernière paire demandée
+
+        // Lecture de la config courante
+        data[1] = COM_ADC_NULL;
+        LOG_INF3("COM : valeur du setup = 0x%x", data[0]);
+
+        // On va écrire les données
+        ret = OS_spi_write_read(i_device, data, 1);
+
+        // TODO enregistrement des données
+        LOG_INF3("COM : valeur du setup = 0x%x", data[0]);
+
+        if (o_setup)
+        {
+            *o_setup = data[1];
+        }
+    }
+
+    return ret;
+}
+
+int COM_adc_read_clock(t_os_spi_device i_device, t_uint8 *o_clock)
+{
+    int ret = 0;
+    t_uint8 data[COM_SETUP_LENGTH + 1];
+    t_com_adc_setup *s;
+
+    switch (i_device)
+    {
+        case OS_SPI_DEVICE_0:
+            s = &(com_device_0_setup);
+            break;
+        case OS_SPI_DEVICE_1:
+            s = &(com_device_1_setup);
+            break;
+        default:
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
+            ret = -1;
+    }
+
+    if (0 == ret)
+    {
+        // Mise en forme du buffer pour écrire dans le registre de configuration
+        data[0] = (t_uint8)  (   (0 << COM_ADC_WRITE_SHIFT)                     // Ecriture dans le registre de com
+                               | (COM_ADC_REG_CLOCK << COM_ADC_REG_SHIFT)       // Selection du registre de données
+                               | (1 << COM_ADC_RW_SHIFT)                        // Lecture des données
+                               | (s->pair << COM_ADC_CHAN_SHIFT));              // On reste sur la dernière paire demandée
+
+        // Lecture de la config courante
+        data[1] = COM_ADC_NULL;
+
+        // On va écrire les données
+        ret = OS_spi_write_read(i_device, data, 1);
+
+        // TODO enregistrement des données
+        LOG_INF3("COM : valeur de la clock = 0x%x", data[1]);
+
+        if (o_clock)
+        {
+            *o_clock = data[1];
+        }
+    }
+
+    return ret;
+}
+
 /*********************************************************************/
 /*                       Fonctions locales                           */
 /*********************************************************************/
@@ -357,7 +461,7 @@ int com_adc_config_setup(t_os_spi_device i_device)
         // Mise en forme du buffer pour écrire dans le registre de configuration
         data[0] = (t_uint8)  (   (0 << COM_ADC_WRITE_SHIFT)                     // Ecriture dans le registre de com
                                | (COM_ADC_REG_SETUP << COM_ADC_REG_SHIFT)       // Selection du registre de données
-                               | (0 << COM_ADC_RW_MASK)                         // Ecriture des données
+                               | (0 << COM_ADC_RW_SHIFT)                        // Ecriture des données
                                | (s->pair << COM_ADC_CHAN_SHIFT));              // On reste sur la dernière paire demandée
 
         // Ecriture de la config courante
@@ -369,7 +473,7 @@ int com_adc_config_setup(t_os_spi_device i_device)
                 );
 
         // On va écrire les données
-        ret = OS_spi_write_read(i_device, data, COM_SETUP_LENGTH + 1);
+        ret = OS_spi_write_read(i_device, data, 1);
     }
 
     return ret;
@@ -404,13 +508,13 @@ int com_adc_config_clock(t_os_spi_device i_device)
 
         // Ecriture de la config courante
         data[1] = (t_uint8) (   (s->clk_disable << COM_ADC_CLK_DIS_SHIFT)
-                              | (s->clk_div << COM_ADC_CLK_DIV_SHIFT)
-                              | (s->clk_rate << COM_ADC_CLK_SET_SHIFT)
-                              | (s->clk_filter << COM_ADC_CLK_FILT_SHIFT)
+                              | (s->clk_div     << COM_ADC_CLK_DIV_SHIFT)
+                              | (s->clk_rate    << COM_ADC_CLK_SET_SHIFT)
+                              | (s->clk_filter  << COM_ADC_CLK_FILT_SHIFT)
                 );
 
         // On va écrire les données
-        ret = OS_spi_write_read(i_device, data, COM_CLOCK_LENGTH + 1);
+        ret = OS_spi_write_read(i_device, data, 1);
     }
 
     return ret;

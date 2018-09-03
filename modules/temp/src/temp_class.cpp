@@ -54,15 +54,23 @@ int TEMP::start_module()
     else
     {
         LOG_INF1("TEMP : timer_fd start = %x", timer_fd);
+        LOG_INF3("TEMP : ret = %d", ret);
 
         // Configuration du GPIO
         ret += OS_set_gpio(TEMP_PIN_OUT, OS_GPIO_FUNC_IN);
+        LOG_INF3("TEMP : ret = %d", ret);
 
         // Configuration du module SPI
         ret += OS_spi_open_port(OS_SPI_DEVICE_0);
+        LOG_INF3("TEMP : ret = %d", ret);
 
         // Configuration de la clock de l'ADC
-//        ret += COM_adc_set_clock_rate(OS_SPI_DEVICE_0, COM_ADC_CLOCK_1MHZ);
+        //ret += COM_adc_set_clock_rate(OS_SPI_DEVICE_0, COM_ADC_CLOCK_1MHZ);
+
+        ret += COM_adc_read_setup(OS_SPI_DEVICE_0, NULL);
+        LOG_INF3("TEMP : ret = %d", ret);
+        ret += COM_adc_read_clock(OS_SPI_DEVICE_0, NULL);
+        LOG_INF3("TEMP : ret = %d", ret);
 
         if ( ret < 0 )
         {
@@ -128,7 +136,6 @@ int TEMP::exec_loop()
 {
     int ret = 0;
 
-#if 1
     int read_fd = 0, ii, ss;
     t_com_msg m;
 
@@ -161,27 +168,7 @@ int TEMP::exec_loop()
             }
         }
     }
-#else
-    int n = 0, max= 1000;
 
-    // Condition de sortie
-    if (n > max)
-    {
-        LOG_INF1("TEMP : fin du module");
-        this->set_running(false);
-    }
-    else
-    {
-        n++;
-    }
-
-    if ( !(n % 100) )
-    {
-        LOG_INF1("TEMP : alive !\n");
-    }
-
-    OS_usleep(100000);
-#endif
     return ret;
 }
 

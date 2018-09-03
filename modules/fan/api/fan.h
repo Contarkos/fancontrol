@@ -13,6 +13,22 @@ typedef enum
     FAN_MODE_RPM = 2
 } fan_e_mode;
 
+typedef enum
+{
+    FAN_POWER_MODE_OFF = 0,
+    FAN_POWER_MODE_ON = 1
+} fan_e_power_mode;
+
+typedef struct
+{
+    fan_e_mode mode;
+} __attribute__((packed)) t_fan_mode;
+
+typedef struct
+{
+    fan_e_power_mode power_mode;
+} __attribute__((packed)) t_fan_power_mode;
+
 // Variables globales
 
 // API pour module FAN

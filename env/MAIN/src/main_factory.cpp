@@ -13,7 +13,10 @@
 #include "cmd.h"
 #include "com.h"
 
-// Variables globales
+/*********************************************************************/
+/*                       Variables globales                          */
+/*********************************************************************/
+
 std::mutex t_mod_mutex[NB_MODULE];
 std::mutex t_main_mutex[NB_MODULE];
 int main_is_running = 0;
@@ -22,6 +25,10 @@ mod_type t_start[NB_MODULE] = {
         {&FAN_start, &FAN_stop},
         {&TEMP_start, &TEMP_stop}
 };
+
+/*********************************************************************/
+/*                       Fonctions internes                          */
+/*********************************************************************/
 
 int main_start_factory()
 {
@@ -73,8 +80,7 @@ int main_start_factory()
         main_is_running = 1;
 
         // On va chercher des commandes rentrées par l'utilisateur
-        CMD_read();
-
+        ret = main_loop();
     }
 
     return ret;
@@ -94,7 +100,33 @@ int main_init(void)
     }
     else
     {
-        ret = COM_init();
+        // Init de la socket UDP
+        if (0 != (ret = COM_init()))
+        {
+            LOG_ERR("MAIN : erreur à l'init de COM, code : %d", ret);
+        }
+        // Init des regex de parsing des commandes
+        else if (0 != (ret = CMD_init()))
+        {
+            LOG_ERR("MAIN : erreur à l'init de CMD, code : %d", ret);
+        }
+        else
+        {
+            LOG_INF1("MAIN : init du systeme OK");
+        }
+
+    }
+
+    return ret;
+}
+
+int main_loop(void)
+{
+    int ret = 0;
+
+    while (main_is_running)
+    {
+        CMD_read();
     }
 
     return ret;
@@ -133,6 +165,9 @@ int main_stop(void)
 
     // Arret de la COM exterieure
     ret += COM_stop();
+
+    // Arret du parsing des regex
+    ret += CMD_stop();
 
     // Arret de l'OS
     ret += OS_stop();

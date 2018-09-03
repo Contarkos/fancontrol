@@ -40,17 +40,17 @@ int OS_spi_open_port (t_os_spi_device spi_device)
     spi_bitsPerWord = 8;
 
     //----- SET SPI BUS SPEED -----
-    spi_speed = 2457600;        //1000000 = 1MHz (1uS per bit) 
+    spi_speed = 976000;        //1000000 = 1MHz (1uS per bit) 
 
     switch (spi_device)
     {
         case OS_SPI_DEVICE_0:
             spi_cs_fd = &spi_cs0_fd;
-            *spi_cs_fd = open("/dev/spidev0.0", O_RDWR);
+            *spi_cs_fd = open("/dev/spidev0.0", O_RDWR | O_NONBLOCK);
             break;
         case OS_SPI_DEVICE_1:
             spi_cs_fd = &spi_cs1_fd;
-            *spi_cs_fd = open("/dev/spidev0.1", O_RDWR);
+            *spi_cs_fd = open("/dev/spidev0.1", O_RDWR | O_NONBLOCK);
             break;
         default:
             LOG_ERR("OS : device SPI inexistant");
@@ -183,19 +183,19 @@ int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int leng
         {
             memset(&spi[i], 0, sizeof (spi[i]));
             spi[i].tx_buf        = (unsigned long)(data + i); // transmit from "data"
-            spi[i].rx_buf        = (unsigned long)(data + i) ; // receive into "data"
-            spi[i].len           = sizeof(*(data + i)) ;
-            spi[i].delay_usecs   = 0 ;
-            spi[i].speed_hz      = spi_speed ;
-            spi[i].bits_per_word = spi_bitsPerWord ;
+            spi[i].rx_buf        = (unsigned long)(data + i); // receive into "data"
+            spi[i].len           = sizeof(*(data + i));
+            spi[i].delay_usecs   = 0;
+            spi[i].speed_hz      = spi_speed;
+            spi[i].bits_per_word = spi_bitsPerWord;
             spi[i].cs_change = 0;
         }
 
-        retVal = ioctl(*spi_cs_fd, SPI_IOC_MESSAGE(length), &spi) ;
+        retVal = ioctl(*spi_cs_fd, SPI_IOC_MESSAGE(length), &spi);
 
         if(retVal < 0)
         {
-            perror("Error - Problem transmitting spi data..ioctl");
+            LOG_ERR("Error - Problem transmitting spi data..ioctl");
             retVal = -4;
         }
     }

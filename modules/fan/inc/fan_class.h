@@ -8,8 +8,9 @@
 #include "temp.h"
 
 #define FAN_MODULE_NAME         "FAN"
-#define FAN_PIN_OUT             (18)
+#define FAN_PIN_PWM             (18)
 #define FAN_PIN_IN              (25)
+#define FAN_PIN_OUT             (23)
 #define FAN_DEFAULT_PREC        (1024)
 #define FAN_DEFAULT_CYCLE       (0.0F)
 #define FAN_TIMER_USEC          (40000)
@@ -37,6 +38,8 @@ class FAN : public MODULE
         int socket_fd;
 
         fan_e_mode current_mode;
+        fan_e_power_mode current_power_mode;
+
         int consigne_speed;     // Consigne de vitesse
         int consigne_temp;      // Température consigne à atteindre
         int current_temp;       // Température de l'élément à refroidir
@@ -63,6 +66,8 @@ class FAN : public MODULE
 
         // Recuperation des données
         int fan_treat_msg(t_com_msg i_msg, int i_size);
+        int fan_update_mode(t_fan_mode *i_data);
+        int fan_update_power(t_fan_power_mode *i_data);
         int fan_update_data(t_temp_data *i_data);
 };
 

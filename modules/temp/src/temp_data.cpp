@@ -40,6 +40,8 @@ int TEMP::temp_retrieve_data(void)
         // Lecture de la donnée dans le AD7705
         d = COM_adc_read_result(OS_SPI_DEVICE_0, COM_ADC_PAIR_0);
 
+        COM_adc_read_clock(OS_SPI_DEVICE_0, NULL);
+
         // Désactivation de la pin connectée au thermistor
         ret = OS_write_gpio(TEMP_PIN_OUT, 0);
 

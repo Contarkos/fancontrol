@@ -54,11 +54,14 @@ int FAN::start_module()
         // Set de la diode en entrée pour lire la vitesse
         ret += OS_set_gpio(FAN_PIN_IN, OS_GPIO_FUNC_IN);
 
+        // Set de la pin en sortie pour le controle de l'allumage
+        ret += OS_set_gpio(FAN_PIN_OUT, OS_GPIO_FUNC_OUT);
+
         // Reglage source Clock sur PLL C
         ret += OS_pwm_set_clock_source(OS_CLOCK_SRC_PLLC);
 
         // Set de la diode en sortie en PWM
-        ret += OS_set_gpio(FAN_PIN_OUT, OS_GPIO_FUNC_ALT5);
+        ret += OS_set_gpio(FAN_PIN_PWM, OS_GPIO_FUNC_ALT5);
 
         // Mode MS pour le PWM
         ret += OS_pwm_set_mode(OS_PWM_MODE_MSMODE);
@@ -131,12 +134,8 @@ int FAN::stop_module()
 int FAN::exec_loop()
 {
     int ret = 0, read_fd = 0, ii, ss;
-    static int n = 0;
-    static int is_onoff = 0;
-    const int max = 100;
     t_com_msg m;
 
-#if 1
     // Ecoute sur les fd
     read_fd = poll(this->p_fd, FAN_FD_NB, FAN_POLL_TIMEOUT);
 
@@ -167,30 +166,6 @@ int FAN::exec_loop()
                 }
             }
         }
-    }
-#else
-    if (is_onoff)
-    {
-        OS_pwm_set_dutycycle((float) 0);
-    }
-    else
-    {
-        OS_pwm_set_dutycycle((float) 100);
-    }
-
-    usleep(10000000);
-#endif
-    is_onoff = 1 - is_onoff;
-
-    // Condition de sortie
-    if (n > max)
-    {
-        LOG_INF1("FAN : fin du module");
-        this->set_running(false);
-    }
-    else
-    {
-        n++;
     }
 
     return ret;
