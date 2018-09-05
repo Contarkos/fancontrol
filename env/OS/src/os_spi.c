@@ -155,8 +155,8 @@ int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int leng
 {
     struct spi_ioc_transfer spi[length];
     int i = 0;
-    int retVal = 0;
-    int *spi_cs_fd;
+    int retVal = 0, ret = 0;
+    int *spi_cs_fd = NULL;
 
     switch (spi_device)
     {
@@ -168,15 +168,10 @@ int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int leng
             break;
         default:
             LOG_ERR("OS : device SPI inexistant");
-            retVal = -1;
+            ret = -1;
     }
 
-    if ( (retVal < 0) )
-    {
-        LOG_ERR("OS : module SPI non chargé");
-        retVal = -2;
-    }
-    else
+    if ( spi_cs_fd )
     {
         //one spi transfer for each byte
         for (i = 0 ; i < length ; i++)
@@ -196,9 +191,14 @@ int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int leng
         if(retVal < 0)
         {
             LOG_ERR("Error - Problem transmitting spi data..ioctl");
-            retVal = -4;
+            ret = -4;
+        }
+        else if (length != retVal)
+        {
+            LOG_WNG("COM : warning nombre de messages envoyés incohérents, %d != %d", length, retVal);
+            ret = -8;
         }
     }
 
-    return retVal;
+    return ret;
 }

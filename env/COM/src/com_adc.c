@@ -79,8 +79,14 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
     data[2] = COM_ADC_NULL;
     LOG_INF3("COM : valeur requete = 0x%x", data[0]);
 
+    // On attend qu'un mot soit pret
+    while (COM_STATE_ON == OS_read_gpio(COM_ADC_PIN_RDY))
+    {
+       OS_usleep(10);
+    }
+
     // On va récupérer les données
-    ret = OS_spi_write_read(i_device, data, 1);
+    ret = OS_spi_write_read(i_device, data, COM_DATA_LENGTH + 1);
     LOG_INF3("COM : valeur result = 0x%x & 0x%x", data[1], data[2]);
 
     if (ret < 0)
@@ -374,7 +380,7 @@ int COM_adc_read_setup(t_os_spi_device i_device, t_uint8 *o_setup)
         LOG_INF3("COM : valeur du setup = 0x%x", data[0]);
 
         // On va écrire les données
-        ret = OS_spi_write_read(i_device, data, 1);
+        ret = OS_spi_write_read(i_device, data, COM_SETUP_LENGTH + 1);
 
         // TODO enregistrement des données
         LOG_INF3("COM : valeur du setup = 0x%x", data[0]);
@@ -419,7 +425,7 @@ int COM_adc_read_clock(t_os_spi_device i_device, t_uint8 *o_clock)
         data[1] = COM_ADC_NULL;
 
         // On va écrire les données
-        ret = OS_spi_write_read(i_device, data, 1);
+        ret = OS_spi_write_read(i_device, data, COM_SETUP_LENGTH + 1);
 
         // TODO enregistrement des données
         LOG_INF3("COM : valeur de la clock = 0x%x", data[1]);
@@ -473,7 +479,7 @@ int com_adc_config_setup(t_os_spi_device i_device)
                 );
 
         // On va écrire les données
-        ret = OS_spi_write_read(i_device, data, 1);
+        ret = OS_spi_write_read(i_device, data, COM_SETUP_LENGTH + 1);
     }
 
     return ret;
@@ -514,7 +520,7 @@ int com_adc_config_clock(t_os_spi_device i_device)
                 );
 
         // On va écrire les données
-        ret = OS_spi_write_read(i_device, data, 1);
+        ret = OS_spi_write_read(i_device, data, COM_CLOCK_LENGTH + 1);
     }
 
     return ret;

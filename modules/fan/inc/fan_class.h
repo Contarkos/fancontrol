@@ -9,8 +9,8 @@
 
 #define FAN_MODULE_NAME         "FAN"
 #define FAN_PIN_PWM             (18)
-#define FAN_PIN_IN              (25)
 #define FAN_PIN_OUT             (23)
+#define FAN_PIN_IN              (24)
 #define FAN_DEFAULT_PREC        (1024)
 #define FAN_DEFAULT_CYCLE       (0.0F)
 #define FAN_TIMER_USEC          (40000)

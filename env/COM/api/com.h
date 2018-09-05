@@ -16,6 +16,8 @@ extern "C" {
 #define COM_MAX_SIZE_DATA   1024        // Taille max d'un message à l'envoi des messages
 #define COM_EXTERN_BACKLOG  128
 
+#define COM_ADC_PIN_RDY     (25)
+
 // Typedef
 typedef enum
 {

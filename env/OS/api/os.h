@@ -124,6 +124,7 @@ int OS_detach_thread(OS_thread_t * p_i_thread);
 // Pour GPIO
 int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout);
 int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active);
+int OS_read_gpio(t_uint32 i_pin);
 
 // Pour SPI
 int OS_spi_open_port (t_os_spi_device spi_device);

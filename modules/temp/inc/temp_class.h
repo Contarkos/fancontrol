@@ -7,16 +7,16 @@
 #include "com.h"
 
 #define TEMP_MODULE_NAME        "TEMP"
-#define TEMP_PIN_OUT            (27)
-#define TEMP_PIN_IN             (25)
+#define TEMP_PIN_IN             (COM_ADC_PIN_RDY)       // /DRDY ADC
+#define TEMP_PIN_OUT            (27)                    // Controle de l'alim du thermistor
 #define TEMP_DEFAULT_PREC       (1024)
 #define TEMP_DEFAULT_CYCLE      (0.0F)
 #define TEMP_TIMER_USEC         (500000)
 
-#define TEMP_THERM_DEF_TEMP     (298.15F) // Température ambiante
-#define TEMP_THERM_COEFF        (3950)    // Coefficient B de l'équation de Steinhart-Hart FIXME trouver la bonne valeur
-#define TEMP_THERM_DEFAULT      (10000)   // Resistance à 25°C de la résistance
-#define TEMP_THERM_COMP         (10000)   // Resistance de comparaison de tension
+#define TEMP_THERM_DEF_TEMP     (298.15F)               // Température ambiante
+#define TEMP_THERM_COEFF        (3950)                  // Coefficient B de l'équation de Steinhart-Hart
+#define TEMP_THERM_DEFAULT      (10000)                 // Resistance à 25°C de la résistance
+#define TEMP_THERM_COMP         (10000)                 // Resistance de comparaison de tension
 
 #define TEMP_POLL_TIMEOUT       (100)
 
