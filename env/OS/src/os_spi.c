@@ -1,3 +1,4 @@
+// Global includes
 #include <fcntl.h>                //Needed for SPI port
 #include <sys/ioctl.h>            //Needed for SPI port
 #include <linux/spi/spidev.h>     //Needed for SPI port
@@ -6,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 // Local includes
 #include "base.h"
@@ -80,11 +82,12 @@ int OS_spi_open_port (t_os_spi_device spi_device)
             LOG_ERR("OS : Could not set SPIMode (RD)...ioctl fail");
             return(1);
         }
+        LOG_INF3("OS : spi mode = %d", spi_mode);
 
         status_value = ioctl(*spi_cs_fd, SPI_IOC_WR_BITS_PER_WORD, &spi_bitsPerWord);
         if(status_value < 0)
         {
-            LOG_ERR("OS : Could not set SPI bitsPerWord (WR)...ioctl fail");
+            LOG_ERR("OS : Could not set SPI bitsPerWord (WR)...ioctl fail, errno = %d", errno);
             return(1);
         }
 
@@ -92,6 +95,21 @@ int OS_spi_open_port (t_os_spi_device spi_device)
         if(status_value < 0)
         {
             LOG_ERR("OS : Could not set SPI bitsPerWord(RD)...ioctl fail");
+            return(1);
+        }
+
+        int spi_lsb = SPI_LSB_FIRST;
+        status_value = ioctl(*spi_cs_fd, SPI_IOC_WR_LSB_FIRST, &spi_lsb);
+        if(status_value < 0)
+        {
+            LOG_ERR("OS : Could not set SPI LSB (WR)...ioctl fail errno = %d", errno);
+            return(1);
+        }
+
+        status_value = ioctl(*spi_cs_fd, SPI_IOC_RD_LSB_FIRST, &spi_lsb);
+        if(status_value < 0)
+        {
+            LOG_ERR("OS : Could not set SPI LSB (RD)...ioctl fail errno = %d", errno);
             return(1);
         }
 
@@ -154,7 +172,7 @@ int OS_spi_close_port (t_os_spi_device spi_device)
 int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int length)
 {
     struct spi_ioc_transfer spi[length];
-    int i = 0;
+    int ii = 0;
     int retVal = 0, ret = 0;
     int *spi_cs_fd = NULL;
 
@@ -174,16 +192,16 @@ int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int leng
     if ( spi_cs_fd )
     {
         //one spi transfer for each byte
-        for (i = 0 ; i < length ; i++)
+        for (ii = 0 ; ii < length ; ii++)
         {
-            memset(&spi[i], 0, sizeof (spi[i]));
-            spi[i].tx_buf        = (unsigned long)(data + i); // transmit from "data"
-            spi[i].rx_buf        = (unsigned long)(data + i); // receive into "data"
-            spi[i].len           = sizeof(*(data + i));
-            spi[i].delay_usecs   = 0;
-            spi[i].speed_hz      = spi_speed;
-            spi[i].bits_per_word = spi_bitsPerWord;
-            spi[i].cs_change = 0;
+            memset(&spi[ii], 0, sizeof (spi[ii]));
+            spi[ii].tx_buf        = (unsigned long)(data + ii); // transmit from "data"
+            spi[ii].rx_buf        = (unsigned long)(data + ii); // receive into "data"
+            spi[ii].len           = sizeof(*(data + ii));
+            spi[ii].delay_usecs   = 0;
+            spi[ii].speed_hz      = spi_speed;
+            spi[ii].bits_per_word = spi_bitsPerWord;
+            spi[ii].cs_change     = 0;
         }
 
         retVal = ioctl(*spi_cs_fd, SPI_IOC_MESSAGE(length), &spi);
@@ -191,12 +209,12 @@ int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int leng
         if(retVal < 0)
         {
             LOG_ERR("Error - Problem transmitting spi data..ioctl");
-            ret = -4;
+            ret = -2;
         }
         else if (length != retVal)
         {
             LOG_WNG("COM : warning nombre de messages envoyés incohérents, %d != %d", length, retVal);
-            ret = -8;
+            ret = -4;
         }
     }
 

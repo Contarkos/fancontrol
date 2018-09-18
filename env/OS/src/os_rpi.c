@@ -1,7 +1,6 @@
 
 // Global includes
 #include <stdio.h>
-#include <linux/gpio.h>
 
 // Local includes
 #include "base.h"

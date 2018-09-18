@@ -31,6 +31,9 @@ int TEMP::temp_retrieve_data(void)
     // Activation de la pin connectée au thermistor
     ret = OS_write_gpio(TEMP_PIN_OUT, 1);
 
+    // Attente que la pin soit haute
+    OS_usleep(10);
+
     if (ret < 0)
     {
         LOG_ERR("TEMP : erreur activation GPIO pour lecture temp, ret = %d", ret);
@@ -39,8 +42,6 @@ int TEMP::temp_retrieve_data(void)
     {
         // Lecture de la donnée dans le AD7705
         d = COM_adc_read_result(OS_SPI_DEVICE_0, COM_ADC_PAIR_0);
-
-        COM_adc_read_clock(OS_SPI_DEVICE_0, NULL);
 
         // Désactivation de la pin connectée au thermistor
         ret = OS_write_gpio(TEMP_PIN_OUT, 0);

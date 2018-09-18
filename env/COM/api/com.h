@@ -17,6 +17,7 @@ extern "C" {
 #define COM_EXTERN_BACKLOG  128
 
 #define COM_ADC_PIN_RDY     (25)
+#define COM_ADC_PIN_ENB     (27)
 
 // Typedef
 typedef enum
@@ -126,6 +127,9 @@ int COM_close_socket(int i_fd);
 int COM_register_socket(int i_fd, int *i_list, int i_size);
 
 // Gestion de l'AD7705
+int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate);
+int COM_adc_reset(t_os_spi_device i_device);
+
 t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair);
 
 int COM_adc_read_setup(t_os_spi_device i_device, t_uint8 *o_setup);

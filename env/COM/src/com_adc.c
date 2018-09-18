@@ -27,7 +27,7 @@ t_com_adc_setup com_device_0_setup =
     .gain = COM_ADC_GAIN_1,
     .bipolarity = COM_STATE_OFF,
     .buffer_mode = COM_STATE_OFF,
-    .filter_sync = COM_STATE_ON
+    .filter_sync = COM_STATE_OFF
 };
 
 t_com_adc_setup com_device_1_setup =
@@ -41,12 +41,61 @@ t_com_adc_setup com_device_1_setup =
     .gain = COM_ADC_GAIN_1,
     .bipolarity = COM_STATE_OFF,
     .buffer_mode = COM_STATE_OFF,
-    .filter_sync = COM_STATE_ON
+    .filter_sync = COM_STATE_OFF
 };
 
 /*********************************************************************/
 /*                         Fonctions API                             */
 /*********************************************************************/
+
+int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
+{
+    int ret = 0;
+
+    switch (i_device)
+    {
+        case OS_SPI_DEVICE_0:
+            com_device_0_setup.clk_rate = i_rate;
+            break;
+        case OS_SPI_DEVICE_1:
+            com_device_1_setup.clk_rate = i_rate;
+            break;
+        default:
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
+            ret = -1;
+    }
+
+    if (0 == ret)
+    {
+        // Reset de l'ADC
+        ret += COM_adc_reset(i_device);
+
+        // Configuration de la clock de l'ADC
+        ret += COM_adc_set_clock_rate(i_device, i_rate);
+
+        // Descente de la pin d'activation
+        ret += OS_write_gpio(COM_ADC_PIN_ENB, 0);
+
+        OS_usleep(10);
+
+        // Setup et demarrage de la calibration
+        ret += COM_adc_set_mode(i_device, COM_ADC_MODE_ZEROCAL);
+
+    }
+    return ret;
+}
+
+int COM_adc_reset(t_os_spi_device i_device)
+{
+    int ret = 0;
+    t_uint8 a[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
+
+    // Ecriture HIGH sur 32 bits
+    ret += OS_spi_write_read(i_device, a, 4);
+
+    LOG_INF1("COM : reset = %d %d %d %d", a[0], a[1], a[2], a[3]);
+    return ret;
+}
 
 t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
 {
@@ -69,10 +118,12 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
     }
 
     // Mise en forme du buffer pour lire le registre de comparaison
-    data[0] = (t_uint8)  (  (0 << COM_ADC_WRITE_SHIFT)                  // Ecriture dans le registre de com
+    data[0] = (t_uint8)  (
+                            (0 << COM_ADC_WRITE_SHIFT)                  // Ecriture dans le registre de com
                           | (COM_ADC_REG_DATA << COM_ADC_REG_SHIFT)     // Selection du registre de données
                           | (COM_ADC_RW_MASK)                           // Lecture des données
-                          | (i_pair << COM_ADC_CHAN_SHIFT) );           // Selection de la paire a ecouter
+                          | (i_pair << COM_ADC_CHAN_SHIFT)              // Selection de la paire a ecouter
+                         );
 
     // Vide pour ne pas bloquer la lecture
     data[1] = COM_ADC_NULL;
@@ -239,6 +290,20 @@ int COM_adc_set_mode(t_os_spi_device i_device, t_com_adc_mode i_mode)
     if (0 == ret)
     {
         com_adc_config_setup(i_device);
+    }
+
+    // Retour à la normal (pas de calibration à chaque setup)
+    switch (i_device)
+    {
+        case OS_SPI_DEVICE_0:
+            com_device_0_setup.mode = COM_ADC_MODE_NORMAL;
+            break;
+        case OS_SPI_DEVICE_1:
+            com_device_1_setup.mode = COM_ADC_MODE_NORMAL;
+            break;
+        default:
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
+            ret = -1;
     }
 
     return ret;
@@ -509,7 +574,7 @@ int com_adc_config_clock(t_os_spi_device i_device)
         // Mise en forme du buffer pour écrire dans le registre de configuration
         data[0] = (t_uint8)  (   (0 << COM_ADC_WRITE_SHIFT)                     // Ecriture dans le registre de com
                                | (COM_ADC_REG_CLOCK << COM_ADC_REG_SHIFT)       // Selection du registre de données
-                               | (0 << COM_ADC_RW_MASK)                         // Ecriture des données
+                               | (0 << COM_ADC_RW_SHIFT)                        // Ecriture des données
                                | (s->pair << COM_ADC_CHAN_SHIFT));              // On reste sur la dernière paire demandée
 
         // Ecriture de la config courante

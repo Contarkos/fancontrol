@@ -13,6 +13,7 @@ SUBDIR_MAIN = env/MAIN
 SUBDIRS_ENV = $(filter-out $(SUBDIR_MAIN), $(wildcard env/* ))
 SUBDIRS_MOD = $(wildcard modules/*)
 SUBDIR_DATA = DATA
+SUBDIR_KERN = tools/modules
 
 export PWD
 export SUBDIR_MAIN
@@ -73,14 +74,21 @@ modules:
 	done
 
 # Compilation du main puis executable
-main: env modules
+main: env modules kmodules
 	@echo "###################################"
 	@echo "Linking..."
 	@echo "-----------------------------------\n"
 	$(MAKE) $(PARALLEL) -C $(SUBDIR_MAIN) -f module.mk bin
 
+# Compilation du module kernel
+kmodules:
+	@echo "###################################"
+	@echo "Compiling kernel modules..."
+	@echo "-----------------------------------\n"
+	$(MAKE) $(PARALLEL) -C $(SUBDIR_KERN)
+	
 print-%:
 	@echo $* = $($(*))
 
-.PHONY: all main modules env clean distclean
+.PHONY: all main modules env clean distclean kmodules
 

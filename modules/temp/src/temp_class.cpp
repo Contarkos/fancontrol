@@ -56,14 +56,15 @@ int TEMP::start_module()
         LOG_INF1("TEMP : timer_fd start = %x", timer_fd);
 
         // Configuration du GPIO
-        ret += OS_set_gpio(TEMP_PIN_OUT, OS_GPIO_FUNC_IN);
+        ret += OS_set_gpio(TEMP_PIN_OUT, OS_GPIO_FUNC_OUT);
 
         // Configuration du module SPI
         ret += OS_spi_open_port(OS_SPI_DEVICE_0);
 
-        // Configuration de la clock de l'ADC
-        ret += COM_adc_set_clock_rate(OS_SPI_DEVICE_0, COM_ADC_CLOCK_1MHZ);
+        // Init de l'ADC
+        ret += COM_adc_init(OS_SPI_DEVICE_0, COM_ADC_CLOCK_1MHZ);
 
+        // Verification du setup
         ret += COM_adc_read_setup(OS_SPI_DEVICE_0, NULL);
         LOG_INF3("TEMP : ret = %d", ret);
         ret += COM_adc_read_clock(OS_SPI_DEVICE_0, NULL);
