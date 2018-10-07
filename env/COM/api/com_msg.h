@@ -17,9 +17,11 @@
 // Messages FAN
 #define FAN_MODE            (0 + (COM_BASE_FAN * COM_NB_MSG_BASE))
 #define FAN_POWER           (1 + (COM_BASE_FAN * COM_NB_MSG_BASE))
+#define FAN_TIMER           (2 + (COM_BASE_FAN * COM_NB_MSG_BASE))
 
 // Messsage TEMP
 #define TEMP_DATA           (0 + (COM_BASE_TEMP * COM_NB_MSG_BASE))
+#define TEMP_TIMER          (1 + (COM_BASE_TEMP * COM_NB_MSG_BASE))
 
 // Dernier message
 #define COM_TOTAL_MSG       (0 + (COM_BASE_LAST * COM_NB_MSG_BASE))

@@ -98,7 +98,7 @@ int OS_spi_open_port (t_os_spi_device spi_device)
             return(1);
         }
 
-        int spi_lsb = SPI_LSB_FIRST;
+        int spi_lsb = 0;
         status_value = ioctl(*spi_cs_fd, SPI_IOC_WR_LSB_FIRST, &spi_lsb);
         if(status_value < 0)
         {

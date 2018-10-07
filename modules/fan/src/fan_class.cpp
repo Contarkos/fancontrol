@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <mutex>
 #include <poll.h>
+#include <fcntl.h>
 
 // Includes locaux
 #include "base.h"
@@ -44,7 +45,7 @@ int FAN::start_module()
     // Démarrage du timer pour la boucle
     this->timer_fd = OS_create_timer(FAN_TIMER_USEC, &FAN::fan_timer_handler, OS_TIMER_PERIODIC, (void *) this);
 
-    if (0 == this->timer_fd)
+    if (0 > this->timer_fd)
     {
         LOG_ERR("FAN : erreur création timer de boucle");
         ret = -1;
@@ -105,6 +106,19 @@ int FAN::start_module()
         }
     }
 
+    // Requete interruption
+    this->irq_fd = OS_irq_request(OS_IRQ_TIME_NAME, O_RDONLY);
+
+    if (0 == this->irq_fd)
+    {
+        LOG_ERR("FAN : erreur requete interruption pour lecture vitesse fan");
+        ret = -4;
+    }
+    else
+    {
+        this->p_fd[FAN_FD_IRQ].fd = this->irq_fd;
+    }
+
     return ret;
 }
 
@@ -134,7 +148,6 @@ int FAN::stop_module()
 int FAN::exec_loop()
 {
     int ret = 0, read_fd = 0, ii, ss;
-    t_com_msg m;
 
     // Ecoute sur les fd
     read_fd = poll(this->p_fd, FAN_FD_NB, FAN_POLL_TIMEOUT);
@@ -150,19 +163,48 @@ int FAN::exec_loop()
     {
         for (ii = 0; ii < FAN_FD_NB; ii++)
         {
-            if (this->p_fd[ii].revents & this->p_fd[ii].events)
+            if (POLLIN & this->p_fd[ii].events)
             {
-                // ss = read(this->p_fd[ii].fd, &m, sizeof(t_com_msg)); // traitement
-                ret = COM_receive_data(this->p_fd[ii].fd, &m, &ss);
+                switch (ii)
+                {
+                    case FAN_FD_SOCKET:
+                        LOG_INF1("FAN : events = %d, ii = %d", this->p_fd[ii].events, ii);
+                        t_com_msg m;
 
-                if (0 == ss)
-                {
-                    LOG_WNG("FAN : mauvaise taille de message ");
-                    ret = -1;
-                }
-                else
-                {
-                    ret = fan_treat_msg(m, ss);
+                        ret = COM_receive_data(this->p_fd[ii].fd, &m, &ss);
+
+                        if (0 == ss)
+                        {
+                            LOG_WNG("FAN : mauvaise taille de message ");
+                            ret = -1;
+                        }
+                        else
+                        {
+                            ret = fan_treat_msg(m, ss);
+                        }
+                        break;
+                    case FAN_FD_IRQ:
+                        char d[OS_MAX_LENGTH_LONG];
+                        LOG_INF1("FAN : events = %d, ii = %d", this->p_fd[ii].events, ii);
+
+
+                        ss = read(this->p_fd[ii].fd, d, OS_MAX_LENGTH_LONG);
+
+                        if (0 > ss)
+                        {
+                            LOG_WNG("FAN : mauvaise taille de message pour fd %d, ss = %d", ii, ss);
+                            ret = 4;
+                        }
+                        else
+                        {
+                            ret = fan_treat_irq(d);
+                        }
+                        break;
+                    case FAN_FD_NB:
+                    default:
+                        LOG_WNG("FAN : mauvais file descriptor");
+                        ret = 2;
+                        break;
                 }
             }
         }

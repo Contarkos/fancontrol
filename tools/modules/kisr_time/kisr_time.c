@@ -8,7 +8,7 @@
  *     Copyright (C) 2009-2010, University of York
  *     Copyright (C) 2004-2006, Advanced Micro Devices, Inc.
  *
- *  Modified by Contarkos (www.disk91.com) for GPIO interrupts counting
+ *  Modified by Contarkos for GPIO interrupts counting
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -30,7 +30,9 @@
 #include <linux/fs.h>
 #include <linux/uaccess.h>
 
-#define GPIO_FOR_RX_SIGNAL    17
+#include <linux/poll.h>
+
+#define GPIO_FOR_RX_SIGNAL    23
 #define DEV_NAME              "gpio_ui0"
 #define BUFFER_SZ             512
 
@@ -42,6 +44,8 @@ static int  pRead;
 static int  pWrite;
 static int  wasOverflow;
 
+// Semaphore de blocage
+static wait_queue_head_t _queue_read;
 
 /* Define GPIOs for RX signal */
 static struct gpio signals[] = {
@@ -65,19 +69,21 @@ static irqreturn_t rx_isr(int irq, void *data)
 
     delta = timespec_sub(current_time, lastIrq_time);
     ns = ( (long long)delta.tv_sec * 1000000 ) + ( delta.tv_nsec/1000 );
-    lastDelta[pWrite] = ns;
 
     getnstimeofday(&lastIrq_time);
 
-    // Hack pour éviter le modulo
-    pWrite = ( pWrite + 1 )  & (BUFFER_SZ-1);
+    // Ajout de la donnée dans le tableau
+    lastDelta[pWrite] = ns;
+
+    // Hack pour éviter le modulo parce que BUFFER_SZ est une puissance de 2
+    pWrite = ( pWrite + 1 ) & (BUFFER_SZ-1);
     if (pWrite == pRead)
     {
         // overflow
         pRead = ( pRead + 1 ) & (BUFFER_SZ-1);
         if ( wasOverflow == 0 )
         {
-            printk(KERN_ERR "RFRPI - Buffer Overflow - IRQ will be missed");
+            printk(KERN_ERR "KISR TIME - Buffer Overflow - IRQ will be missed");
             wasOverflow = 1;
         }
     }
@@ -85,6 +91,10 @@ static irqreturn_t rx_isr(int irq, void *data)
     {
         wasOverflow = 0;
     }
+
+    // Reveil des queues
+    wake_up(&(_queue_read));
+
 
     return IRQ_HANDLED;
 }
@@ -112,29 +122,51 @@ static ssize_t kisr_write(struct file *file, const char __user *buf,
  * return >0 : size
  * return -EFAULT : error
  */
- static ssize_t kisr_read(struct file *file, char __user *buf,
+static ssize_t kisr_read(struct file *file, char __user *buf,
                           size_t count, loff_t *pos)
 {
-    char tmp[256];
-    int _count;
+    int _ret = 0, _count = 0;
     int _error_count;
 
-    _count = 0;
-    if ( pRead != pWrite )
+    // Buffer overflow
+    if ( pRead == pWrite )
     {
-        sprintf(tmp, "%ld\n", lastDelta[pRead]);
-        _count = strlen(tmp);
-        _error_count = copy_to_user(buf, tmp, _count+1);
+        _ret = wait_event_interruptible(_queue_read, (pRead != pWrite));
 
-        if ( _error_count != 0 )
+        if (_ret != 0)
         {
-            printk(KERN_ERR "RFRPI - Error writing to char device");
-            return -EFAULT;
+            return -ERESTARTSYS;
         }
-        pRead = (pRead + 1) & (BUFFER_SZ-1);
     }
 
+    _count = sizeof(unsigned long);
+    _error_count = copy_to_user(buf, &(lastDelta[pRead]), _count);
+
+    if ( _error_count != 0 )
+    {
+        printk(KERN_ERR "KISR Time - Error writing to char device");
+        return -EFAULT;
+    }
+    pRead = (pRead + 1) & (BUFFER_SZ-1);
+
     return _count;
+}
+
+static unsigned int kisr_poll(struct file *file, poll_table *table)
+{
+    unsigned int mask = 0;
+
+    // Attente du signal de nouvelle donnée
+    poll_wait(file, &(_queue_read), table);
+
+    if ( pRead != pWrite )
+    {
+        // Data normale dispo
+        mask |= (POLLIN | POLLRDNORM);
+    }
+
+    printk(KERN_INFO "KISR poll - mask = %d\n", mask);
+    return mask;
 }
 
 static struct file_operations kisr_fops = {
@@ -143,6 +175,7 @@ static struct file_operations kisr_fops = {
    .read = kisr_read,
    .write = kisr_write,
    .release = kisr_release,
+   .poll = kisr_poll,
 };
 
 static struct miscdevice kisr_misc_device = {
@@ -164,6 +197,9 @@ static int __init kisr_init(void)
     pRead = 0;
     pWrite = 0;
     wasOverflow = 0;
+
+    // Init de la wait queue
+    init_waitqueue_head(&(_queue_read));
 
     // register GPIO PIN in use
     ret = gpio_request_array(signals, ARRAY_SIZE(signals));

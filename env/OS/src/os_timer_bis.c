@@ -28,70 +28,82 @@
 typedef struct timer_node
 {
     int fd;
+    int index;
     timer_func callback;
     void * data;
     unsigned int usec;
     t_os_timer_type type;
-    struct timer_node * next;
 } t_os_timer_node;
+
+/*********************************************************************/
+/*                       Déclarations statiques                      */
+/*********************************************************************/
 
 static void * os_timer_thread(void * data);
 static t_os_timer_node * _get_timer_from_fd(int fd);
+
+static int _os_get_free_index(t_os_timer_node *i_array);
+
+
 static pthread_t os_timer_thread_id;
 static t_os_timer_node *os_timer_head = NULL;
+
+static t_os_timer_node timer_array[MAX_TIMER_COUNT] = { {0} };
 
 /*********************************************************************/
 /*                         Fonctions API                             */
 /*********************************************************************/
 
 // Creation d'un timer
-size_t OS_create_timer_old(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_type, void * i_data)
+int OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_type, void * i_data)
 {
-    t_os_timer_node * n = NULL;
+    int ii = -1;
 
-    // Allocation de la memoire pour le nouveau timer
-    n = (t_os_timer_node *) malloc(sizeof(t_os_timer_node));
+    // Pas d'allocation dynamique
+    ii = _os_get_free_index(timer_array);
 
-    if (NULL == n)
+    if (-1 == ii)
     {
         LOG_ERR("OS : erreur allocation timer");
     }
     else
     {
-        n->callback = i_handler;
-        n->data = i_data;
-        n->usec = i_usec;
-        n->type = i_type;
+        timer_array[ii].callback = i_handler;
+        timer_array[ii].data = i_data;
+        timer_array[ii].usec = i_usec;
+        timer_array[ii].type = i_type;
 
         // Tentative de création du timer
-        n->fd = timerfd_create(CLOCK_REALTIME, 0);
+        timer_array[ii].fd = timerfd_create(CLOCK_REALTIME, 0);
 
-        // Si le timer n'a pas pu être crée on sort en libérant la mémoire du malloc
-        if (-1 == n->fd)
+        // Si le timer n'a pas pu être crée on sort en resettant la mémoire
+        if (-1 == timer_array[ii].fd)
         {
             // Libération de la mémoire avant exit
-            free(n);
+            memset(&(timer_array[ii]), 0, sizeof(t_os_timer_node));
+
+            // Pas de quoi faire un timer
+            ii = -2;
         }
         else
         {
-            // Insertion du timer dans la liste
-            n->next = os_timer_head;
-            os_timer_head = n;
+            // Sauvegarde de l'index
+            timer_array[ii].index = ii;
         }
     }
 
-    return (size_t)n;
+    return ii;
 }
 
 // L'ID est le file descriptor donc on peut caster directement la structure (bof)
-int OS_start_timer_old(size_t i_timer_id)
+int OS_start_timer(int i_timer_id)
 {
     int ret = 0;
-    t_os_timer_node *n = (t_os_timer_node *)i_timer_id;
+    t_os_timer_node *n = &(timer_array[i_timer_id]);
     struct itimerspec t;
 
     // On vérifie que le timer existe bien
-    if (n)
+    if (n->fd)
     {
         // Reglage du temps au bout duquel le timer déclenche
         t.it_value.tv_sec = 0;
@@ -127,57 +139,25 @@ int OS_start_timer_old(size_t i_timer_id)
     return ret;
 }
 
-int OS_stop_timer_old(size_t i_timer_id)
+int OS_stop_timer(int i_timer_id)
 {
     int ret = 0;
-    t_os_timer_node *tmp = NULL, *n = (t_os_timer_node *) i_timer_id;
+    t_os_timer_node *n = &(timer_array[i_timer_id]);
 
-    if (n)
+    if (n->fd)
     {
+        // Fermeture du fichier
         close(n->fd);
-
-        // Si on est sur le timer de tete dans la liste
-        if (n == os_timer_head)
-        {
-            os_timer_head = os_timer_head->next;
-        }
-        else
-        {
-            // On parcourt la liste pour trouver n
-            tmp = os_timer_head;
-
-            while (tmp)
-            {
-                // On a trouvé n et il vaut tmp->next
-                if (tmp->next == n)
-                {
-                    tmp->next = tmp->next->next;
-                    break;
-                }
-
-                // On passe au suivant
-                tmp = tmp->next;
-            }
-
-        }
-
-        // Liberation de la mémoire si nécessaire
-        if (n)
-        {
-            free(n);
-        }
     }
-    else
-    {
-        LOG_ERR("OS : Arret timer, timer inexistant (timer id = %d)", i_timer_id);
-        ret = -1;
-    }
+
+    // Clean de la zone mémoire
+    memset(n, 0, sizeof(t_os_timer_node));
 
     return ret;
 }
 
 // Fonction basique d'attente
-void OS_usleep_old(int i_usec)
+void OS_usleep(int i_usec)
 {
     struct timespec timer_enbl = {.tv_sec = 0, .tv_nsec = i_usec * OS_USEC2NSEC};
     nanosleep(&timer_enbl, NULL);
@@ -190,6 +170,9 @@ void OS_usleep_old(int i_usec)
 int os_init_timer()
 {
     int ret = 0;
+
+    // Init de la zone mémoire
+    memset(timer_array, 0, sizeof(t_os_timer_node) * MAX_TIMER_COUNT);
 
     // Creation du timer qui lancera les timers
     ret = pthread_create(&os_timer_thread_id, NULL, os_timer_thread, NULL);
@@ -208,12 +191,12 @@ int os_init_timer()
 
 int os_end_timer()
 {
-    int ret = 0;
+    int ret = 0, ii;
 
     // Arret des timers
-    while(os_timer_head) 
+    for (ii = 0; ii < MAX_TIMER_COUNT; ii++)
     {
-        OS_stop_timer_old((size_t) os_timer_head);
+        ret += OS_stop_timer(ii);
     }
 
     // Arret du thread et suppression
@@ -230,16 +213,35 @@ int os_end_timer()
 // Récupération d'un noeud à partir du fd de son timer
 static t_os_timer_node * _get_timer_from_fd(int fd)
 {
-    t_os_timer_node * tmp = os_timer_head;
+    int ii;
+    t_os_timer_node *tmp = NULL;
 
-    while(tmp)
+    for (ii = 0; ii < MAX_TIMER_COUNT; ii++)
     {
-        if(tmp->fd == fd) break;
-
-        tmp = tmp->next;
+        if (timer_array[ii].fd == fd)
+        {
+            tmp = &(timer_array[ii]);
+            break;
+        }
     }
 
     return tmp;
+}
+
+static int _os_get_free_index(t_os_timer_node *i_array)
+{
+    int ret = -1, ii;
+
+    for (ii = 0; ii < MAX_TIMER_COUNT; ii++)
+    {
+        if (0 == i_array[ii].fd)
+        {
+            ret = ii;
+            break;
+        }
+    }
+
+    return ret;
 }
 
 static void * os_timer_thread(void * data)
@@ -247,7 +249,7 @@ static void * os_timer_thread(void * data)
     struct pollfd ufds[MAX_TIMER_COUNT] = {{0}};
     int read_fds = 0, ss;
     t_os_timer_node *tmp = NULL;
-    t_uint32 ii, max = 0;
+    t_uint32 jj, ii, max = 0;
     uint64_t exp;
 
     UNUSED_PARAMS(data);
@@ -267,14 +269,18 @@ static void * os_timer_thread(void * data)
         // Reinit de la zone mémoire
         memset(ufds, 0, sizeof(struct pollfd) * MAX_TIMER_COUNT);
 
-        while(tmp)
+        // On ne surveille que les timers initialisés
+        for (jj = 0; jj < MAX_TIMER_COUNT; jj++)
         {
-            ufds[max].fd = tmp->fd;
-            ufds[max].events = POLLIN;
-            max++;
-
-            tmp = tmp->next;
+            if (timer_array[jj].fd)
+            {
+                ufds[max].fd = timer_array[jj].fd;
+                ufds[max].events = POLLIN;
+                max++;
+            }
         }
+
+        // Polling sur les file descriptors
         read_fds = poll(ufds, max, OS_TIMER_TIMEOUT);
 
         // Si rien ne s'est passé on continue
@@ -293,7 +299,7 @@ static void * os_timer_thread(void * data)
                 // Pour ne pas lancer les callbacks qui n'existent plus
                 if(tmp && tmp->callback) 
                 {
-                    tmp->callback((int)tmp, tmp->data);
+                    tmp->callback(tmp->index, tmp->data);
                 }
             }
         }

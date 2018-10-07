@@ -22,6 +22,17 @@ void TEMP::temp_timer_handler(int i_timer_id, void * i_data)
     }
 }
 
+void TEMP::temp_timer_handler_bis(int i_timer_id, void *i_data)
+{
+    TEMP *p_this = reinterpret_cast<TEMP *> (i_data);
+    int dum;
+
+    if (p_this && (p_this->timer_fd == i_timer_id))
+    {
+        COM_send_data(p_this->socket_fd, TEMP_TIMER, &dum, sizeof(dum), 0);
+    }
+}
+
 int TEMP::temp_retrieve_data(void)
 {
     int ret = 0;
@@ -100,6 +111,24 @@ int TEMP::temp_send_data(void)
         {
             LOG_ERR("TEMP : erreur lors de l'envoi des données, ret = %d", ret);
         }
+    }
+
+    return ret;
+}
+
+int TEMP::temp_treat_irq(char *i_data)
+{
+    int ret = 0;
+
+    if (NULL == i_data)
+    {
+        LOG_ERR("TEMP : données IRQ nulles");
+        ret = -1;
+    }
+    else
+    {
+        // Conversion de la donnée
+//        LOG_INF1("Résultat : data = %s", i_data);
     }
 
     return ret;

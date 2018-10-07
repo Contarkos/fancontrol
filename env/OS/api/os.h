@@ -99,6 +99,10 @@ typedef enum
 #define OS_MIN_PERCENT_PWM     0.0F
 #define OS_MAX_PERCENT_PWM     100.0F
 
+#define OS_IRQ_TIME_NAME        "/dev/gpio_ui0"
+#define OS_IRQ_ADC_NAME         "/dev/gpio_ui1"
+
+#define OS_MAX_LENGTH_LONG      10
 /*********************************************************************/
 /*                         Fonctions API                             */
 /*********************************************************************/
@@ -108,9 +112,10 @@ int OS_init(void);
 int OS_stop(void);
 
 // Gestion du temps
-size_t OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_type, void * i_data);
-int OS_start_timer(size_t i_timer_id);
-int OS_stop_timer(size_t i_timer_id);
+int OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_type, void * i_data);
+//size_t OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_type, void * i_data);
+int OS_start_timer(int i_timer_id);
+int OS_stop_timer(int i_timer_id);
 
 void OS_usleep(int i_usec);
 
@@ -134,6 +139,9 @@ int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int leng
 int OS_spi_set_mode(t_os_spi_device i_device, t_os_spi_mode i_mode);
 int OS_spi_set_bits_per_word(t_os_spi_device i_device, t_os_spi_bpw i_bpw);
 int OS_spi_set_max_speed(t_os_spi_device i_device, t_os_spi_bpw i_bpw);
+
+// Pour IRQ
+int OS_irq_request(const char *i_irq, int i_flags);
 
 // Pour PWM
 int OS_pwn_enable(t_os_state i_enable);

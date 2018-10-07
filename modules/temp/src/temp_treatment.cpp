@@ -22,6 +22,9 @@ int TEMP::temp_treat_msg(t_com_msg i_msg)
         case MAIN_SHUTDOWN:
             ret = this->stop_and_exit();
             break;
+        case TEMP_TIMER:
+            ret = this->temp_retrieve_data();
+            break;
         default:
             LOG_ERR("FAN : mauvaise ID pour message, id = %d", i_msg.id);
             ret = 1;

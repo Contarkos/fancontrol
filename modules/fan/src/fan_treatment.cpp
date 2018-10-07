@@ -35,6 +35,9 @@ int FAN::fan_treat_msg(t_com_msg i_msg, int i_size)
             case FAN_POWER:
                 ret = this->fan_update_power((t_fan_power_mode *) i_msg.data);
                 break;
+            case FAN_TIMER:
+                ret = this->fan_compute_duty();
+                break;
             case TEMP_DATA:
                 ret = this->fan_update_data((t_temp_data *) i_msg.data);
                 break;

@@ -5,7 +5,7 @@ KERNEL_MODULES := $(filter-out Makefile, $(wildcard *))
 K_SRC := $(filter-out %.mod.c, $(foreach dir,$(KERNEL_MODULES), $(wildcard $(dir)/*.c)))
 K_OBJ := $(patsubst %.c, %.ko, $(K_SRC))
 
-%.ko:
+%.ko: %.c
 	@$(MAKE) -C $(dir $@)
 
 all: $(K_OBJ)

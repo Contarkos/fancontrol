@@ -8,7 +8,7 @@
 
 #define TEMP_MODULE_NAME        "TEMP"
 #define TEMP_PIN_IN             (COM_ADC_PIN_RDY)       // /DRDY ADC
-#define TEMP_PIN_OUT            (COM_ADC_PIN_ENB)                    // Controle de l'alim du thermistor
+#define TEMP_PIN_OUT            (COM_ADC_PIN_ENB)       // Controle de l'alim du thermistor
 #define TEMP_DEFAULT_PREC       (1024)
 #define TEMP_DEFAULT_CYCLE      (0.0F)
 #define TEMP_TIMER_USEC         (500000)
@@ -23,7 +23,8 @@
 typedef enum
 {
     TEMP_FD_SOCKET = 0,
-    TEMP_FD_NB = 1
+    TEMP_FD_IRQ = 1,
+    TEMP_FD_NB = 2
 } t_temp_fd_index;
 
 class TEMP : public MODULE
@@ -37,6 +38,7 @@ class TEMP : public MODULE
         int timer_fd = -1;
         int socket_fd = -1;
         int fan_fd = -1;
+        int irq_fd = -1;
         float fan_temp;
         bool fan_temp_valid;
         float room_temp;
@@ -55,6 +57,7 @@ class TEMP : public MODULE
         /*             Methodes spécifiques            */
         /***********************************************/
         static void temp_timer_handler(int i_timer_id, void * i_data);
+        static void temp_timer_handler_bis(int i_timer_id, void *i_data);
 
         // Accesseurs
         float temp_getTemp(void)     { return fan_temp; }
@@ -64,4 +67,5 @@ class TEMP : public MODULE
         int temp_retrieve_data(void);
         int temp_send_data(void);
         int temp_treat_msg(t_com_msg i_msg);
+        int temp_treat_irq(char *i_data);
 };

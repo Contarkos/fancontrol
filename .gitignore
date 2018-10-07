@@ -15,6 +15,10 @@
 *.ko
 *.mod.c
 *.com
+*.cmd
+.tmp_versions
+Module.symvers
+modules.order
 
 # Packages #
 ############

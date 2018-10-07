@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <mutex>
 #include <math.h>
+#include <fcntl.h>
 
 // Includes locaux
 #include "base.h"
@@ -43,10 +44,7 @@ int TEMP::start_module()
     // Démarrage du timer pour la boucle
     this->timer_fd = OS_create_timer(TEMP_TIMER_USEC, &TEMP::temp_timer_handler, OS_TIMER_PERIODIC, (void *) this);
 
-    // Ouverture socket UNIX
-    this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s);
-
-    if (0 == this->timer_fd)
+    if (0 > this->timer_fd)
     {
         LOG_ERR("TEMP : erreur création timer de boucle");
         ret = -1;
@@ -85,6 +83,33 @@ int TEMP::start_module()
                 LOG_ERR("TEMP : erreur démarrage timer, ret = %d", ret);
             }
         }
+    }
+
+    // Ouverture socket UNIX
+    this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s);
+
+    if (0 == this->socket_fd)
+    {
+        LOG_ERR("TEMP : erreur création socket");
+        ret = -2;
+    }
+    else
+    {
+        // Enregistrement de la socket
+        this->p_fd[TEMP_FD_SOCKET].fd = this->socket_fd;
+    }
+
+    // Requete interruption
+    this->irq_fd = OS_irq_request(OS_IRQ_ADC_NAME, O_RDONLY);
+
+    if (0 == this->irq_fd)
+    {
+        LOG_ERR("TEMP : erreur requete interruption pour synchro SPI");
+        ret = -4;
+    }
+    else
+    {
+        this->p_fd[TEMP_FD_IRQ].fd = this->irq_fd;
     }
 
     return ret;
@@ -135,7 +160,6 @@ int TEMP::exec_loop()
     int ret = 0;
 
     int read_fd = 0, ii, ss;
-    t_com_msg m;
 
     // Lecture des sockets
     read_fd = poll(this->p_fd, TEMP_FD_NB, TEMP_POLL_TIMEOUT);
@@ -150,18 +174,43 @@ int TEMP::exec_loop()
     {
         for (ii = 0; ii < TEMP_FD_NB; ii++)
         {
-            if (this->p_fd[ii].revents & this->p_fd[ii].events)
+            if (POLLIN & this->p_fd[ii].events)
             {
-                ss = read(this->p_fd[ii].fd, &m, sizeof(t_com_msg)); // traitement
+                switch (ii)
+                {
+                    case TEMP_FD_SOCKET:
+                        t_com_msg m;
 
-                if (sizeof(t_com_msg) != ss)
-                {
-                    LOG_WNG("FAN : mauvaise taille de message pour fd %d", ii);
-                    ret = -1;
-                }
-                else
-                {
-                    ret = temp_treat_msg(m);
+                        ret = COM_receive_data(this->p_fd[ii].fd, &m, &ss);
+
+                        if (sizeof(t_com_msg) != ss)
+                        {
+                            LOG_WNG("FAN : mauvaise taille de message pour fd %d", ii);
+                            ret = 2;
+                        }
+                        else
+                        {
+                            ret = temp_treat_msg(m);
+                        }
+                        break;
+                    case TEMP_FD_IRQ:
+                        char d[OS_MAX_LENGTH_LONG];
+
+                        ss = read(this->p_fd[ii].fd, d, OS_MAX_LENGTH_LONG);
+
+                        if (0 > ss)
+                        {
+                            LOG_WNG("FAN : mauvaise taille de message pour fd %d, ss = %d", ii, ss);
+                            ret = 4;
+                        }
+                        else
+                        {
+                            ret = temp_treat_irq(d);
+                        }
+                        break;
+                    case TEMP_FD_NB:
+                    default:
+                        break;
                 }
             }
         }
