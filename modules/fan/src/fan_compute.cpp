@@ -108,33 +108,34 @@ int FAN::fan_compute_duty(void)
     return ret;
 }
 
-
-int FAN::fan_treat_irq(char *i_data)
+int FAN::fan_treat_irq(int i_fd)
 {
-    int r, v, ret = 0;
+    int v, ret = 0;
+    t_uint32 ss;
+    unsigned long d;
 
-    if (NULL == i_data)
+    if (0 == i_fd)
     {
-        LOG_ERR("FAN : pas de données venant de l'interruption");
-        ret = -1;
+        LOG_ERR("FAN : pas de file descriptor valide pour l'IRQ");
+        ret = 2;
     }
     else
     {
-//        r = *((unsigned long *) (i_data));
-        memcpy(&(r), i_data, sizeof(r));
+        // Lecture des données
+        ss = read(i_fd, &(d), sizeof(d));
 
-        if (0 == r)
+        if (sizeof(d) > ss)
         {
-            LOG_WNG("FAN : erreur de données pour vitesse FAN, r = %d", r);
-            ret = 1;
+            LOG_WNG("FAN : mauvaise taille de message pour fd %d, ss = %d", i_fd, ss);
+            ret = 4;
         }
         else
         {
             // Conversion en vitesse de rotation (RPM)
-            v = (int) ( FAN_SEC_TO_MSEC / (float) (FAN_HITS_PER_CYCLE * r) );
+            v = (int) ( FAN_SEC_TO_MSEC / (float) (FAN_HITS_PER_CYCLE * d) );
 
-            LOG_INF3("FAN : vitesse du fan = %d, d = %d", v, r);
-            this->fan_setCurSpeed(r);
+            LOG_INF3("FAN : vitesse du fan = %d, d = %ld", v, d);
+            this->fan_setCurSpeed(v);
         }
     }
 

@@ -13,37 +13,49 @@
 #include "fan.h"
 #include "fan_class.h"
 
-int FAN::fan_treat_msg(t_com_msg i_msg, int i_size)
+int FAN::fan_treat_msg(int i_fd)
 {
-    int ret = 0;
+    int ret = 0, ss;
+    t_com_msg m;
 
-    if (0 == i_size)
+    if (0 > i_fd)
     {
-        LOG_WNG("FAN : mauvaise taille de message ");
+        LOG_ERR("FAN : pas de file descriptor pour lecture message, fd = %d", i_fd);
         ret = -1;
     }
     else
     {
-        switch (i_msg.id)
+        // Recuperation des données du message
+        ret = COM_receive_data(i_fd, &m, &ss);
+
+        if (0 == ss)
         {
-            case MAIN_SHUTDOWN:
-                ret = this->stop_and_exit();
-                break;
-            case FAN_MODE:
-                ret = this->fan_update_mode((t_fan_mode *) i_msg.data);
-                break;
-            case FAN_POWER:
-                ret = this->fan_update_power((t_fan_power_mode *) i_msg.data);
-                break;
-            case FAN_TIMER:
-                ret = this->fan_compute_duty();
-                break;
-            case TEMP_DATA:
-                ret = this->fan_update_data((t_temp_data *) i_msg.data);
-                break;
-            default:
-                LOG_ERR("FAN : mauvaise ID pour message, id = %d", i_msg.id);
-                ret = 1;
+            LOG_WNG("FAN : mauvaise taille de message ");
+            ret = -2;
+        }
+        else
+        {
+            switch (m.id)
+            {
+                case MAIN_SHUTDOWN:
+                    ret = this->stop_and_exit();
+                    break;
+                case FAN_MODE:
+                    ret = this->fan_update_mode((t_fan_mode *) m.data);
+                    break;
+                case FAN_POWER:
+                    ret = this->fan_update_power((t_fan_power_mode *) m.data);
+                    break;
+                case FAN_TIMER:
+                    ret = this->fan_compute_duty();
+                    break;
+                case TEMP_DATA:
+                    ret = this->fan_update_data((t_temp_data *) m.data);
+                    break;
+                default:
+                    LOG_ERR("FAN : mauvaise ID pour message, id = %d", m.id);
+                    ret = 1;
+            }
         }
     }
 

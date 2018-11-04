@@ -10,16 +10,13 @@
 #include "os.h"
 #include "module.h"
 
-MODULE::MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod)
+MODULE::MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod) : MODULE()
 {
-    // Copie du nom
-    strncpy(this->name, mod_name, MAX_LENGTH_MOD_NAME);
-    this->m_mod_init = m_mod;
-    this->m_main_init = m_main;
+    this->mod_config(mod_name, m_main, m_mod);
+}
 
-    // Lock de MAIN jusqu'à la fin de l'init
-    this->m_main_init->lock();
-
+MODULE::MODULE()
+{
     // Init du pthread
     this->m_thread.loop = reinterpret_cast<loop_func> (&MODULE::init_module);
 }
@@ -27,6 +24,23 @@ MODULE::MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std
 MODULE::~MODULE()
 {
     ;
+}
+
+// Configuration du module
+void MODULE::mod_config(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod)
+{
+    // Copie du nom
+    strncpy(this->name, mod_name, MAX_LENGTH_MOD_NAME);
+
+    this->m_mod_init = m_mod;
+    this->m_main_init = m_main;
+
+    // Lock de MAIN jusqu'à la fin de l'init
+    if (this->m_main_init && this->m_mod_init)
+    {
+        this->m_main_init->lock();
+        is_init = true;
+    }
 }
 
 // Fonction principale du thread du module
@@ -144,7 +158,14 @@ int MODULE::stop_and_exit(void)
 // Accesseurs
 void MODULE::set_running(bool i_isRunning)
 {
-    this->isRunning = i_isRunning;
+    if (is_init)
+    {
+        this->isRunning = i_isRunning;
+    }
+    else
+    {
+        this->isRunning = false;
+    }
 }
 
 bool MODULE::is_running(void)

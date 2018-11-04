@@ -23,6 +23,7 @@ static int main_config(int argc, char *argv[])
 
         for (ii = 0, a = argv[0]; ii < argc; ii++, a = argv[ii])
         {
+            // Traitement des arguments
             printf("%s, ", a);
         }
 

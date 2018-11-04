@@ -76,6 +76,7 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
         // Descente de la pin d'activation
         ret += OS_write_gpio(COM_ADC_PIN_ENB, 0);
 
+        // Attente pour être certain que la pin est down
         OS_usleep(10);
 
         // Setup et demarrage de la calibration
@@ -93,7 +94,7 @@ int COM_adc_reset(t_os_spi_device i_device)
     // Ecriture HIGH sur 32 bits
     ret += OS_spi_write_read(i_device, a, 4);
 
-    LOG_INF1("COM : reset = %d %d %d %d", a[0], a[1], a[2], a[3]);
+    LOG_INF1("COM : reset = %x %x %x %x", a[0], a[1], a[2], a[3]);
     return ret;
 }
 

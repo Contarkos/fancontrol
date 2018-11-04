@@ -135,26 +135,39 @@ int main_loop(void)
 int main_stop_factory()
 {
     int ret = 0, ii;
+    static int is_called = 0;
 
     LOG_INF1("MAIN : extinction des modules");
 
-    // On lance les demandes d'arrets
-    for (ii = 0; ii < NB_MODULE; ii++)
+    // Pour éviter les arrets multiples
+    if (is_called)
     {
-        t_start[ii].mod_stop();
+        LOG_WNG("MAIN : Appel d'arret déjà effectué pour factory");
+        ret = 1;
     }
-
-    LOG_INF1("MAIN : Attente des locks à libérer pour les modules");
-
-    // On attend que tous les threads soient terminés
-    for (ii = 0; ii < NB_MODULE; ii++)
+    else
     {
-        t_mod_mutex[ii].lock();
-    }
+        is_called = 1;
 
-    // Arret des éléments du système
-    LOG_INF1("MAIN : Arret des modules systemes");
-    ret += main_stop();
+        // On lance les demandes d'arrets
+        for (ii = 0; ii < NB_MODULE; ii++)
+        {
+            // TODO envoi des messages MAIN_SHUTDOWN
+            t_start[ii].mod_stop();
+        }
+
+        LOG_INF1("MAIN : Attente des locks à libérer pour les modules");
+
+        // On attend que tous les threads soient terminés
+        for (ii = 0; ii < NB_MODULE; ii++)
+        {
+            t_mod_mutex[ii].lock();
+        }
+
+        // Arret des éléments du système
+        LOG_INF1("MAIN : Arret des modules systemes");
+        ret += main_stop();
+    }
 
     return ret;
 }

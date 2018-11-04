@@ -21,6 +21,16 @@
 /* Définition des constructeurs */
 FAN::FAN(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod) : MODULE(mod_name, m_main, m_mod)
 {
+    this->fan_init_pollfd();
+}
+
+FAN::FAN() : MODULE()
+{
+    this->fan_init_pollfd();
+}
+
+void FAN::fan_init_pollfd()
+{
     int ii;
 
     for (ii = 0; ii < FAN_FD_NB; ii++)
@@ -81,13 +91,11 @@ int FAN::start_module()
 
         if (ret < 0)
         {
+            LOG_ERR("FAN : erreur lors du parametrage du PWM, ret = %d", ret);
             return ret;
         }
         else
         {
-            // Demarrage du timer
-            //ret = OS_start_timer(this->timer_fd);
-
             // Creation socket
             LOG_INF1("FAN : création de la socket d'écoute");
 
@@ -127,6 +135,14 @@ int FAN::init_after_wait(void)
 {
     int ret = 0;
 
+    // Demarrage du timer
+    //ret = OS_start_timer(this->timer_fd);
+
+    if (ret < 0)
+    {
+        LOG_ERR("FAN : timer non démarré, ret = %d", ret);
+    }
+
     return ret;
 }
 
@@ -147,7 +163,7 @@ int FAN::stop_module()
 
 int FAN::exec_loop()
 {
-    int ret = 0, read_fd = 0, ii, ss;
+    int ret = 0, read_fd = 0, ii;
 
     // Ecoute sur les fd
     read_fd = poll(this->p_fd, FAN_FD_NB, FAN_POLL_TIMEOUT);
@@ -169,36 +185,13 @@ int FAN::exec_loop()
                 {
                     case FAN_FD_SOCKET:
                         LOG_INF1("FAN : events = %d, ii = %d", this->p_fd[ii].events, ii);
-                        t_com_msg m;
 
-                        ret = COM_receive_data(this->p_fd[ii].fd, &m, &ss);
-
-                        if (0 == ss)
-                        {
-                            LOG_WNG("FAN : mauvaise taille de message ");
-                            ret = -1;
-                        }
-                        else
-                        {
-                            ret = fan_treat_msg(m, ss);
-                        }
+                        ret = fan_treat_msg(this->p_fd[ii].fd);
                         break;
                     case FAN_FD_IRQ:
-                        char d[OS_MAX_LENGTH_LONG];
                         LOG_INF1("FAN : events = %d, ii = %d", this->p_fd[ii].events, ii);
 
-
-                        ss = read(this->p_fd[ii].fd, d, OS_MAX_LENGTH_LONG);
-
-                        if (0 > ss)
-                        {
-                            LOG_WNG("FAN : mauvaise taille de message pour fd %d, ss = %d", ii, ss);
-                            ret = 4;
-                        }
-                        else
-                        {
-                            ret = fan_treat_irq(d);
-                        }
+                        ret = fan_treat_irq(this->p_fd[ii].fd);
                         break;
                     case FAN_FD_NB:
                     default:

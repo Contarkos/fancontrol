@@ -12,27 +12,38 @@
 #include "temp.h"
 #include "temp_class.h"
 
-void TEMP::temp_timer_handler(int i_timer_id, void * i_data)
-{
-    TEMP *p_this = reinterpret_cast<TEMP *> (i_data);
-
-    if (p_this && (p_this->timer_fd == i_timer_id))
-    {
-        p_this->temp_retrieve_data();
-    }
-}
-
-void TEMP::temp_timer_handler_bis(int i_timer_id, void *i_data)
+/*******************************************************************/
+/*                                                                 */
+/*  description : callback appelée par le thread du timer pour     */
+/*                déclencher le comportement désiré dans le thread */
+/*                TEMP                                             */
+/*                                                                 */
+/*  @in i_timer_id  : ID founie lors de la création du timer       */
+/*  @in i_data      : pointeur vers les données fournies au timer  */
+/*                                                                 */
+/*  @out void                                                      */
+/*                                                                 */
+/*******************************************************************/
+void TEMP::temp_timer_handler(int i_timer_id, void *i_data)
 {
     TEMP *p_this = reinterpret_cast<TEMP *> (i_data);
     int dum;
 
     if (p_this && (p_this->timer_fd == i_timer_id))
     {
+        LOG_INF3("TEMP : envoi data pour FAN");
         COM_send_data(p_this->socket_fd, TEMP_TIMER, &dum, sizeof(dum), 0);
     }
 }
 
+/*******************************************************************/
+/*                                                                 */
+/*  description : Récupération des données sur la carte ADC        */
+/*                                                                 */
+/*  @out        : ret = 0  si tout va bien                         */
+/*                ret > 0  si erreur                               */
+/*                                                                 */
+/*******************************************************************/
 int TEMP::temp_retrieve_data(void)
 {
     int ret = 0;
@@ -41,9 +52,6 @@ int TEMP::temp_retrieve_data(void)
 
     // Activation de la pin connectée au thermistor
     ret = OS_write_gpio(TEMP_PIN_OUT, 1);
-
-    // Attente que la pin soit haute
-    OS_usleep(10);
 
     if (ret < 0)
     {
@@ -85,6 +93,14 @@ int TEMP::temp_retrieve_data(void)
     return ret;
 }
 
+/*******************************************************************/
+/*                                                                 */
+/*  description : Envoi des données au thread de FAN               */
+/*                                                                 */
+/*  @out        : ret = 0  si tout va bien                         */
+/*                ret > 0  si erreur                               */
+/*                                                                 */
+/*******************************************************************/
 int TEMP::temp_send_data(void)
 {
     int ret = 0;
@@ -116,14 +132,26 @@ int TEMP::temp_send_data(void)
     return ret;
 }
 
-int TEMP::temp_treat_irq(char *i_data)
+/*******************************************************************/
+/*                                                                 */
+/*  description : Callback de traitement de l'interruption         */
+/*                                                                 */
+/*  @out        : ret = 0  si tout va bien                         */
+/*                ret > 0  si erreur                               */
+/*                                                                 */
+/*******************************************************************/
+int TEMP::temp_treat_irq()
 {
-    int ret = 0;
+    int ret= 0, ss;
+    unsigned long d;
 
-    if (NULL == i_data)
+    // Récupération des données
+    ss = read(this->p_fd[TEMP_FD_IRQ].fd, &d, sizeof(unsigned long));
+
+    if (0 > ss)
     {
-        LOG_ERR("TEMP : données IRQ nulles");
-        ret = -1;
+        LOG_WNG("FAN : erreur lecture pour fd %d, ss = %d, errno = %d", TEMP_FD_IRQ, ss, errno);
+        ret = 4;
     }
     else
     {

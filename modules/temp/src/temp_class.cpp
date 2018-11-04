@@ -20,6 +20,22 @@
 /* Définition des constructeurs */
 TEMP::TEMP(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod) : MODULE(mod_name, m_main, m_mod)
 {
+    this->temp_init_pollfd();
+}
+
+TEMP::TEMP() : MODULE()
+{
+    this->temp_init_pollfd();
+}
+
+TEMP::~TEMP()
+{
+    // Pas de pointeurs à liberer
+    ;
+}
+
+void TEMP::temp_init_pollfd()
+{
     int ii;
 
     for (ii = 0; ii < TEMP_FD_NB; ii++)
@@ -27,11 +43,6 @@ TEMP::TEMP(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mu
         this->p_fd[ii].fd = -1;
         this->p_fd[ii].events = POLLIN;
     }
-}
-
-TEMP::~TEMP()
-{
-    ;
 }
 
 int TEMP::start_module()
@@ -72,16 +83,6 @@ int TEMP::start_module()
         {
             LOG_ERR("TEMP : pas de port SPI");
             this->set_running(false);
-        }
-        else
-        {
-            // Démarrage du timer pour looper
-            ret = OS_start_timer(this->timer_fd);
-
-            if (ret < 0)
-            {
-                LOG_ERR("TEMP : erreur démarrage timer, ret = %d", ret);
-            }
         }
     }
 
@@ -128,6 +129,14 @@ int TEMP::init_after_wait(void)
     if (0 == ret)
     {
         LOG_INF1("TEMP : connexion à la socket UNIX OK, fd = %d", this->fan_fd);
+
+        // Démarrage du timer pour looper
+        ret = OS_start_timer(this->timer_fd);
+
+        if (ret < 0)
+        {
+            LOG_ERR("TEMP : erreur démarrage timer, ret = %d", ret);
+        }
     }
 
     return ret;
@@ -158,8 +167,7 @@ int TEMP::stop_module()
 int TEMP::exec_loop()
 {
     int ret = 0;
-
-    int read_fd = 0, ii, ss;
+    int read_fd = 0, ii;
 
     // Lecture des sockets
     read_fd = poll(this->p_fd, TEMP_FD_NB, TEMP_POLL_TIMEOUT);
@@ -179,37 +187,16 @@ int TEMP::exec_loop()
                 switch (ii)
                 {
                     case TEMP_FD_SOCKET:
-                        t_com_msg m;
-
-                        ret = COM_receive_data(this->p_fd[ii].fd, &m, &ss);
-
-                        if (sizeof(t_com_msg) != ss)
-                        {
-                            LOG_WNG("FAN : mauvaise taille de message pour fd %d", ii);
-                            ret = 2;
-                        }
-                        else
-                        {
-                            ret = temp_treat_msg(m);
-                        }
+                        LOG_INF1("TEMP : events = %d, ii = %d", this->p_fd[ii].events, ii);
+                        ret = temp_treat_msg();
                         break;
                     case TEMP_FD_IRQ:
-                        char d[OS_MAX_LENGTH_LONG];
-
-                        ss = read(this->p_fd[ii].fd, d, OS_MAX_LENGTH_LONG);
-
-                        if (0 > ss)
-                        {
-                            LOG_WNG("FAN : mauvaise taille de message pour fd %d, ss = %d", ii, ss);
-                            ret = 4;
-                        }
-                        else
-                        {
-                            ret = temp_treat_irq(d);
-                        }
+                        LOG_INF1("TEMP : events = %d, ii = %d", this->p_fd[ii].events, ii);
+                        ret = temp_treat_irq();
                         break;
                     case TEMP_FD_NB:
                     default:
+                        LOG_INF3("TEMP : erreur valeur de fd, ii = %d", ii);
                         break;
                 }
             }

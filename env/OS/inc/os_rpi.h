@@ -30,26 +30,26 @@
 #define GPIO_READ_REGISTER       *( os_periph_gpio.addr + 13 )
 #define GPIO_READ(g)             ( (int) (GPIO_READ_REGISTER & (t_uint32) (1 << (g))) >> (g) )
 
-#define GPIO_MAX_NB             27U
+#define GPIO_MAX_NB              27U
 
 // Macros de base PWM pour modifier les paramètres
-#define PWM_CTL_OFFSET          0U
-#define PWM_CTL_REGISTER        *( os_periph_pwm.addr + PWM_CTL_OFFSET )
-#define PWM_STA_OFFSET          1U
-#define PWM_STA_REGISTER        *( os_periph_pwm.addr + PWM_STA_OFFSET )
-#define PWM_RNG1_OFFSET         4U
-#define PWM_RNG1_REGISTER       *( os_periph_pwm.addr + PWM_RNG1_OFFSET )
-#define PWM_DAT1_OFFSET         5U
-#define PWM_DAT1_REGISTER       *( os_periph_pwm.addr + PWM_DAT1_OFFSET )
+#define PWM_CTL_OFFSET           0U
+#define PWM_CTL_REGISTER         *( os_periph_pwm.addr + PWM_CTL_OFFSET )
+#define PWM_STA_OFFSET           1U
+#define PWM_STA_REGISTER         *( os_periph_pwm.addr + PWM_STA_OFFSET )
+#define PWM_RNG1_OFFSET          4U
+#define PWM_RNG1_REGISTER        *( os_periph_pwm.addr + PWM_RNG1_OFFSET )
+#define PWM_DAT1_OFFSET          5U
+#define PWM_DAT1_REGISTER        *( os_periph_pwm.addr + PWM_DAT1_OFFSET )
 
-#define PWM_CTL_PWEN1_MASK      ((t_uint32) 0x00000001)
-#define PWM_CTL_PWEN1_SHIFT     0U
-#define PWM_CTL_MODE1_MASK      ((t_uint32) 0x00000002)
-#define PWM_CTL_MODE1_SHIFT     1U
-#define PWM_CTL_USEF1_MASK      ((t_uint32) 0x00000020)
-#define PWM_CTL_USEF1_SHIFT     5U
-#define PWM_CTL_MSEN1_MASK      ((t_uint32) 0x00000080)
-#define PWM_CTL_MSEN1_SHIFT     7U
+#define PWM_CTL_PWEN1_MASK       ((t_uint32) 0x00000001)
+#define PWM_CTL_PWEN1_SHIFT      0U
+#define PWM_CTL_MODE1_MASK       ((t_uint32) 0x00000002)
+#define PWM_CTL_MODE1_SHIFT      1U
+#define PWM_CTL_USEF1_MASK       ((t_uint32) 0x00000020)
+#define PWM_CTL_USEF1_SHIFT      5U
+#define PWM_CTL_MSEN1_MASK       ((t_uint32) 0x00000080)
+#define PWM_CTL_MSEN1_SHIFT      7U
 
 #define PWM_STA_FULL_MASK
 #define PWM_STA_FULL_SHIFT

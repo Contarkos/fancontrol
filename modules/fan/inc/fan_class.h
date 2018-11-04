@@ -26,7 +26,7 @@
 typedef enum
 {
     FAN_FD_SOCKET = 0,
-    FAN_FD_IRQ = 2,
+    FAN_FD_IRQ = 1,
     FAN_FD_NB
 } t_fan_fd_index;
 
@@ -34,6 +34,7 @@ class FAN : public MODULE
 {
     public:
         FAN(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod);
+        FAN();
         ~FAN();
 
     private:
@@ -64,6 +65,9 @@ class FAN : public MODULE
         /***********************************************/
         /*             Methodes spécifiques            */
         /***********************************************/
+        // Methodes de constructeurs
+        void fan_init_pollfd();
+
         void fan_setConsSpeed(int s) { this->consigne_speed = s; }
         int  fan_getConsSpeed(void)  { return consigne_speed;    }
 
@@ -76,12 +80,12 @@ class FAN : public MODULE
         int fan_compute_duty(void);
 
         // Recuperation des données
-        int fan_treat_msg(t_com_msg i_msg, int i_size);
+        int fan_treat_msg(int i_fd);
         int fan_update_mode(t_fan_mode *i_data);
         int fan_update_power(t_fan_power_mode *i_data);
         int fan_update_data(t_temp_data *i_data);
 
         // Gestion IT
-        int fan_treat_irq(char *i_data);
+        int fan_treat_irq(int i_fd);
 };
 

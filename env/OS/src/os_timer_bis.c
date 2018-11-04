@@ -18,7 +18,7 @@
 #include "os_rpi.h"
 
 #define OS_USEC2NSEC        (1000)
-#define MAX_TIMER_COUNT     (100)
+#define MAX_TIMER_COUNT     (10)
 #define OS_TIMER_TIMEOUT    (100)
 
 /*********************************************************************/

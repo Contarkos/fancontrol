@@ -31,6 +31,7 @@ class TEMP : public MODULE
 {
     public:
         TEMP(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod);
+        TEMP();
         ~TEMP();
 
     private:
@@ -57,7 +58,9 @@ class TEMP : public MODULE
         /*             Methodes spécifiques            */
         /***********************************************/
         static void temp_timer_handler(int i_timer_id, void * i_data);
-        static void temp_timer_handler_bis(int i_timer_id, void *i_data);
+
+        // Methodes de constructeurs
+        void temp_init_pollfd();
 
         // Accesseurs
         float temp_getTemp(void)     { return fan_temp; }
@@ -66,6 +69,7 @@ class TEMP : public MODULE
         // Gestion des données
         int temp_retrieve_data(void);
         int temp_send_data(void);
-        int temp_treat_msg(t_com_msg i_msg);
+        int temp_treat_msg(void);
         int temp_treat_irq(char *i_data);
+        int temp_treat_irq(void);
 };

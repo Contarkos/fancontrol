@@ -14,24 +14,29 @@
 /*********************************************************************/
 /*                       Variables globales                          */
 /*********************************************************************/
-TEMP* instances_temp[NB_INSTANCES_TEMP];
+TEMP instances_temp[NB_INSTANCES_TEMP];
 
 /*********************************************************************/
 /*                         Fonctions API                             */
 /*********************************************************************/
 
+/* Démarrage d'une instance de TEMP */
 int TEMP_start(std::mutex *m_main, std::mutex *m_mod)
 {
     int ret = 0;
     static int ii = 0;
+    char n[MAX_LENGTH_MOD_NAME];
 
     if (ii < NB_INSTANCES_TEMP)
     {
+        // Creation du nom de l'instance
+        snprintf(n, MAX_LENGTH_MOD_NAME, "%s_tsk%d", TEMP_MODULE_NAME, ii);
+
         // Création de l'instance
-        instances_temp[ii] = new TEMP(TEMP_MODULE_NAME, m_main, m_mod);
+        instances_temp[ii].mod_config(n, m_main, m_mod);
 
         // Creation du thread
-        OS_create_thread(instances_temp[ii]->MOD_getThread(),(void *) instances_temp[ii]);
+        OS_create_thread(instances_temp[ii].MOD_getThread(),(void *) &(instances_temp[ii]));
 
         // Init des instances
         ii++;
@@ -47,18 +52,21 @@ int TEMP_start(std::mutex *m_main, std::mutex *m_mod)
 
 int TEMP_stop(void)
 {
-    int ret = 0, ii;
+    int ret = 0;
+    static int ii = 0;
 
-    for (ii = 0; ii < NB_INSTANCES_TEMP; ii++)
+    LOG_INF1("TEMP : arrêt du module");
+
+    if (ii < NB_INSTANCES_TEMP)
     {
         // On coupe l'execution
-        MODULE::exit_module(instances_temp[ii]);
+        MODULE::exit_module( &(instances_temp[ii]) );
 
         // On réattache le thread pour éviter les zombies
-        OS_joint_thread(instances_temp[ii]->MOD_getThread(), NULL);
+        OS_joint_thread(instances_temp[ii].MOD_getThread(), NULL);
 
-        // Clean des instances
-        instances_temp[ii]->~TEMP();
+        // Incrementation du nombre d'instances stoppées
+        ii++;
     }
 
     return ret;
