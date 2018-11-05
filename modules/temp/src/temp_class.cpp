@@ -182,7 +182,7 @@ int TEMP::exec_loop()
     {
         for (ii = 0; ii < TEMP_FD_NB; ii++)
         {
-            if (POLLIN & this->p_fd[ii].events)
+            if (POLLIN & this->p_fd[ii].revents)
             {
                 switch (ii)
                 {
