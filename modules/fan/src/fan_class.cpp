@@ -179,17 +179,17 @@ int FAN::exec_loop()
     {
         for (ii = 0; ii < FAN_FD_NB; ii++)
         {
-            if (POLLIN & this->p_fd[ii].events)
+            if (POLLIN & this->p_fd[ii].revents)
             {
                 switch (ii)
                 {
                     case FAN_FD_SOCKET:
-                        LOG_INF1("FAN : events = %d, ii = %d", this->p_fd[ii].events, ii);
+                        LOG_INF1("FAN : events = %d, ii = %d", this->p_fd[ii].revents, ii);
 
                         ret = fan_treat_msg(this->p_fd[ii].fd);
                         break;
                     case FAN_FD_IRQ:
-                        LOG_INF1("FAN : events = %d, ii = %d", this->p_fd[ii].events, ii);
+                        LOG_INF1("FAN : events = %d, ii = %d", this->p_fd[ii].revents, ii);
 
                         ret = fan_treat_irq(this->p_fd[ii].fd);
                         break;
