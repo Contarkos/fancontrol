@@ -15,12 +15,6 @@
 #include "os.h"
 #include "os_spi.h"
 
-int spi_cs0_fd;                //file descriptor for the SPI device
-int spi_cs1_fd;                //file descriptor for the SPI device
-unsigned char spi_mode;
-unsigned char spi_bitsPerWord;
-unsigned int spi_speed;
-
 t_os_spi_struct spi_device_0 =
 {
     .fd = 0,
@@ -101,7 +95,7 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
             LOG_ERR("OS : Could not set SPIMode (RD)...ioctl fail");
             return(1);
         }
-        LOG_INF3("OS : spi mode = %d", spi_mode);
+        LOG_INF3("OS : spi mode = %d", spi_device->mode);
 
         status_value = ioctl(spi_device->fd, SPI_IOC_WR_BITS_PER_WORD, &(spi_device->bits_per_word));
         if(status_value < 0)
@@ -213,13 +207,16 @@ int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *data, int length
         //one spi transfer for each byte
         for (ii = 0 ; ii < length ; ii++)
         {
+            // init de la zone memoire
             memset(&spi[ii], 0, sizeof (spi[ii]));
+
+            // Remplissage de la demande de transfert
             spi[ii].tx_buf        = (unsigned long)(data + ii); // transmit from "data"
             spi[ii].rx_buf        = (unsigned long)(data + ii); // receive into "data"
             spi[ii].len           = sizeof(*(data + ii));
             spi[ii].delay_usecs   = 0;
-            spi[ii].speed_hz      = spi_speed;
-            spi[ii].bits_per_word = spi_bitsPerWord;
+            spi[ii].speed_hz      = spi_device->speed;
+            spi[ii].bits_per_word = spi_device->bits_per_word;
             spi[ii].cs_change     = 0;
         }
 
