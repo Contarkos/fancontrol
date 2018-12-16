@@ -62,16 +62,16 @@ int TEMP::start_module()
     }
     else
     {
-        LOG_INF1("TEMP : timer_fd start = %x", timer_fd);
+        LOG_INF3("TEMP : timer id start = %d", timer_fd);
 
         // Configuration du GPIO
         ret += OS_set_gpio(TEMP_PIN_OUT, OS_GPIO_FUNC_OUT);
 
         // Configuration du module SPI
-        ret += OS_spi_open_port(OS_SPI_DEVICE_0);
+        ret += OS_spi_open_port(OS_SPI_DEVICE_0, SPI_MODE_0, COM_ADC_BITS_PER_WORD, COM_ADC_SPEED);
 
         // Init de l'ADC
-        ret += COM_adc_init(OS_SPI_DEVICE_0, COM_ADC_CLOCK_1MHZ);
+        ret += COM_adc_init(OS_SPI_DEVICE_0, COM_ADC_CLOCK_2MHZ4);
 
         // Verification du setup
         ret += COM_adc_read_setup(OS_SPI_DEVICE_0, NULL);
@@ -187,11 +187,9 @@ int TEMP::exec_loop()
                 switch (ii)
                 {
                     case TEMP_FD_SOCKET:
-                        LOG_INF1("TEMP : events = %d, ii = %d", this->p_fd[ii].events, ii);
                         ret = temp_treat_msg();
                         break;
                     case TEMP_FD_IRQ:
-                        LOG_INF1("TEMP : events = %d, ii = %d", this->p_fd[ii].events, ii);
                         ret = temp_treat_irq();
                         break;
                     case TEMP_FD_NB:

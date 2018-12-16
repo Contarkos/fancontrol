@@ -102,8 +102,9 @@ int FAN::start_module()
             // Ouverture socket UNIX
             this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s);
 
-            if (this->socket_fd >= 0)
+            if (this->socket_fd > 0)
             {
+                LOG_INF3("FAN : creation socket OK, fd = %d", this->socket_fd);
                 this->p_fd[FAN_FD_SOCKET].fd = this->socket_fd;
             }
             else
@@ -127,6 +128,7 @@ int FAN::start_module()
         this->p_fd[FAN_FD_IRQ].fd = this->irq_fd;
     }
 
+    LOG_INF3("FAN : fin init module (ret = %d)", ret);
     return ret;
 }
 
@@ -150,12 +152,18 @@ int FAN::init_after_wait(void)
 int FAN::stop_module()
 {
     int ret = 0;
+    t_fan_power_mode m;
+
+    m.power_mode = FAN_POWER_MODE_OFF;
+
+    // Arret du ventilateur
+    ret += this->fan_update_power(&m);
 
     // Arret du timer
-    ret = OS_stop_timer(this->timer_fd);
+    ret += OS_stop_timer(this->timer_fd);
 
     // Fermeture de la socket
-    ret = COM_close_socket(this->socket_fd);
+    ret += COM_close_socket(this->socket_fd);
 
     LOG_INF3("FAN : fin du stop_module, ret = %d", ret);
     return ret;
@@ -184,13 +192,9 @@ int FAN::exec_loop()
                 switch (ii)
                 {
                     case FAN_FD_SOCKET:
-                        LOG_INF1("FAN : events = %d, ii = %d", this->p_fd[ii].revents, ii);
-
                         ret = fan_treat_msg(this->p_fd[ii].fd);
                         break;
                     case FAN_FD_IRQ:
-                        LOG_INF1("FAN : events = %d, ii = %d", this->p_fd[ii].revents, ii);
-
                         ret = fan_treat_irq(this->p_fd[ii].fd);
                         break;
                     case FAN_FD_NB:

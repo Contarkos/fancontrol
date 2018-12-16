@@ -132,9 +132,9 @@ int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active);
 int OS_read_gpio(t_uint32 i_pin);
 
 // Pour SPI
-int OS_spi_open_port (t_os_spi_device spi_device);
-int OS_spi_close_port (t_os_spi_device spi_device);
-int OS_spi_write_read (t_os_spi_device spi_device, unsigned char *data, int length);
+int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned char i_bits, unsigned int i_speed);
+int OS_spi_close_port (t_os_spi_device i_spi_id);
+int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *data, int length);
 
 int OS_spi_set_mode(t_os_spi_device i_device, t_os_spi_mode i_mode);
 int OS_spi_set_bits_per_word(t_os_spi_device i_device, t_os_spi_bpw i_bpw);

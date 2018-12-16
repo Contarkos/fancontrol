@@ -10,10 +10,10 @@
 #include "com_adc.h"
 
 // Defines
-#define COM_BYTE_SHIFT      8
-#define COM_DATA_LENGTH     2
-#define COM_SETUP_LENGTH    1
-#define COM_CLOCK_LENGTH    1
+#define COM_BYTE_SHIFT        8
+#define COM_DATA_LENGTH       2
+#define COM_SETUP_LENGTH      1
+#define COM_CLOCK_LENGTH      1
 
 // Variables globales
 t_com_adc_setup com_device_0_setup =
@@ -80,7 +80,7 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
         OS_usleep(10);
 
         // Setup et demarrage de la calibration
-        ret += COM_adc_set_mode(i_device, COM_ADC_MODE_ZEROCAL);
+        ret += COM_adc_set_mode(i_device, COM_ADC_MODE_SELFCAL);
 
     }
     return ret;
@@ -291,6 +291,12 @@ int COM_adc_set_mode(t_os_spi_device i_device, t_com_adc_mode i_mode)
     if (0 == ret)
     {
         com_adc_config_setup(i_device);
+
+        // On attend que le device ait fini sa calibration
+        while (COM_STATE_ON == OS_read_gpio(COM_ADC_PIN_RDY))
+        {
+            OS_usleep(10);
+        }
     }
 
     // Retour à la normal (pas de calibration à chaque setup)
@@ -443,13 +449,13 @@ int COM_adc_read_setup(t_os_spi_device i_device, t_uint8 *o_setup)
 
         // Lecture de la config courante
         data[1] = COM_ADC_NULL;
-        LOG_INF3("COM : valeur du setup = 0x%x", data[0]);
+        LOG_INF3("COM : valeur de la cmd = 0x%x", data[0]);
 
         // On va écrire les données
         ret = OS_spi_write_read(i_device, data, COM_SETUP_LENGTH + 1);
 
         // TODO enregistrement des données
-        LOG_INF3("COM : valeur du setup = 0x%x", data[0]);
+        LOG_INF3("COM : valeur du setup = 0x%x", data[1]);
 
         if (o_setup)
         {

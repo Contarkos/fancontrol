@@ -10,14 +10,16 @@ extern "C" {
 #endif
 
 // Defines
-#define COM_UNIX_PATH_MAX   108
-#define COM_ADC_MAXVALUE    (65535)     // Valeur max en sortie de l'ADC
-#define COM_MAX_NB_MSG      256
-#define COM_MAX_SIZE_DATA   1024        // Taille max d'un message à l'envoi des messages
-#define COM_EXTERN_BACKLOG  128
+#define COM_UNIX_PATH_MAX       108
+#define COM_ADC_MAXVALUE        (65535)     // Valeur max en sortie de l'ADC
+#define COM_MAX_NB_MSG          256
+#define COM_MAX_SIZE_DATA       1024        // Taille max d'un message à l'envoi des messages
+#define COM_EXTERN_BACKLOG      128
 
-#define COM_ADC_PIN_RDY     (25)
-#define COM_ADC_PIN_ENB     (27)
+#define COM_ADC_PIN_RDY         (25)
+#define COM_ADC_PIN_ENB         (27)
+#define COM_ADC_BITS_PER_WORD   8
+#define COM_ADC_SPEED           (2457600U)
 
 // Typedef
 typedef enum
