@@ -45,7 +45,7 @@ static int  pWrite;
 static int  wasOverflow;
 
 // Semaphore de blocage
-static wait_queue_head_t _queue_read;
+static DECLARE_WAIT_QUEUE_HEAD(_queue_read);
 
 /* Define GPIOs for RX signal */
 static struct gpio signals[] = {
