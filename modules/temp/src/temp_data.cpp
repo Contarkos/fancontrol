@@ -27,12 +27,17 @@
 void TEMP::temp_timer_handler(int i_timer_id, void *i_data)
 {
     TEMP *p_this = reinterpret_cast<TEMP *> (i_data);
-    int dum;
+    int dum, ret;
 
     if (p_this && (p_this->timer_fd == i_timer_id))
     {
         LOG_INF3("TEMP : envoi data pour FAN");
-        COM_send_data(p_this->socket_fd, TEMP_TIMER, &dum, sizeof(dum), 0);
+        ret = COM_send_data(p_this->timeout_fd, TEMP_TIMER, &dum, sizeof(dum), 0);
+
+        if (ret < 0)
+        {
+            LOG_ERR("TEMP : erreur d'envoi pour FAN, ret = %d", ret);
+        }
     }
 }
 
@@ -49,6 +54,8 @@ int TEMP::temp_retrieve_data(void)
     int ret = 0;
     t_uint16 d;
     float r = 1;
+
+    LOG_ERR("TEMP : temp_retrieve_data");
 
     // Activation de la pin connectée au thermistor
     ret = OS_write_gpio(TEMP_PIN_OUT, 1);

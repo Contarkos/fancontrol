@@ -70,7 +70,7 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
         // Reset de l'ADC
         ret += COM_adc_reset(i_device);
 
-        // Configuration de la clock de l'ADC
+        // Configuration de la clock de l'ADC avec la vitesse demandée
         ret += COM_adc_set_clock_rate(i_device, i_rate);
 
         // Descente de la pin d'activation
@@ -134,7 +134,8 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
     // On attend qu'un mot soit pret
     while (COM_STATE_ON == OS_read_gpio(COM_ADC_PIN_RDY))
     {
-       OS_usleep(10);
+        LOG_INF3("TEMP : waiting for RDY pin to get low");
+        OS_usleep(10);
     }
 
     // On va récupérer les données

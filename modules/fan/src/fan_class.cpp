@@ -136,13 +136,24 @@ int FAN::start_module()
 int FAN::init_after_wait(void)
 {
     int ret = 0;
+    char t[] = FAN_SOCKET_NAME;
 
-    // Demarrage du timer
-    //ret = OS_start_timer(this->timer_fd);
+    // Connexion a la socket temp pour envoyer le message de timer
+    ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, t, &(this->timeout_fd));
 
-    if (ret < 0)
+    if (ret != 0)
     {
-        LOG_ERR("FAN : timer non démarré, ret = %d", ret);
+        LOG_ERR("FAN : error while connecting timeout socket, ret = %d", ret);
+    }
+    else
+    {
+        // Demarrage du timer
+        //ret = OS_start_timer(this->timer_fd);
+
+        if (ret < 0)
+        {
+            LOG_ERR("FAN : timer non démarré, ret = %d", ret);
+        }
     }
 
     return ret;
@@ -154,9 +165,8 @@ int FAN::stop_module()
     int ret = 0;
     t_fan_power_mode m;
 
-    m.power_mode = FAN_POWER_MODE_OFF;
-
     // Arret du ventilateur
+    m.power_mode = FAN_POWER_MODE_OFF;
     ret += this->fan_update_power(&m);
 
     // Arret du timer
@@ -164,6 +174,9 @@ int FAN::stop_module()
 
     // Fermeture de la socket
     ret += COM_close_socket(this->socket_fd);
+
+    // Fermeture socket timeout
+    ret += COM_close_socket(this->timeout_fd);
 
     LOG_INF3("FAN : fin du stop_module, ret = %d", ret);
     return ret;

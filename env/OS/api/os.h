@@ -136,9 +136,9 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
 int OS_spi_close_port (t_os_spi_device i_spi_id);
 int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *data, int length);
 
-int OS_spi_set_mode(t_os_spi_device i_device, t_os_spi_mode i_mode);
+int OS_spi_set_speed(t_os_spi_device i_spi_id, unsigned int i_speed);
+int OS_spi_set_mode(t_os_spi_device i_spi_id, t_os_spi_mode i_mode);
 int OS_spi_set_bits_per_word(t_os_spi_device i_device, t_os_spi_bpw i_bpw);
-int OS_spi_set_max_speed(t_os_spi_device i_device, t_os_spi_bpw i_bpw);
 
 // Pour IRQ
 int OS_irq_request(const char *i_irq, int i_flags);

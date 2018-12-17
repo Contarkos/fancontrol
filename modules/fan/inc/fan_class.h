@@ -40,6 +40,7 @@ class FAN : public MODULE
     private:
         struct pollfd p_fd[FAN_FD_NB];
         int timer_fd;
+        int timeout_fd;
         int socket_fd;
         int irq_fd;
 

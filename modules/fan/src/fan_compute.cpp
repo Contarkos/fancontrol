@@ -29,7 +29,7 @@ void FAN::fan_timer_handler_bis(int i_timer_id, void * i_data)
 
     if (p_this && (p_this->timer_fd == i_timer_id))
     {
-        COM_send_data(p_this->socket_fd, FAN_TIMER, &dum, sizeof(dum), 0);
+        COM_send_data(p_this->timeout_fd, FAN_TIMER, &dum, sizeof(dum), 0);
     }
 }
 

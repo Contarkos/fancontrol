@@ -27,7 +27,7 @@ int TEMP::temp_treat_msg()
         LOG_ERR("TEMP : erreur à la réception des données, ret = %d", ret);
         ret = 1;
     }
-    else if (sizeof(t_com_msg) != ss)
+    else if (0 == ss)
     {
         LOG_WNG("TEMP : mauvaise taille de message, ss = %d", ss);
         ret = 2;

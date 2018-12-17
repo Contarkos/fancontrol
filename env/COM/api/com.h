@@ -19,7 +19,9 @@ extern "C" {
 #define COM_ADC_PIN_RDY         (25)
 #define COM_ADC_PIN_ENB         (27)
 #define COM_ADC_BITS_PER_WORD   8
-#define COM_ADC_SPEED           (2457600U)
+#define COM_ADC_SPEED_1M        (1000000U)
+#define COM_ADC_SPEED_2M4       (2457600U)
+#define COM_ADC_SPEED_4M9       (4915200U)
 
 // Typedef
 typedef enum

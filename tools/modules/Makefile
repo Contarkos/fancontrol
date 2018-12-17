@@ -16,7 +16,9 @@ clean:
 		$(MAKE) -C $$directory clean ;			\
 	done
 
+distclean: clean
+
 print-%:
 	@echo $* = $($(*))
 
-.PHONY: all clean
+.PHONY: all clean distclean

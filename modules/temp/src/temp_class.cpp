@@ -68,7 +68,7 @@ int TEMP::start_module()
         ret += OS_set_gpio(TEMP_PIN_OUT, OS_GPIO_FUNC_OUT);
 
         // Configuration du module SPI
-        ret += OS_spi_open_port(OS_SPI_DEVICE_0, SPI_MODE_0, COM_ADC_BITS_PER_WORD, COM_ADC_SPEED);
+        ret += OS_spi_open_port(OS_SPI_DEVICE_0, SPI_MODE_3, COM_ADC_BITS_PER_WORD, COM_ADC_SPEED_4M9);
 
         // Init de l'ADC
         ret += COM_adc_init(OS_SPI_DEVICE_0, COM_ADC_CLOCK_2MHZ4);
@@ -119,7 +119,7 @@ int TEMP::start_module()
 int TEMP::init_after_wait(void)
 {
     int ret = 0;
-    char s[] = FAN_SOCKET_NAME;
+    char s[] = FAN_SOCKET_NAME, t[] = TEMP_SOCKET_NAME;
 
     LOG_INF1("TEMP : connexion en cours à la socket UNIX");
 
@@ -130,12 +130,22 @@ int TEMP::init_after_wait(void)
     {
         LOG_INF1("TEMP : connexion à la socket UNIX OK, fd = %d", this->fan_fd);
 
-        // Démarrage du timer pour looper
-        ret = OS_start_timer(this->timer_fd);
+        // Connexion a la socket temp pour envoyer le message de timout
+        ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, t, &(this->timeout_fd));
 
-        if (ret < 0)
+        if (ret != 0)
         {
-            LOG_ERR("TEMP : erreur démarrage timer, ret = %d", ret);
+            LOG_ERR("TEMP : erreur connexion au timeout timer");
+        }
+        else
+        {
+            // Démarrage du timer pour looper
+            ret = OS_start_timer(this->timer_fd);
+
+            if (ret < 0)
+            {
+                LOG_ERR("TEMP : erreur démarrage timer, ret = %d", ret);
+            }
         }
     }
 
@@ -155,6 +165,9 @@ int TEMP::stop_module()
 
     // Fermeture de la socket d'écoute
     ret += COM_close_socket(this->fan_fd);
+
+    // Fermeture socket timeout
+    ret += COM_close_socket(this->timeout_fd);
 
     // Fermeture du device SPI
     ret += OS_spi_close_port(OS_SPI_DEVICE_0);

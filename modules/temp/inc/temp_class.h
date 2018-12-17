@@ -37,6 +37,7 @@ class TEMP : public MODULE
     private:
         struct pollfd p_fd[TEMP_FD_NB];
         int timer_fd = -1;
+        int timeout_fd = -1;
         int socket_fd = -1;
         int fan_fd = -1;
         int irq_fd = -1;
