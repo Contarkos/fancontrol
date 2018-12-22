@@ -44,10 +44,7 @@ static t_os_timer_node * _get_timer_from_fd(int fd);
 
 static int _os_get_free_index(t_os_timer_node *i_array);
 
-
 static pthread_t os_timer_thread_id;
-static t_os_timer_node *os_timer_head = NULL;
-
 static t_os_timer_node timer_array[MAX_TIMER_COUNT] = { {0} };
 
 /*********************************************************************/
@@ -95,7 +92,7 @@ int OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_typ
     return ii;
 }
 
-// L'ID est le file descriptor donc on peut caster directement la structure (bof)
+// L'ID est l'index dans le tableau des timers donc on peut récupérer l'adresse
 int OS_start_timer(int i_timer_id)
 {
     int ret = 0;
@@ -263,11 +260,9 @@ static void * os_timer_thread(void * data)
         // On desactive l'annulabilité du thread pour être sur d'avoir le temps de tout faire proprement
         pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 
-        max = 0;
-        tmp = os_timer_head;
-
         // Reinit de la zone mémoire
         memset(ufds, 0, sizeof(struct pollfd) * MAX_TIMER_COUNT);
+        max = 0;
 
         // On ne surveille que les timers initialisés
         for (jj = 0; jj < MAX_TIMER_COUNT; jj++)
