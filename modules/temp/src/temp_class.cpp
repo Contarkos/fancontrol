@@ -67,9 +67,6 @@ int TEMP::start_module()
         // Configuration du GPIO
         ret += OS_set_gpio(TEMP_PIN_OUT, OS_GPIO_FUNC_OUT);
 
-        // Configuration du module SPI
-        ret += OS_spi_open_port(OS_SPI_DEVICE_0, SPI_MODE_3, COM_ADC_BITS_PER_WORD, COM_ADC_SPEED_4M9);
-
         // Init de l'ADC
         ret += COM_adc_init(OS_SPI_DEVICE_0, COM_ADC_CLOCK_2MHZ4);
 
