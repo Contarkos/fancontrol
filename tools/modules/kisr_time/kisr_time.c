@@ -95,7 +95,6 @@ static irqreturn_t rx_isr(int irq, void *data)
     // Reveil des queues
     wake_up(&(_queue_read));
 
-
     return IRQ_HANDLED;
 }
 
