@@ -13,6 +13,14 @@
 #include "os.h"
 #include "os_rpi.h"
 
+/*********************************************************************/
+/*                       Variables globales                          */
+/*********************************************************************/
+
+
+/*********************************************************************/
+/*                         Fonctions API                             */
+/*********************************************************************/
 
 // Init de toutes les fonctions nécessaires au Rpi
 int OS_init(void)
@@ -56,6 +64,10 @@ int OS_stop(void)
     return ret;
 }
 
+/*********************************************************************/
+/*                       Fonctions locales                           */
+/*********************************************************************/
+
 // Exposes the physical address defined in the passed structure using mmap on /dev/mem
 int os_map_peripheral(struct bcm2835_peripheral *p)
 {
@@ -96,6 +108,7 @@ int os_map_peripheral(struct bcm2835_peripheral *p)
     return ret;
 }
 
+// Close the memory mapping
 void os_unmap_peripheral(struct bcm2835_peripheral *p)
 {
 #if 1

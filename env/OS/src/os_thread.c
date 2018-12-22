@@ -9,7 +9,15 @@
 #include "integ_log.h"
 #include "os.h"
 
+/*********************************************************************/
+/*                       Variables globales                          */
+/*********************************************************************/
 
+/*********************************************************************/
+/*                         Fonctions API                             */
+/*********************************************************************/
+
+// Creation d'un thread sans options
 int OS_create_thread(OS_thread_t *p_o_thread,
                      void *args)
 {
@@ -26,6 +34,7 @@ int OS_create_thread(OS_thread_t *p_o_thread,
    return ret;
 }
 
+// Permet de joindre un thread pour qu'il se termine correctement
 int OS_joint_thread(OS_thread_t * p_i_thread, void **retval)
 {
    int ret = 0;
@@ -51,10 +60,13 @@ int OS_detach_thread(OS_thread_t * p_i_thread)
 
    if (ret != 0)
    {
-      LOG_ERR("OS : Erreur pendant la jonction d'un thread (code = %d)", ret);
+      LOG_ERR("OS : Erreur pendant le detachement d'un thread (code = %d)", ret);
    }
 
    return ret;
 }
 
+/*********************************************************************/
+/*                       Fonctions locales                           */
+/*********************************************************************/
 

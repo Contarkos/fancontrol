@@ -64,7 +64,18 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
     //SPI_MODE_1 (0,1)     CPOL = 0, CPHA = 1, Clock idle low, data is clocked in on falling edge, output data (change) on rising edge
     //SPI_MODE_2 (1,0)     CPOL = 1, CPHA = 0, Clock idle high, data is clocked in on falling edge, output data (change) on rising edge
     //SPI_MODE_3 (1,1)     CPOL = 1, CPHA = 1, Clock idle high, data is clocked in on rising, edge output data (change) on falling edge
-    spi_device->mode = i_mode;
+    switch (i_mode)
+    {
+       case SPI_MODE_0:
+       case SPI_MODE_1:
+       case SPI_MODE_2:
+       case SPI_MODE_3:
+          spi_device->mode = i_mode;
+          break;
+       default:
+          ret += -2;
+          break;
+    }
 
     //----- SET BITS PER WORD -----
     spi_device->bits_per_word = i_bits;
@@ -110,23 +121,6 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
             LOG_ERR("OS : Could not set SPI bitsPerWord(RD)...ioctl fail");
             return(1);
         }
-
-#if 0
-        int spi_lsb = 0;
-        ret = ioctl(spi_device->fd, SPI_IOC_WR_LSB_FIRST, &spi_lsb);
-        if(ret < 0)
-        {
-            LOG_ERR("OS : Could not set SPI LSB (WR)...ioctl fail errno = %d", errno);
-            return(1);
-        }
-
-        ret = ioctl(spi_device->fd, SPI_IOC_RD_LSB_FIRST, &spi_lsb);
-        if(ret < 0)
-        {
-            LOG_ERR("OS : Could not set SPI LSB (RD)...ioctl fail errno = %d", errno);
-            return(1);
-        }
-#endif
 
         ret = ioctl(spi_device->fd, SPI_IOC_WR_MAX_SPEED_HZ, &(spi_device->speed));
         if(ret < 0)
