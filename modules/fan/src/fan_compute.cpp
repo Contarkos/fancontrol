@@ -12,7 +12,7 @@
 #include "fan.h"
 #include "fan_class.h"
 
-void FAN::fan_timer_handler(int i_timer_id, void * i_data)
+void FAN::fan_timer_handler_old(int i_timer_id, void * i_data)
 {
     FAN *p_this = reinterpret_cast<FAN *> (i_data);
 
@@ -22,7 +22,7 @@ void FAN::fan_timer_handler(int i_timer_id, void * i_data)
     }
 }
 
-void FAN::fan_timer_handler_bis(int i_timer_id, void * i_data)
+void FAN::fan_timer_handler(int i_timer_id, void * i_data)
 {
     FAN *p_this = reinterpret_cast<FAN *> (i_data);
     int dum = 0;

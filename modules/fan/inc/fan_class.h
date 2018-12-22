@@ -8,9 +8,9 @@
 #include "temp.h"
 
 #define FAN_MODULE_NAME         "FAN"
-#define FAN_PIN_PWM             (18)
-#define FAN_PIN_IN              (23)
-#define FAN_PIN_OUT             (24)
+#define FAN_PIN_PWM             (18)    // Pin de sortie du signal PWM
+#define FAN_PIN_IN              (23)    // Pin non utilisee car gestion interruption
+#define FAN_PIN_OUT             (24)    // Activation/desactivation du relais de puissance
 #define FAN_DEFAULT_PREC        (1024)
 #define FAN_DEFAULT_CYCLE       (0.0F)
 #define FAN_TIMER_USEC          (40000)
@@ -38,11 +38,11 @@ class FAN : public MODULE
         ~FAN();
 
     private:
-        struct pollfd p_fd[FAN_FD_NB];
-        int timer_fd;
-        int timeout_fd;
-        int socket_fd;
-        int irq_fd;
+        struct pollfd p_fd[FAN_FD_NB];  // Structure pour polling
+        int timer_fd;                   // Index du timer requested
+        int timeout_fd;                 // File descriptor donné au timer pour envoyer les messages de timeout
+        int socket_fd;                  // File descriptor pour recevoir les messages
+        int irq_fd;                     // File descriptor pour recevoir les interruptions
 
         fan_e_mode current_mode;
         fan_e_power_mode current_power_mode;
@@ -76,8 +76,8 @@ class FAN : public MODULE
         int  fan_getCurSpeed(void)   { return current_speed;    }
 
         // Algorithme de décision pour le dutycycle
+        static void fan_timer_handler_old(int i_timer_id, void * i_data);
         static void fan_timer_handler(int i_timer_id, void * i_data);
-        static void fan_timer_handler_bis(int i_timer_id, void * i_data);
         int fan_compute_duty(void);
 
         // Recuperation des données

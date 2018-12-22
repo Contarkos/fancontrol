@@ -115,17 +115,20 @@ int FAN::start_module()
         }
     }
 
-    // Requete interruption
-    this->irq_fd = OS_irq_request(OS_IRQ_TIME_NAME, O_RDONLY);
+    if (0 == ret)
+    {
+        // Requete interruption
+        this->irq_fd = OS_irq_request(OS_IRQ_TIME_NAME, O_RDONLY);
 
-    if (0 == this->irq_fd)
-    {
-        LOG_ERR("FAN : erreur requete interruption pour lecture vitesse fan");
-        ret = -4;
-    }
-    else
-    {
-        this->p_fd[FAN_FD_IRQ].fd = this->irq_fd;
+        if (0 == this->irq_fd)
+        {
+            LOG_ERR("FAN : erreur requete interruption pour lecture vitesse fan");
+            ret = -4;
+        }
+        else
+        {
+            this->p_fd[FAN_FD_IRQ].fd = this->irq_fd;
+        }
     }
 
     LOG_INF3("FAN : fin init module (ret = %d)", ret);
