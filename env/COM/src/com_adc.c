@@ -9,18 +9,27 @@
 
 #include "com_adc.h"
 
-// Defines
+/*********************************************************************/
+/*                            Defines                                */
+/*********************************************************************/
+
+// Utilisation de la self calibration plutot que zero calibration
+#define COM_ADC_SELF_CAL
+
 #define COM_BYTE_SHIFT        8
 #define COM_DATA_LENGTH       2
 #define COM_SETUP_LENGTH      1
 #define COM_CLOCK_LENGTH      1
 
-// Variables globales
+/*********************************************************************/
+/*                       Variables globales                          */
+/*********************************************************************/
+
 t_com_adc_setup com_device_0_setup =
 {
     .clk_disable = COM_ADC_CLOCK_ON,
     .clk_div = COM_STATE_OFF,
-    .clk_rate = COM_ADC_CLOCK_1MHZ,
+    .clk_rate = COM_ADC_CLOCK_2MHZ4,
     .clk_filter = COM_ADC_CLOCK_FILT_25_60,
     .pair = COM_ADC_PAIR_0,
     .mode = COM_ADC_MODE_NORMAL,
@@ -34,7 +43,7 @@ t_com_adc_setup com_device_1_setup =
 {
     .clk_disable = COM_ADC_CLOCK_ON,
     .clk_div = COM_STATE_OFF,
-    .clk_rate = COM_ADC_CLOCK_1MHZ,
+    .clk_rate = COM_ADC_CLOCK_2MHZ4,
     .clk_filter = COM_ADC_CLOCK_FILT_25_60,
     .pair = COM_ADC_PAIR_0,
     .mode = COM_ADC_MODE_NORMAL,
@@ -67,25 +76,41 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
 
     if (0 == ret)
     {
-        // Reset de l'ADC
-        ret += COM_adc_reset(i_device);
+        // Configuration du module SPI
+        ret = OS_spi_open_port(i_device, SPI_MODE_3, COM_ADC_BITS_PER_WORD, COM_ADC_SPEED_4M9);
 
-        // Configuration de la clock de l'ADC avec la vitesse demandée
-        ret += COM_adc_set_clock_rate(i_device, i_rate);
+        if (ret < 0)
+        {
+            LOG_ERR("COM : erreur à l'ouverture du device SPI, ret = %d", ret);
+        }
+        else
+        {
+            // Reset de l'ADC
+            ret += COM_adc_reset(i_device);
 
-        // Descente de la pin d'activation
-        ret += OS_write_gpio(COM_ADC_PIN_ENB, 0);
+            // Configuration de la clock de l'ADC avec la vitesse demandée
+            ret += COM_adc_set_clock_rate(i_device, i_rate);
 
-        // Attente pour être certain que la pin est down
-        OS_usleep(10);
+// #if 0 pour faire une selfcalibration, #if 1 pour faire une zero calibration
+#ifndef COM_ADC_SELF_CAL
+            // Descente de la pin d'activation
+            ret += OS_write_gpio(COM_ADC_PIN_ENB, 0);
 
-        // Setup et demarrage de la calibration
-        ret += COM_adc_set_mode(i_device, COM_ADC_MODE_SELFCAL);
+            // Attente pour être certain que la pin est down
+            OS_usleep(10);
 
+            // Setup et demarrage de la calibration
+            ret += COM_adc_set_mode(i_device, COM_ADC_MODE_ZEROCAL);
+#else
+            // Setup et demarrage de la calibration
+            ret += COM_adc_set_mode(i_device, COM_ADC_MODE_SELFCAL);
+#endif
+        }
     }
     return ret;
 }
 
+// Reset du module SPI, equivalent a un ON/OFF physique
 int COM_adc_reset(t_os_spi_device i_device)
 {
     int ret = 0;
@@ -98,6 +123,7 @@ int COM_adc_reset(t_os_spi_device i_device)
     return ret;
 }
 
+// Lecture du resultat de la conversion analogique->numerique
 t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
 {
     t_uint16 result = 0;
@@ -156,21 +182,33 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
     return result;
 }
 
+// Configuration du regitre FSYNC du module ADC (1 = arret des fonctions de conversions)
 int COM_adc_set_filter_sync(t_os_spi_device i_device, t_com_state i_filter_sync)
 {
     int ret = 0;
 
-    switch (i_device)
+    switch (i_filter_sync)
     {
-        case OS_SPI_DEVICE_0:
-            com_device_0_setup.filter_sync = i_filter_sync;
-            break;
-        case OS_SPI_DEVICE_1:
-            com_device_1_setup.filter_sync = i_filter_sync;
+        case COM_STATE_ON:
+        case COM_STATE_OFF:
+            switch (i_device)
+            {
+                case OS_SPI_DEVICE_0:
+                    com_device_0_setup.filter_sync = i_filter_sync;
+                    break;
+                case OS_SPI_DEVICE_1:
+                    com_device_1_setup.filter_sync = i_filter_sync;
+                    break;
+                default:
+                    LOG_ERR("COM : device inexistant, device = %d", i_device);
+                    ret = -1;
+                    break;
+            }
             break;
         default:
-            LOG_ERR("COM : device inexistant, device = %d", i_device);
-            ret = -1;
+            LOG_ERR("COM : erreur sur la valeur de synchro filtre, i_filter_sync = %d", i_filter_sync);
+            ret = -2;
+            break;
     }
 
     // Reconfig du setup
@@ -186,17 +224,27 @@ int COM_adc_set_buffer_mode(t_os_spi_device i_device, t_com_state i_buffer_mode)
 {
     int ret = 0;
 
-    switch (i_device)
+    switch (i_buffer_mode)
     {
-        case OS_SPI_DEVICE_0:
-            com_device_0_setup.buffer_mode = i_buffer_mode;
-            break;
-        case OS_SPI_DEVICE_1:
-            com_device_1_setup.buffer_mode = i_buffer_mode;
+        case COM_STATE_ON:
+        case COM_STATE_OFF:
+            switch (i_device)
+            {
+                case OS_SPI_DEVICE_0:
+                    com_device_0_setup.buffer_mode = i_buffer_mode;
+                    break;
+                case OS_SPI_DEVICE_1:
+                    com_device_1_setup.buffer_mode = i_buffer_mode;
+                    break;
+                default:
+                    LOG_ERR("COM : device inexistant, device = %d", i_device);
+                    ret = -1;
+                    break;
+            }
             break;
         default:
-            LOG_ERR("COM : device inexistant, device = %d", i_device);
-            ret = -1;
+            LOG_ERR("COM : erreur pour la valeur du buffer mode, i_buffer_mode = %d", i_buffer_mode);
+            ret = -2;
     }
 
     // Reconfig du setup
@@ -208,6 +256,7 @@ int COM_adc_set_buffer_mode(t_os_spi_device i_device, t_com_state i_buffer_mode)
     return ret;
 }
 
+// Reglage de la bipolarite de l'ADC (1 = bipolaire, 0 = monopolaire)
 int COM_adc_set_bipolarity(t_os_spi_device i_device, t_com_state i_bipolarity)
 {
     int ret = 0;
@@ -249,17 +298,33 @@ int COM_adc_set_gain(t_os_spi_device i_device, t_com_adc_gain i_gain)
 {
     int ret = 0;
 
-    switch (i_device)
+    switch (i_gain)
     {
-        case OS_SPI_DEVICE_0:
-            com_device_0_setup.gain = i_gain;
-            break;
-        case OS_SPI_DEVICE_1:
-            com_device_1_setup.gain = i_gain;
+        case COM_ADC_GAIN_1:
+        case COM_ADC_GAIN_2:
+        case COM_ADC_GAIN_4:
+        case COM_ADC_GAIN_8:
+        case COM_ADC_GAIN_16:
+        case COM_ADC_GAIN_32:
+        case COM_ADC_GAIN_64:
+        case COM_ADC_GAIN_128:
+            switch (i_device)
+            {
+                case OS_SPI_DEVICE_0:
+                    com_device_0_setup.gain = i_gain;
+                    break;
+                case OS_SPI_DEVICE_1:
+                    com_device_1_setup.gain = i_gain;
+                    break;
+                default:
+                    LOG_ERR("COM : device inexistant, device = %d", i_device);
+                    ret = -1;
+                    break;
+            }
             break;
         default:
-            LOG_ERR("COM : device inexistant, device = %d", i_device);
-            ret = -1;
+            LOG_ERR("COM : erreur de valeur pour le gain de l'ADC, i_gain = %d", i_gain);
+            ret = -2;
     }
 
     // Reconfig du setup
@@ -271,21 +336,35 @@ int COM_adc_set_gain(t_os_spi_device i_device, t_com_adc_gain i_gain)
     return ret;
 }
 
+// Configuration et realisation de la calibration de l'ADC
 int COM_adc_set_mode(t_os_spi_device i_device, t_com_adc_mode i_mode)
 {
     int ret = 0;
 
-    switch (i_device)
+    switch (i_mode)
     {
-        case OS_SPI_DEVICE_0:
-            com_device_0_setup.mode = i_mode;
-            break;
-        case OS_SPI_DEVICE_1:
-            com_device_1_setup.mode = i_mode;
+        case COM_ADC_MODE_NORMAL:
+        case COM_ADC_MODE_SELFCAL:
+        case COM_ADC_MODE_ZEROCAL:
+        case COM_ADC_MODE_FULLCAL:
+            switch (i_device)
+            {
+                case OS_SPI_DEVICE_0:
+                    com_device_0_setup.mode = i_mode;
+                    break;
+                case OS_SPI_DEVICE_1:
+                    com_device_1_setup.mode = i_mode;
+                    break;
+                default:
+                    LOG_ERR("COM : device inexistant, device = %d", i_device);
+                    ret = -1;
+                    break;
+            }
             break;
         default:
-            LOG_ERR("COM : device inexistant, device = %d", i_device);
-            ret = -1;
+            LOG_ERR("COM : erreur de valeur pour mode de calibration, i_mode = %d", i_mode);
+            ret = -2;
+            break;
     }
 
     // Reconfig du setup
@@ -317,21 +396,34 @@ int COM_adc_set_mode(t_os_spi_device i_device, t_com_adc_mode i_mode)
     return ret;
 }
 
+// Configuration de l'activation/desactivation de la clock de l'ADC
+// WARNING : le ON = 0 et le OFF = 1
 int COM_adc_enable_clock(t_os_spi_device i_device, t_com_adc_clock i_clock)
 {
     int ret = 0;
 
-    switch (i_device)
+    switch (i_clock)
     {
-        case OS_SPI_DEVICE_0:
-            com_device_0_setup.clk_disable = i_clock;
-            break;
-        case OS_SPI_DEVICE_1:
-            com_device_1_setup.clk_disable = i_clock;
+        case COM_ADC_CLOCK_ON:
+        case COM_ADC_CLOCK_OFF:
+            switch (i_device)
+            {
+                case OS_SPI_DEVICE_0:
+                    com_device_0_setup.clk_disable = i_clock;
+                    break;
+                case OS_SPI_DEVICE_1:
+                    com_device_1_setup.clk_disable = i_clock;
+                    break;
+                default:
+                    LOG_ERR("COM : device inexistant, device = %d", i_device);
+                    ret = -1;
+                    break;
+            }
             break;
         default:
-            LOG_ERR("COM : device inexistant, device = %d", i_device);
-            ret = -1;
+            LOG_ERR("COM : valeur erronee pour i_clock, i_clock = %d", i_clock);
+            ret = -2;
+            break;
     }
 
     // Reconfig du setup
@@ -343,21 +435,33 @@ int COM_adc_enable_clock(t_os_spi_device i_device, t_com_adc_clock i_clock)
     return ret;
 }
 
+// Configuration de la fréquence d'utilisation de l'ADC (au demarrage elle doit etre de 2MHz4)
 int COM_adc_set_clock_rate(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
 {
     int ret = 0;
 
-    switch (i_device)
+    switch (i_rate)
     {
-        case OS_SPI_DEVICE_0:
-            com_device_0_setup.clk_rate = i_rate;
-            break;
-        case OS_SPI_DEVICE_1:
-            com_device_1_setup.clk_rate = i_rate;
+        case COM_ADC_CLOCK_1MHZ:
+        case COM_ADC_CLOCK_2MHZ4:
+            switch (i_device)
+            {
+                case OS_SPI_DEVICE_0:
+                    com_device_0_setup.clk_rate = i_rate;
+                    break;
+                case OS_SPI_DEVICE_1:
+                    com_device_1_setup.clk_rate = i_rate;
+                    break;
+                default:
+                    LOG_ERR("COM : device inexistant, device = %d", i_device);
+                    ret = -1;
+                    break;
+            }
             break;
         default:
-            LOG_ERR("COM : device inexistant, device = %d", i_device);
-            ret = -1;
+            LOG_ERR("COM : valeur erronee pour la frequence de fonctionnement de l'ADC, i_rate = %d", i_rate);
+            ret = -2;
+            break;
     }
 
     // Reconfig du setup
@@ -373,20 +477,31 @@ int COM_adc_set_clock_div(t_os_spi_device i_device, t_com_state i_div)
 {
     int ret = 0;
 
-    switch (i_device)
+    switch (i_div)
     {
-        case OS_SPI_DEVICE_0:
-            com_device_0_setup.clk_div = i_div;
-            break;
-        case OS_SPI_DEVICE_1:
-            com_device_1_setup.clk_div = i_div;
+        case COM_STATE_ON:
+        case COM_STATE_OFF:
+            switch (i_device)
+            {
+                case OS_SPI_DEVICE_0:
+                    com_device_0_setup.clk_div = i_div;
+                    break;
+                case OS_SPI_DEVICE_1:
+                    com_device_1_setup.clk_div = i_div;
+                    break;
+                default:
+                    LOG_ERR("COM : device inexistant, device = %d", i_device);
+                    ret = -1;
+                    break;
+            }
             break;
         default:
-            LOG_ERR("COM : device inexistant, device = %d", i_device);
-            ret = -1;
+            LOG_ERR("COM : erreur sur la valeur du diviseur de fréquence, i_div = %d", i_div);
+            ret = -2;
+            break;
     }
 
-    // Reconfig du setup
+    // Reconfig de la clock
     if (0 == ret)
     {
         com_adc_config_clock(i_device);
@@ -399,17 +514,30 @@ int COM_adc_set_clock_filter(t_os_spi_device i_device, t_com_adc_clock_filt i_fi
 {
     int ret = 0;
 
-    switch (i_device)
+    switch (i_filter)
     {
-        case OS_SPI_DEVICE_0:
-            com_device_0_setup.clk_filter = i_filter;
-            break;
-        case OS_SPI_DEVICE_1:
-            com_device_1_setup.clk_filter = i_filter;
+        case COM_ADC_CLOCK_FILT_20_50:
+        case COM_ADC_CLOCK_FILT_25_60:
+        case COM_ADC_CLOCK_FILT_100_250:
+        case COM_ADC_CLOCK_FILT_200_500:
+            switch (i_device)
+            {
+                case OS_SPI_DEVICE_0:
+                    com_device_0_setup.clk_filter = i_filter;
+                    break;
+                case OS_SPI_DEVICE_1:
+                    com_device_1_setup.clk_filter = i_filter;
+                    break;
+                default:
+                    LOG_ERR("COM : device inexistant, device = %d", i_device);
+                    ret = -1;
+                    break;
+            }
             break;
         default:
-            LOG_ERR("COM : device inexistant, device = %d", i_device);
-            ret = -1;
+            LOG_ERR("COM : erreur sur la valeur du filtre pour ADC, i_filter = %d", i_filter);
+            ret = -2;
+            break;
     }
 
     // Reconfig du setup
@@ -421,6 +549,7 @@ int COM_adc_set_clock_filter(t_os_spi_device i_device, t_com_adc_clock_filt i_fi
     return ret;
 }
 
+// Lecture du setup dans le registre de l'ADC
 int COM_adc_read_setup(t_os_spi_device i_device, t_uint8 *o_setup)
 {
     int ret = 0;
@@ -467,6 +596,7 @@ int COM_adc_read_setup(t_os_spi_device i_device, t_uint8 *o_setup)
     return ret;
 }
 
+// Lecture de la configuration de la clock sur l'ADC
 int COM_adc_read_clock(t_os_spi_device i_device, t_uint8 *o_clock)
 {
     int ret = 0;
@@ -516,6 +646,7 @@ int COM_adc_read_clock(t_os_spi_device i_device, t_uint8 *o_clock)
 /*                       Fonctions locales                           */
 /*********************************************************************/
 
+// Ecriture de la confuguration en memoire dans le registre setup de l'ADC
 int com_adc_config_setup(t_os_spi_device i_device)
 {
     int ret = 0;
@@ -558,6 +689,7 @@ int com_adc_config_setup(t_os_spi_device i_device)
     return ret;
 }
 
+// Ecriture de la configuration en memoire dans le registre clock de l'ADC
 int com_adc_config_clock(t_os_spi_device i_device)
 {
     int ret = 0;
