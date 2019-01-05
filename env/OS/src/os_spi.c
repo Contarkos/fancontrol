@@ -59,81 +59,105 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
             ret = -1;
     }
 
-    //----- SET SPI MODE -----
-    //SPI_MODE_0 (0,0)     CPOL = 0, CPHA = 0, Clock idle low, data is clocked in on rising edge, output data (change) on falling edge
-    //SPI_MODE_1 (0,1)     CPOL = 0, CPHA = 1, Clock idle low, data is clocked in on falling edge, output data (change) on rising edge
-    //SPI_MODE_2 (1,0)     CPOL = 1, CPHA = 0, Clock idle high, data is clocked in on falling edge, output data (change) on rising edge
-    //SPI_MODE_3 (1,1)     CPOL = 1, CPHA = 1, Clock idle high, data is clocked in on rising, edge output data (change) on falling edge
-    switch (i_mode)
-    {
-       case SPI_MODE_0:
-       case SPI_MODE_1:
-       case SPI_MODE_2:
-       case SPI_MODE_3:
-          spi_device->mode = i_mode;
-          break;
-       default:
-          ret += -2;
-          break;
-    }
-
-    //----- SET BITS PER WORD -----
-    spi_device->bits_per_word = i_bits;
-
-    //----- SET SPI BUS SPEED -----
-    spi_device->speed = i_speed;        //1000000 = 1MHz (1uS per bit) 
-
     if (0 == ret)
     {
-        LOG_INF1("OS : ouverture fichier SPI%d", spi_device->id);
-
-        if (spi_device->fd < 0)
+        //----- SET SPI MODE -----
+        //SPI_MODE_0 (0,0)     CPOL = 0, CPHA = 0, Clock idle low, data is clocked in on rising edge, output data (change) on falling edge
+        //SPI_MODE_1 (0,1)     CPOL = 0, CPHA = 1, Clock idle low, data is clocked in on falling edge, output data (change) on rising edge
+        //SPI_MODE_2 (1,0)     CPOL = 1, CPHA = 0, Clock idle high, data is clocked in on falling edge, output data (change) on rising edge
+        //SPI_MODE_3 (1,1)     CPOL = 1, CPHA = 1, Clock idle high, data is clocked in on rising, edge output data (change) on falling edge
+        switch (i_mode)
         {
-            LOG_ERR("OS : Error - Could not open SPI device");
-            return(1);
+            case SPI_MODE_0:
+            case SPI_MODE_1:
+            case SPI_MODE_2:
+            case SPI_MODE_3:
+                spi_device->mode = i_mode;
+                break;
+            default:
+                ret += -2;
+                break;
         }
 
-        ret = ioctl(spi_device->fd, SPI_IOC_WR_MODE, &(spi_device->mode));
-        if(ret < 0)
+        //----- SET BITS PER WORD -----
+        switch (i_bits)
         {
-            LOG_ERR("OS : Could not set SPIMode (WR)...ioctl fail");
-            return(1);
+            case OS_SPI_BITS_WORD_8:
+            case OS_SPI_BITS_WORD_9:
+                spi_device->bits_per_word = i_bits;
+                break;
+            default:
+                ret += -4;
+                break;
         }
 
-        ret = ioctl(spi_device->fd, SPI_IOC_RD_MODE, &(spi_device->mode));
-        if(ret < 0)
+        //----- SET SPI BUS SPEED -----
+        if (i_speed <= OS_MAX_SPI_SPEED)
         {
-            LOG_ERR("OS : Could not set SPIMode (RD)...ioctl fail");
-            return(1);
+            spi_device->speed = i_speed;
         }
-        LOG_INF3("OS : spi mode = %d", spi_device->mode);
-
-        ret = ioctl(spi_device->fd, SPI_IOC_WR_BITS_PER_WORD, &(spi_device->bits_per_word));
-        if(ret < 0)
+        else
         {
-            LOG_ERR("OS : Could not set SPI bitsPerWord (WR)...ioctl fail, errno = %d", errno);
-            return(1);
+            ret += -8;
         }
 
-        ret = ioctl(spi_device->fd, SPI_IOC_RD_BITS_PER_WORD, &(spi_device->bits_per_word));
-        if(ret < 0)
+        if (0 == ret)
         {
-            LOG_ERR("OS : Could not set SPI bitsPerWord(RD)...ioctl fail");
-            return(1);
-        }
+            LOG_INF1("OS : ouverture fichier SPI%d", spi_device->id);
 
-        ret = ioctl(spi_device->fd, SPI_IOC_WR_MAX_SPEED_HZ, &(spi_device->speed));
-        if(ret < 0)
-        {
-            LOG_ERR("OS : Could not set SPI speed (WR)...ioctl fail");
-            return(1);
-        }
+            if (spi_device->fd < 0)
+            {
+                LOG_ERR("OS : Error - Could not open SPI device");
+                return(1);
+            }
 
-        ret = ioctl(spi_device->fd, SPI_IOC_RD_MAX_SPEED_HZ, &(spi_device->speed));
-        if(ret < 0)
-        {
-            LOG_ERR("OS : Could not set SPI speed (RD)...ioctl fail");
-            return(1);
+            ret = ioctl(spi_device->fd, SPI_IOC_WR_MODE, &(spi_device->mode));
+            if(ret < 0)
+            {
+                LOG_ERR("OS : Could not set SPIMode (WR)...ioctl fail");
+                return(1);
+            }
+
+            ret = ioctl(spi_device->fd, SPI_IOC_RD_MODE, &(spi_device->mode));
+            if(ret < 0)
+            {
+                LOG_ERR("OS : Could not set SPIMode (RD)...ioctl fail");
+                return(1);
+            }
+
+            ret = ioctl(spi_device->fd, SPI_IOC_WR_BITS_PER_WORD, &(spi_device->bits_per_word));
+            if(ret < 0)
+            {
+                LOG_ERR("OS : Could not set SPI bitsPerWord (WR)...ioctl fail, errno = %d", errno);
+                return(1);
+            }
+
+            ret = ioctl(spi_device->fd, SPI_IOC_RD_BITS_PER_WORD, &(spi_device->bits_per_word));
+            if(ret < 0)
+            {
+                LOG_ERR("OS : Could not set SPI bitsPerWord(RD)...ioctl fail");
+                return(1);
+            }
+
+            ret = ioctl(spi_device->fd, SPI_IOC_WR_MAX_SPEED_HZ, &(spi_device->speed));
+            if(ret < 0)
+            {
+                LOG_ERR("OS : Could not set SPI speed (WR)...ioctl fail");
+                return(1);
+            }
+
+            ret = ioctl(spi_device->fd, SPI_IOC_RD_MAX_SPEED_HZ, &(spi_device->speed));
+            if(ret < 0)
+            {
+                LOG_ERR("OS : Could not set SPI speed (RD)...ioctl fail");
+                return(1);
+            }
+
+            LOG_INF3("OS : SPI status for SPI%d : mode = %d, BPW = %d, speed = %d",
+                     spi_device->id,
+                     spi_device->mode,
+                     spi_device->bits_per_word,
+                     spi_device->speed);
         }
     }
 
@@ -197,17 +221,25 @@ int OS_spi_set_speed (t_os_spi_device i_spi_id, unsigned int i_speed)
 
     if (0 == ret)
     {
-        ret  = ioctl (spi_device->fd, SPI_IOC_WR_MAX_SPEED_HZ, &(i_speed));
-        ret += ioctl (spi_device->fd, SPI_IOC_RD_MAX_SPEED_HZ, &(i_speed));
-
-        if (ret < 0)
+        if (i_speed > OS_MAX_SPI_SPEED)
         {
-            LOG_ERR("[OS] Error while updating speed for SPI %d, speed unchanged = %d", spi_device->fd, spi_device->speed);
+            LOG_ERR("OS : wrong value for SPI speed, i_speed = %d", i_speed);
+            ret = -2;
         }
         else
         {
-            spi_device->speed = i_speed;
-            LOG_INF3("[OS] Updated speed for SPI %d, speed = %d", spi_device->fd, spi_device->speed);
+            ret  = ioctl (spi_device->fd, SPI_IOC_WR_MAX_SPEED_HZ, &(i_speed));
+            ret += ioctl (spi_device->fd, SPI_IOC_RD_MAX_SPEED_HZ, &(i_speed));
+
+            if (ret < 0)
+            {
+                LOG_ERR("[OS] Error while updating speed for SPI %d, speed unchanged = %d", spi_device->fd, spi_device->speed);
+            }
+            else
+            {
+                spi_device->speed = i_speed;
+                LOG_INF3("[OS] Updated speed for SPI %d, speed = %d", spi_device->fd, spi_device->speed);
+            }
         }
     }
 
@@ -277,10 +309,10 @@ int OS_spi_set_mode(t_os_spi_device i_spi_id, t_os_spi_mode i_mode)
 /*******************************************/
 /*          SPI WRITE & READ DATA          */
 /*******************************************/
-//data        Bytes to write.  Contents is overwritten with bytes read.
-int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *data, int length)
+//io_data        Bytes to write.  Contents is overwritten with bytes read.
+int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *io_data, int i_length)
 {
-    struct spi_ioc_transfer spi[length];
+    struct spi_ioc_transfer spi[i_length];
     int ii = 0;
     int retVal = 0, ret = 0;
     t_os_spi_struct *spi_device = NULL;
@@ -300,48 +332,52 @@ int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *data, int length
 
     if ( spi_device )
     {
+#if defined(INTEGRATION_LOG_LEVEL) && (INTEGRATION_LOG_LEVEL >= 6)
         printf("[OS] Data TX : ");
-        for (ii = 0; ii < length; ii++)
+        for (ii = 0; ii < i_length; ii++)
         {
-            printf("[%d] = %x, ", ii, *(data + ii));
+            printf("[%d] = %x, ", ii, *(io_data + ii));
         }
         printf("\n");
+#endif
 
         //one spi transfer for each byte
-        for (ii = 0 ; ii < length ; ii++)
+        for (ii = 0 ; ii < i_length ; ii++)
         {
             // init de la zone memoire
             memset(&spi[ii], 0, sizeof (spi[ii]));
 
             // Remplissage de la demande de transfert
-            spi[ii].tx_buf        = (unsigned long)(data + ii); // transmit from "data"
-            spi[ii].rx_buf        = (unsigned long)(data + ii); // receive into "data"
-            spi[ii].len           = sizeof(*(data + ii));
+            spi[ii].tx_buf        = (unsigned long)(io_data + ii); // transmit from "io_data"
+            spi[ii].rx_buf        = (unsigned long)(io_data + ii); // receive into "io_data"
+            spi[ii].len           = sizeof(*(io_data + ii));
             spi[ii].delay_usecs   = 0;
             spi[ii].speed_hz      = spi_device->speed;
             spi[ii].bits_per_word = spi_device->bits_per_word;
             spi[ii].cs_change     = 0;
         }
 
-        retVal = ioctl(spi_device->fd, SPI_IOC_MESSAGE(length), spi);
+        retVal = ioctl(spi_device->fd, SPI_IOC_MESSAGE(i_length), spi);
 
         if(retVal < 0)
         {
             LOG_ERR("Error - Problem transmitting spi data..ioctl");
             ret = -2;
         }
-        else if (length != retVal)
+        else if (i_length != retVal)
         {
-            LOG_WNG("COM : warning nombre de messages envoyés incohérents, %d != %d", length, retVal);
+            LOG_WNG("COM : warning nombre de messages envoyés incohérents, %d != %d", i_length, retVal);
             ret = -4;
         }
 
+#if defined(INTEGRATION_LOG_LEVEL) && (INTEGRATION_LOG_LEVEL >= 6)
         printf("[OS] Data RX : ");
-        for (ii = 0; ii < length; ii++)
+        for (ii = 0; ii < i_length; ii++)
         {
-            printf("[%d] = %x, ", ii, *(data + ii));
+            printf("[%d] = %x, ", ii, *(io_data + ii));
         }
         printf("\n");
+#endif
     }
 
     return ret;
