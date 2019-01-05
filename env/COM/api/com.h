@@ -16,12 +16,16 @@ extern "C" {
 #define COM_MAX_SIZE_DATA       1024        // Taille max d'un message à l'envoi des messages
 #define COM_EXTERN_BACKLOG      128
 
-#define COM_ADC_PIN_RDY         (25)
-#define COM_ADC_PIN_ENB         (27)
+#define COM_ADC_PIN_RDY0        (25)
+#define COM_ADC_PIN_RDY1        (5)
+#define COM_ADC_PIN_ENB0        (27)
+#define COM_ADC_PIN_ENB1        (6)
 #define COM_ADC_BITS_PER_WORD   8
 #define COM_ADC_SPEED_1M        (1000000U)
 #define COM_ADC_SPEED_2M4       (2457600U)
 #define COM_ADC_SPEED_4M9       (4915200U)
+
+#define COM_ADC_MAX_WAIT        (45U)       // Nombre de cycles de 10ms d'attente (450ms = 9 cycles à 20Hz)
 
 // Typedef
 typedef enum

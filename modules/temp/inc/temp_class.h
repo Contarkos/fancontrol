@@ -7,8 +7,8 @@
 #include "com.h"
 
 #define TEMP_MODULE_NAME        "TEMP"
-#define TEMP_PIN_IN             (COM_ADC_PIN_RDY)       // /DRDY ADC
-#define TEMP_PIN_OUT            (COM_ADC_PIN_ENB)       // Controle de l'alim du thermistor
+#define TEMP_PIN_IN             (COM_ADC_PIN_RDY0)       // /DRDY ADC
+#define TEMP_PIN_OUT            (COM_ADC_PIN_ENB0)       // Controle de l'alim du thermistor
 #define TEMP_DEFAULT_PREC       (1024)
 #define TEMP_DEFAULT_CYCLE      (0.0F)
 #define TEMP_TIMER_USEC         (500000)

@@ -92,7 +92,10 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
             ret += COM_adc_set_clock_rate(i_device, i_rate);
 
 // #if 0 pour faire une selfcalibration, #if 1 pour faire une zero calibration
-#ifndef COM_ADC_SELF_CAL
+#ifdef COM_ADC_SELF_CAL
+            // Setup et demarrage de la calibration
+            ret += COM_adc_set_mode(i_device, COM_ADC_MODE_SELFCAL);
+#else
             // Descente de la pin d'activation
             ret += OS_write_gpio(COM_ADC_PIN_ENB, 0);
 
@@ -101,9 +104,6 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
 
             // Setup et demarrage de la calibration
             ret += COM_adc_set_mode(i_device, COM_ADC_MODE_ZEROCAL);
-#else
-            // Setup et demarrage de la calibration
-            ret += COM_adc_set_mode(i_device, COM_ADC_MODE_SELFCAL);
 #endif
         }
     }
@@ -116,10 +116,28 @@ int COM_adc_reset(t_os_spi_device i_device)
     int ret = 0;
     t_uint8 a[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
 
-    // Ecriture HIGH sur 32 bits
-    ret += OS_spi_write_read(i_device, a, 4);
+    // Verification du device a resetter
+    switch (i_device)
+    {
+        case OS_SPI_DEVICE_0:
+        case OS_SPI_DEVICE_1:
+            break;
+        default:
+            LOG_ERR("COM : device à reset inexistant, device = %d", i_device);
+            ret = -1;
+    }
 
-    LOG_INF1("COM : reset = %x %x %x %x", a[0], a[1], a[2], a[3]);
+    if (ret < 0)
+    {
+        // Ecriture HIGH sur 32 bits
+        ret += OS_spi_write_read(i_device, a, 4);
+
+        // On attend qu'un mot soit pret
+        ret += com_adc_wait_ready(i_device);
+
+        LOG_INF2("COM : reset = %x %x %x %x", a[0], a[1], a[2], a[3]);
+    }
+
     return ret;
 }
 
@@ -144,39 +162,42 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
             ret = -1;
     }
 
-    // Mise en forme du buffer pour lire le registre de comparaison
-    data[0] = (t_uint8)  (
-                            (0 << COM_ADC_WRITE_SHIFT)                  // Ecriture dans le registre de com
-                          | (COM_ADC_REG_DATA << COM_ADC_REG_SHIFT)     // Selection du registre de données
-                          | (COM_ADC_RW_MASK)                           // Lecture des données
-                          | (i_pair << COM_ADC_CHAN_SHIFT)              // Selection de la paire a ecouter
-                         );
-
-    // Vide pour ne pas bloquer la lecture
-    data[1] = COM_ADC_NULL;
-    data[2] = COM_ADC_NULL;
-    LOG_INF3("COM : valeur requete = 0x%x", data[0]);
-
-    // On attend qu'un mot soit pret
-    while (COM_STATE_ON == OS_read_gpio(COM_ADC_PIN_RDY))
-    {
-        LOG_INF3("TEMP : waiting for RDY pin to get low");
-        OS_usleep(10);
-    }
-
-    // On va récupérer les données
-    ret = OS_spi_write_read(i_device, data, COM_DATA_LENGTH + 1);
-    LOG_INF3("COM : valeur result = 0x%x & 0x%x", data[1], data[2]);
-
     if (ret < 0)
     {
-        LOG_ERR("COM : AD7705, pas de données disponibles...");
+        // Ne rien faire
+        ;
     }
     else
     {
-        result = (t_uint16) ( (data[1] << COM_BYTE_SHIFT) | data[2]);
+        // Mise en forme du buffer pour lire le registre de comparaison
+        data[0] = (t_uint8)  (
+                (0 << COM_ADC_WRITE_SHIFT)                  // Ecriture dans le registre de com
+                | (COM_ADC_REG_DATA << COM_ADC_REG_SHIFT)     // Selection du registre de données
+                | (COM_ADC_RW_MASK)                           // Lecture des données
+                | (i_pair << COM_ADC_CHAN_SHIFT)              // Selection de la paire a ecouter
+                );
 
-        LOG_INF1("COM : resultat ADC = %d", result);
+        // Vide pour ne pas bloquer la lecture
+        data[1] = COM_ADC_NULL;
+        data[2] = COM_ADC_NULL;
+        LOG_INF3("COM : valeur requete = 0x%x", data[0]);
+
+        // On attend qu'un mot soit pret
+        ret = com_adc_wait_ready(i_device);
+
+        if (ret < 0)
+        {
+            LOG_ERR("COM : AD7705, pas de données disponibles...");
+        }
+        else
+        {
+            // On va récupérer les données
+            ret = OS_spi_write_read(i_device, data, COM_DATA_LENGTH + 1);
+            LOG_INF3("COM : valeur result = 0x%x & 0x%x", data[1], data[2]);
+
+            result = (t_uint16) ( (data[1] << COM_BYTE_SHIFT) | data[2]);
+            LOG_INF3("COM : resultat ADC = %d", result);
+        }
     }
 
     return result;
@@ -373,10 +394,7 @@ int COM_adc_set_mode(t_os_spi_device i_device, t_com_adc_mode i_mode)
         com_adc_config_setup(i_device);
 
         // On attend que le device ait fini sa calibration
-        while (COM_STATE_ON == OS_read_gpio(COM_ADC_PIN_RDY))
-        {
-            OS_usleep(10);
-        }
+        ret = com_adc_wait_ready(i_device);
     }
 
     // Retour à la normal (pas de calibration à chaque setup)
@@ -726,6 +744,47 @@ int com_adc_config_clock(t_os_spi_device i_device)
 
         // On va écrire les données
         ret = OS_spi_write_read(i_device, data, COM_CLOCK_LENGTH + 1);
+    }
+
+    return ret;
+}
+
+// Attente que l'ADC soit pret
+int com_adc_wait_ready(t_os_spi_device i_device)
+{
+    int ret = 0, cpt = COM_ADC_MAX_WAIT;
+    t_uint32 p;
+
+    switch (i_device)
+    {
+        case OS_SPI_DEVICE_0:
+            p = COM_ADC_PIN_RDY0;
+            break;
+        case OS_SPI_DEVICE_1:
+            p = COM_ADC_PIN_RDY1;
+            break;
+        default:
+            LOG_ERR("COM : device inexistant, device = %d", i_device);
+            ret = -1;
+    }
+
+    if (ret < 0)
+    {
+        // Ne rien faire
+        ;
+    }
+    else
+    {
+        // On attend qu'un mot soit pret
+        while ( (COM_STATE_ON == OS_read_gpio(p)) && cpt )
+        {
+            // Decrement du compteur
+            cpt--;
+
+            // 10ms de pause
+            LOG_INF3("TEMP : waiting for RDY pin to get low during reset, cpt = %d", cpt);
+            OS_usleep(10000);
+        }
     }
 
     return ret;

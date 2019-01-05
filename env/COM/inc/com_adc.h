@@ -44,3 +44,5 @@ extern t_com_adc_setup com_device_1_setup;
 // Fonctions locales
 int com_adc_config_setup(t_os_spi_device i_device);
 int com_adc_config_clock(t_os_spi_device i_device);
+
+int com_adc_wait_ready(t_os_spi_device i_device);
