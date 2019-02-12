@@ -48,11 +48,11 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
     {
         case OS_SPI_DEVICE_0:
             spi_device = &spi_device_0;
-            spi_device->fd = open("/dev/spidev0.0", O_RDWR | O_NONBLOCK);
+            spi_device->fd = open(OS_FILE_SPI0, O_RDWR | O_NONBLOCK);
             break;
         case OS_SPI_DEVICE_1:
             spi_device = &spi_device_1;
-            spi_device->fd = open("/dev/spidev0.1", O_RDWR | O_NONBLOCK);
+            spi_device->fd = open(OS_FILE_SPI1, O_RDWR | O_NONBLOCK);
             break;
         default:
             LOG_ERR("OS : device SPI inexistant");

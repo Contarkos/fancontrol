@@ -1,5 +1,10 @@
 #pragma once
 
+// Defines
+#define OS_FILE_SPI0    "/dev/spidev0.0"
+#define OS_FILE_SPI1    "/dev/spidev0.1"
+
+// Struct
 typedef struct
 {
     int fd;
