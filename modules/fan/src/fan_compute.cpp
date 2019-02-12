@@ -81,7 +81,7 @@ int FAN::fan_compute_duty(void)
             {
                 if (this->consigne_speed > FAN_MAX_SPEED)
                 {
-                    LOG_WNG("FAN : vitesse trop haute");
+                    LOG_WNG("FAN : vitesse trop haute, reducing @ %d RPM", FAN_MAX_SPEED);
                     this->fan_setConsSpeed(FAN_MAX_SPEED);
 
                     ret = 2;
