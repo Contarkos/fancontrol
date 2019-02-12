@@ -16,11 +16,13 @@ extern "C" {
 #define COM_MAX_SIZE_DATA       1024        // Taille max d'un message à l'envoi des messages
 #define COM_EXTERN_BACKLOG      128
 
-#define COM_ADC_PIN_RDY0        (25)
-#define COM_ADC_PIN_RDY1        (5)
-#define COM_ADC_PIN_ENB0        (27)
-#define COM_ADC_PIN_ENB1        (6)
-#define COM_ADC_BITS_PER_WORD   8
+#define COM_ADC_PIN_RDY0        (OS_GPIO_BCM_25)
+#define COM_ADC_PIN_RDY1        (OS_GPIO_BCM_5)
+#define COM_ADC_PIN_ENB0        (OS_GPIO_BCM_27)
+#define COM_ADC_PIN_ENB1        (OS_GPIO_BCM_6)
+#define COM_ADC_PIN_RST0        (OS_GPIO_BCM_22)
+#define COM_ADC_PIN_RST1        (OS_GPIO_BCM_26)
+#define COM_ADC_BITS_PER_WORD   8U
 #define COM_ADC_SPEED_1M        (1000000U)
 #define COM_ADC_SPEED_2M4       (2457600U)
 #define COM_ADC_SPEED_4M9       (4915200U)
@@ -96,6 +98,7 @@ typedef enum
 
 typedef struct
 {
+    t_uint32 pin_rst;
     t_com_adc_clock clk_disable;
     t_com_state clk_div;
     t_com_adc_clock_rate clk_rate;
@@ -136,7 +139,8 @@ int COM_register_socket(int i_fd, int *i_list, int i_size);
 
 // Gestion de l'AD7705
 int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate);
-int COM_adc_reset(t_os_spi_device i_device);
+int COM_adc_reset_soft(t_os_spi_device i_device);
+int COM_adc_reset_hard(t_os_spi_device i_device);
 
 t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair);
 

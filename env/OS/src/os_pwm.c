@@ -113,7 +113,7 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
             divr = os_clock_max_freq[os_clock_source] % (os_pwm_freq * os_pwm_prec);
             divf = (t_uint32) ((float) (divr * CLOCK_MAX_DIVISOR) / (float) (os_pwm_freq * os_pwm_prec));
 
-            LOG_INF1("OS : diviseur pour PWM = %d", divi);
+            LOG_INF3("OS : diviseur pour PWM = %d", divi);
 
             if (divi > CLOCK_MAX_DIVISOR)
             {
@@ -167,7 +167,7 @@ int OS_pwm_set_dutycycle(float i_duty)
         // Ecriture de la valeur dans le registre
         PWM_DAT1_REGISTER = ((t_uint32) ((os_pwm_duty / OS_MAX_PERCENT_PWM) * (float) os_pwm_prec) );
 
-        LOG_INF1("OS : dutycycle value = %d", PWM_DAT1_REGISTER);
+        LOG_INF3("OS : dutycycle value = %d", PWM_DAT1_REGISTER);
     }
 
     return ret;

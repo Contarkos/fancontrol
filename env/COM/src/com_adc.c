@@ -27,6 +27,7 @@
 
 t_com_adc_setup com_device_0_setup =
 {
+    .pin_rst = COM_ADC_PIN_RST0,
     .clk_disable = COM_ADC_CLOCK_ON,
     .clk_div = COM_STATE_OFF,
     .clk_rate = COM_ADC_CLOCK_2MHZ4,
@@ -41,6 +42,7 @@ t_com_adc_setup com_device_0_setup =
 
 t_com_adc_setup com_device_1_setup =
 {
+    .pin_rst = COM_ADC_PIN_RST1,
     .clk_disable = COM_ADC_CLOCK_ON,
     .clk_div = COM_STATE_OFF,
     .clk_rate = COM_ADC_CLOCK_2MHZ4,
@@ -60,14 +62,17 @@ t_com_adc_setup com_device_1_setup =
 int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
 {
     int ret = 0;
+    t_uint32 pin_rst;
 
     switch (i_device)
     {
         case OS_SPI_DEVICE_0:
             com_device_0_setup.clk_rate = i_rate;
+            pin_rst = com_device_0_setup.pin_rst;
             break;
         case OS_SPI_DEVICE_1:
             com_device_1_setup.clk_rate = i_rate;
+            pin_rst = com_device_1_setup.pin_rst;
             break;
         default:
             LOG_ERR("COM : device inexistant, device = %d", i_device);
@@ -85,8 +90,14 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
         }
         else
         {
+            // Reglage pin de reset en OUT
+            ret += OS_set_gpio(pin_rst, OS_GPIO_FUNC_OUT);
+
+            // Reset physique
+            ret += COM_adc_reset_hard(i_device);
+
             // Reset de l'ADC
-            ret += COM_adc_reset(i_device);
+            ret += COM_adc_reset_soft(i_device);
 
             // Configuration de la clock de l'ADC avec la vitesse demandée
             ret += COM_adc_set_clock_rate(i_device, i_rate);
@@ -110,8 +121,48 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
     return ret;
 }
 
+// Reset physique via la pin RST du module
+int COM_adc_reset_hard(t_os_spi_device i_device)
+{
+    int ret = 0;
+    t_uint32 pin;
+
+    // Verification du device a resetter
+    switch (i_device)
+    {
+        case OS_SPI_DEVICE_0:
+            pin = COM_ADC_PIN_RST0;
+            break;
+        case OS_SPI_DEVICE_1:
+            pin = COM_ADC_PIN_RST1;
+            break;
+        default:
+            LOG_ERR("COM : device à reset inexistant, device = %d", i_device);
+            ret = -1;
+    }
+
+    if (0 == ret)
+    {
+        LOG_INF1("COM : reset hard pour ADC");
+
+        // Reset de la pin
+        ret += OS_write_gpio(pin, 0);
+
+        // Attente pour être sur que le device recoit la commande
+        OS_usleep(10);
+
+        // Remontee de la pin
+        ret += OS_write_gpio(pin, 1);
+
+        // On attend qu'un mot soit pret
+        ret += com_adc_wait_ready(i_device);
+    }
+
+    return ret;
+}
+
 // Reset du module SPI, equivalent a un ON/OFF physique
-int COM_adc_reset(t_os_spi_device i_device)
+int COM_adc_reset_soft(t_os_spi_device i_device)
 {
     int ret = 0;
     t_uint8 a[4] = { 0xFF, 0xFF, 0xFF, 0xFF };

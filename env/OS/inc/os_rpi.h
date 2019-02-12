@@ -46,19 +46,59 @@
 #define PWM_CTL_PWEN1_SHIFT      0U
 #define PWM_CTL_MODE1_MASK       ((t_uint32) 0x00000002)
 #define PWM_CTL_MODE1_SHIFT      1U
+#define PWM_CTL_RPTL1_MASK       ((t_uint32) 0x00000004)
+#define PWM_CTL_RPTL1_SHIFT      2U
+#define PWM_CTL_SBIT1_MASK       ((t_uint32) 0x00000008)
+#define PWM_CTL_SBIT1_SHIFT      3U
+#define PWM_CTL_POLA1_MASK       ((t_uint32) 0x00000010)
+#define PWM_CTL_POLA1_SHIFT      4U
 #define PWM_CTL_USEF1_MASK       ((t_uint32) 0x00000020)
 #define PWM_CTL_USEF1_SHIFT      5U
+#define PWM_CTL_CLRF1_MASK       ((t_uint32) 0x00000040)
+#define PWM_CTL_CLRF1_SHIFT      6U
 #define PWM_CTL_MSEN1_MASK       ((t_uint32) 0x00000080)
 #define PWM_CTL_MSEN1_SHIFT      7U
+#define PWM_CTL_PWEN2_MASK       ((t_uint32) 0x00000100)
+#define PWM_CTL_PWEN2_SHIFT      8U
+#define PWM_CTL_MODE2_MASK       ((t_uint32) 0x00000200)
+#define PWM_CTL_MODE2_SHIFT      9U
+#define PWM_CTL_RPTL2_MASK       ((t_uint32) 0x00000400)
+#define PWM_CTL_RPTL2_SHIFT      10U
+#define PWM_CTL_SBIT2_MASK       ((t_uint32) 0x00000800)
+#define PWM_CTL_SBIT2_SHIFT      11U
+#define PWM_CTL_POLA2_MASK       ((t_uint32) 0x00001000)
+#define PWM_CTL_POLA2_SHIFT      12U
+#define PWM_CTL_USEF2_MASK       ((t_uint32) 0x00002000)
+#define PWM_CTL_USEF2_SHIFT      13U
+#define PWM_CTL_MSEN2_MASK       ((t_uint32) 0x00008000)
+#define PWM_CTL_MSEN2_SHIFT      15U
 
-#define PWM_STA_FULL_MASK
-#define PWM_STA_FULL_SHIFT
-//#define PWM_STA_
-//#define PWM_STA_
-//#define PWM_STA_
-//#define PWM_STA_
-//#define PWM_STA_
-//#define PWM_STA_
+#define PWM_STA_FULL_MASK        ((t_uint32) 0x00000001)
+#define PWM_STA_FULL_SHIFT       0U
+#define PWM_STA_EMPT_MASK        ((t_uint32) 0x00000002)
+#define PWM_STA_EMPT_SHIFT       1U
+#define PWM_STA_WERR_MASK        ((t_uint32) 0x00000004)
+#define PWM_STA_WERR_SHIFT       2U
+#define PWM_STA_RERR_MASK        ((t_uint32) 0x00000008)
+#define PWM_STA_RERR_SHIFT       3U
+#define PWM_STA_GAPO1_MASK       ((t_uint32) 0x00000010)
+#define PWM_STA_GAPO1_SHIFT      4U
+#define PWM_STA_GAPO2_MASK       ((t_uint32) 0x00000020)
+#define PWM_STA_GAPO2_SHIFT      5U
+#define PWM_STA_GAPO3_MASK       ((t_uint32) 0x00000040)
+#define PWM_STA_GAPO3_SHIFT      6U
+#define PWM_STA_GAPO4_MASK       ((t_uint32) 0x00000080)
+#define PWM_STA_GAPO4_SHIFT      7U
+#define PWM_STA_BERR_MASK        ((t_uint32) 0x00000100)
+#define PWM_STA_BERR_SHIFT       8U
+#define PWM_STA_STAO1_MASK       ((t_uint32) 0x00000200)
+#define PWM_STA_STAO1_SHIFT      9U
+#define PWM_STA_STAO2_MASK       ((t_uint32) 0x00000400)
+#define PWM_STA_STAO2_SHIFT      10U
+#define PWM_STA_STAO3_MASK       ((t_uint32) 0x00000800)
+#define PWM_STA_STAO3_SHIFT      11U
+#define PWM_STA_STAO4_MASK       ((t_uint32) 0x00001000)
+#define PWM_STA_STAO4_SHIFT      12U
 
 // Macros pour les registres de CLOCK
 #define CLOCK_GP0_CTL_OFFSET    28

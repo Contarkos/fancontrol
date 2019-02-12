@@ -4,13 +4,14 @@
 #include <poll.h>
 
 // Includes locaux
+#include "os.h"
 #include "com.h"
 #include "temp.h"
 
 #define FAN_MODULE_NAME         "FAN"
-#define FAN_PIN_PWM             (18)    // Pin de sortie du signal PWM
-#define FAN_PIN_IN              (23)    // Pin non utilisee car gestion interruption
-#define FAN_PIN_OUT             (24)    // Activation/desactivation du relais de puissance
+#define FAN_PIN_PWM             (OS_GPIO_PWM_0)    // Pin de sortie du signal PWM
+#define FAN_PIN_IN              (OS_GPIO_BCM_23)   // Pin non utilisee car gestion interruption
+#define FAN_PIN_OUT             (OS_GPIO_BCM_24)   // Activation/desactivation du relais de puissance
 #define FAN_DEFAULT_PREC        (1024)
 #define FAN_DEFAULT_CYCLE       (0.0F)
 #define FAN_TIMER_USEC          (40000)

@@ -7,6 +7,10 @@
 extern "C" {
 #endif
 
+/*********************************************************************/
+/*                             Typedef                               */
+/*********************************************************************/
+
 typedef void * (*loop_func) (void *);
 typedef void   (*timer_func)(int i_timer_id, void * i_data);
 
@@ -95,7 +99,10 @@ typedef enum
 } t_os_timer_type;
 
 
-// Defines
+/*********************************************************************/
+/*                            Defines                                */
+/*********************************************************************/
+
 #define OS_MIN_PERCENT_PWM     0.0F
 #define OS_MAX_PERCENT_PWM     100.0F
 
@@ -105,6 +112,45 @@ typedef enum
 #define OS_MAX_SPI_SPEED        25000000U
 
 #define OS_MAX_LENGTH_LONG      10
+
+// Define pour les numéros des GPIOs
+#define OS_GPIO_BCM_0           0U
+#define OS_GPIO_BCM_1           1U
+#define OS_GPIO_BCM_2           2U
+#define OS_GPIO_BCM_3           3U
+#define OS_GPIO_BCM_4           4U
+#define OS_GPIO_BCM_5           5U
+#define OS_GPIO_BCM_6           6U
+#define OS_GPIO_BCM_7           7U
+#define OS_GPIO_BCM_8           8U
+#define OS_GPIO_BCM_9           9U
+#define OS_GPIO_BCM_10          10U
+#define OS_GPIO_BCM_11          11U
+#define OS_GPIO_BCM_12          12U
+#define OS_GPIO_BCM_13          13U
+#define OS_GPIO_BCM_14          14U
+#define OS_GPIO_BCM_15          15U
+#define OS_GPIO_BCM_16          16U
+#define OS_GPIO_BCM_17          17U
+#define OS_GPIO_BCM_18          18U
+#define OS_GPIO_BCM_19          19U
+#define OS_GPIO_BCM_20          20U
+#define OS_GPIO_BCM_21          21U
+#define OS_GPIO_BCM_22          22U
+#define OS_GPIO_BCM_23          23U
+#define OS_GPIO_BCM_24          24U
+#define OS_GPIO_BCM_25          25U
+#define OS_GPIO_BCM_26          26U
+#define OS_GPIO_BCM_27          27U
+
+// Define pour des pins specifiques
+#define OS_GPIO_PWM_0           OS_GPIO_BCM_18
+#define OS_GPIO_SPI0_MISO       OS_GPIO_BCM_9
+#define OS_GPIO_SPI0_MOSI       OS_GPIO_BCM_10
+#define OS_GPIO_SPI0_SCLK       OS_GPIO_BCM_11
+#define OS_GPIO_SPI0_CE0        OS_GPIO_BCM_8
+#define OS_GPIO_SPI0_CE1        OS_GPIO_BCM_7
+
 /*********************************************************************/
 /*                         Fonctions API                             */
 /*********************************************************************/
