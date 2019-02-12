@@ -2,7 +2,7 @@
 // Contient les prototypes pour les fonctions de démarrage et d'arret des modules
 
 // Defines
-#define NB_MODULE 2
+#define NB_MODULE 3
 
 // Variables globales
 extern mod_type t_start[NB_MODULE];

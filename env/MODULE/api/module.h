@@ -1,6 +1,9 @@
 #pragma once
 
+// Includes globaux
 #include <mutex>
+
+// Includes locaux
 
 // Macro
 

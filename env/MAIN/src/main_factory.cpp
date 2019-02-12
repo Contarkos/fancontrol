@@ -10,6 +10,7 @@
 #include "module.h"
 #include "fan.h"
 #include "temp.h"
+#include "remote.h"
 #include "cmd.h"
 #include "com.h"
 
@@ -23,7 +24,8 @@ int main_is_running = 0;
 
 mod_type t_start[NB_MODULE] = {
         {&FAN_start, &FAN_stop},
-        {&TEMP_start, &TEMP_stop}
+        {&TEMP_start, &TEMP_stop},
+        {&REMOTE_start, &REMOTE_stop}
 };
 
 /*********************************************************************/
