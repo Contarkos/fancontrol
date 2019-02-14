@@ -43,7 +43,7 @@ int REMOTE_start(std::mutex *m_main, std::mutex *m_mod)
     }
     else
     {
-        LOG_ERR("FAN : plus d'instances disponibles, %d > %d", ii, NB_INSTANCES_FAN);
+        LOG_ERR("FAN : plus d'instances disponibles, %d > %d", ii, NB_INSTANCES_REMOTE);
         ret = -1;
     }
 
