@@ -79,7 +79,7 @@ int REMOTE::exec_loop()
     if (read_fd <= 0)
     {
         // Timeout expiré
-        LOG_WNG("FAN : timeout poll expiré");
+        LOG_WNG("REMOTE : timeout poll expiré");
         ret = 1;
     }
     else
@@ -96,7 +96,7 @@ int REMOTE::exec_loop()
                         break;
                     case REMOTE_FD_NB:
                     default:
-                        LOG_WNG("FAN : mauvais file descriptor");
+                        LOG_WNG("REMOTE : mauvais file descriptor");
                         ret = 2;
                         break;
                 }

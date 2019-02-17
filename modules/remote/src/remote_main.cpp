@@ -20,7 +20,7 @@ REMOTE instances_remote[NB_INSTANCES_REMOTE];
 /*                         Fonctions API                             */
 /*********************************************************************/
 
-/* Démarrage d'une instance de FAN */
+/* Démarrage d'une instance de REMOTE */
 int REMOTE_start(std::mutex *m_main, std::mutex *m_mod)
 {
     int ret = 0;
@@ -43,7 +43,7 @@ int REMOTE_start(std::mutex *m_main, std::mutex *m_mod)
     }
     else
     {
-        LOG_ERR("FAN : plus d'instances disponibles, %d > %d", ii, NB_INSTANCES_REMOTE);
+        LOG_ERR("REMOTE : plus d'instances disponibles, %d > %d", ii, NB_INSTANCES_REMOTE);
         ret = -1;
     }
 
@@ -55,7 +55,7 @@ int REMOTE_stop(void)
     int ret = 0;
     static int ii = 0;
 
-    LOG_INF1("FAN : arrêt du module");
+    LOG_INF1("REMOTE : arrêt du module");
 
     if (ii < NB_INSTANCES_REMOTE)
     {
