@@ -12,16 +12,6 @@
 #include "fan.h"
 #include "fan_class.h"
 
-void FAN::fan_timer_handler_old(int i_timer_id, void * i_data)
-{
-    FAN *p_this = reinterpret_cast<FAN *> (i_data);
-
-    if (p_this && (p_this->timer_fd == i_timer_id))
-    {
-        p_this->fan_compute_duty();
-    }
-}
-
 void FAN::fan_timer_handler(int i_timer_id, void * i_data)
 {
     FAN *p_this = reinterpret_cast<FAN *> (i_data);
