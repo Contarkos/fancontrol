@@ -44,7 +44,7 @@ int TEMP::temp_treat_msg()
                 ret = this->temp_retrieve_data();
                 break;
             default:
-                LOG_ERR("FAN : mauvaise ID pour message, id = %d", m.id);
+                LOG_ERR("TEMP : mauvaise ID pour message, id = %d", m.id);
                 ret = 1;
         }
     }
