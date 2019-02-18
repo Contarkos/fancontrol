@@ -40,3 +40,25 @@ int OS_irq_request(const char *i_irq, int i_flags)
 
     return fd;
 }
+
+// Fermeture du fichier d'interruption
+int OS_irq_close(int i_fd)
+{
+    int ret = 0;
+
+    if (0 == i_fd)
+    {
+        LOG_ERR("OS : file descriptor IRQ invalide, i_fd = %d", i_fd);
+        ret = -1;
+    }
+    else
+    {
+        if (0 != close(i_fd))
+        {
+            LOG_WNG("OS : probleme lors de la fermeture fichier IRQ, i_fd = %d", i_fd);
+            ret = -2;
+        }
+    }
+
+    return ret;
+}

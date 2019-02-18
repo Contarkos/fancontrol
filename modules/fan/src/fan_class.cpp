@@ -151,11 +151,19 @@ int FAN::init_after_wait(void)
     else
     {
         // Demarrage du timer
-        //ret = OS_start_timer(this->timer_fd);
+        ret = OS_start_timer(this->timer_fd);
 
         if (ret < 0)
         {
             LOG_ERR("FAN : timer non démarré, ret = %d", ret);
+        }
+        else
+        {
+            t_fan_power_mode m;
+
+            // Allumage du fan
+            m.power_mode = FAN_POWER_MODE_ON;
+            this->fan_update_power(&m);
         }
     }
 
@@ -180,6 +188,9 @@ int FAN::stop_module()
 
     // Fermeture socket timeout
     ret += COM_close_socket(this->timeout_fd);
+
+    // Fermeture IRQ
+    ret += OS_irq_close(this->irq_fd);
 
     LOG_INF3("FAN : fin du stop_module, ret = %d", ret);
     return ret;

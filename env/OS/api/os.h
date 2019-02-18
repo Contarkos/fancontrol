@@ -156,52 +156,53 @@ typedef enum
 /*********************************************************************/
 
 // Init des modules disponibles
-int OS_init(void);
-int OS_stop(void);
+int OS_init (void);
+int OS_stop (void);
 
 // Gestion du temps
-int OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_type, void * i_data);
+int OS_create_timer (t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_type, void * i_data);
 //size_t OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_type, void * i_data);
-int OS_start_timer(int i_timer_id);
-int OS_stop_timer(int i_timer_id);
+int OS_start_timer (int i_timer_id);
+int OS_stop_timer (int i_timer_id);
 
-void OS_usleep(int i_usec);
+void OS_usleep (int i_usec);
 
 // Gestion des threads
-int OS_create_thread(OS_thread_t * p_o_thread,
-                     void * args);
+int OS_create_thread (OS_thread_t * p_o_thread,
+                      void * args);
 
-int OS_joint_thread(OS_thread_t * p_i_thread, void **retval);
-int OS_detach_thread(OS_thread_t * p_i_thread);
+int OS_joint_thread (OS_thread_t * p_i_thread, void **retval);
+int OS_detach_thread (OS_thread_t * p_i_thread);
 
 // Pour GPIO
-int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout);
-int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active);
-int OS_read_gpio(t_uint32 i_pin);
+int OS_set_gpio (t_uint32 i_pin, t_os_gpio_func i_inout);
+int OS_write_gpio (t_uint32 i_pin, t_uint32 bool_active);
+int OS_read_gpio (t_uint32 i_pin);
 
 // Pour SPI
 int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned char i_bits, unsigned int i_speed);
 int OS_spi_close_port (t_os_spi_device i_spi_id);
 int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *data, int length);
 
-int OS_spi_set_speed(t_os_spi_device i_spi_id, unsigned int i_speed);
-int OS_spi_set_mode(t_os_spi_device i_spi_id, t_os_spi_mode i_mode);
-int OS_spi_set_bits_per_word(t_os_spi_device i_spi_id, t_os_spi_bpw i_bpw);
+int OS_spi_set_speed (t_os_spi_device i_spi_id, unsigned int i_speed);
+int OS_spi_set_mode (t_os_spi_device i_spi_id, t_os_spi_mode i_mode);
+int OS_spi_set_bits_per_word (t_os_spi_device i_spi_id, t_os_spi_bpw i_bpw);
 
 // Pour IRQ
-int OS_irq_request(const char *i_irq, int i_flags);
+int OS_irq_request (const char *i_irq, int i_flags);
+int OS_irq_close (int i_fd);
 
 // Pour PWM
-int OS_pwn_enable(t_os_state i_enable);
-int OS_pwm_set_clock_source(t_os_clock_source i_source);
-int OS_pwm_set_frequency(t_uint32 i_freq);
-int OS_pwm_set_dutycycle(float i_duty);
-int OS_pwm_set_precision(t_uint32 i_prec);
-int OS_pwm_set_mode(os_pwm_mode i_mode);
+int OS_pwn_enable (t_os_state i_enable);
+int OS_pwm_set_clock_source (t_os_clock_source i_source);
+int OS_pwm_set_frequency (t_uint32 i_freq);
+int OS_pwm_set_dutycycle (float i_duty);
+int OS_pwm_set_precision (t_uint32 i_prec);
+int OS_pwm_set_mode (os_pwm_mode i_mode);
 
 // Pour CLOCK
-int OS_clock_set_source(t_os_clock_source i_source);
-int OS_clock_set_freq(t_uint32 i_freq);
+int OS_clock_set_source (t_os_clock_source i_source);
+int OS_clock_set_freq (t_uint32 i_freq);
 
 #ifdef __cplusplus
 }

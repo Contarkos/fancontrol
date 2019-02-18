@@ -93,6 +93,8 @@ int FAN::fan_compute_duty(void)
         duty = BASE_BORNE(duty, OS_MIN_PERCENT_PWM, OS_MAX_PERCENT_PWM);
 
         OS_pwm_set_dutycycle(duty);
+
+        LOG_INF3("FAN : dutycycle courant = %f", duty);
     }
 
     return ret;
@@ -124,7 +126,7 @@ int FAN::fan_treat_irq(int i_fd)
             // Conversion en vitesse de rotation (RPM)
             v = (int) ( FAN_SEC_TO_MSEC / (float) (FAN_HITS_PER_CYCLE * d) );
 
-            LOG_INF3("FAN : vitesse du fan = %d, d = %ld", v, d);
+            //LOG_INF3("FAN : vitesse du fan = %d, d = %ld", v, d);
             this->fan_setCurSpeed(v);
         }
     }

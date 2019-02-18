@@ -14,7 +14,7 @@
 #define FAN_PIN_OUT             (OS_GPIO_BCM_24)   // Activation/desactivation du relais de puissance
 #define FAN_DEFAULT_PREC        (1024)
 #define FAN_DEFAULT_CYCLE       (0.0F)
-#define FAN_TIMER_USEC          (40000)
+#define FAN_TIMER_USEC          (500000)
 #define FAN_POLL_TIMEOUT        1000
 
 #define FAN_PWM_FREQ            (25000)
