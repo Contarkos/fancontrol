@@ -83,7 +83,7 @@ int TEMP::temp_retrieve_data(void)
         else
         {
             // Calcul de la résistance équivalente
-            r = TEMP_THERM_DEFAULT + (float) (d - (COM_ADC_MAXVALUE / 2)) * ( (float)TEMP_THERM_COMP / (((3*(float) COM_ADC_MAXVALUE) / 2) - d));
+            r = (float) (d - (COM_ADC_MAXVALUE / 2)) * ( (float)TEMP_THERM_COMP / ((float) COM_ADC_MAXVALUE) - d);
             LOG_INF3("TEMP : valeur de la resistance, R = %f, d = %d", r, d);
 
             // Calcul de la température (formule de Steinhart-Hart)
