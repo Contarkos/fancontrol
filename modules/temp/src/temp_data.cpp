@@ -53,9 +53,7 @@ int TEMP::temp_retrieve_data(void)
 {
     int ret = 0;
     t_uint16 d;
-    float r = 1;
-
-    LOG_ERR("TEMP : temp_retrieve_data");
+    float r = 1, c;
 
     // Activation de la pin connectée au thermistor
     ret = OS_write_gpio(TEMP_PIN_OUT, 1);
@@ -83,11 +81,13 @@ int TEMP::temp_retrieve_data(void)
         else
         {
             // Calcul de la résistance équivalente
-            r = (float) (d - (COM_ADC_MAXVALUE / 2)) * ( (float)TEMP_THERM_COMP / ((float) COM_ADC_MAXVALUE) - d);
-            LOG_INF3("TEMP : valeur de la resistance, R = %f, d = %d", r, d);
+            c = (TEMP_VREF_ADC / (float) ((float) this->adc_gain * TEMP_VDD_ADC)) * (float) ( d - (COM_ADC_MAXVALUE >> 1) );
+            r = (float) TEMP_THERM_COMP * (c + (COM_ADC_MAXVALUE >> 2)) / ((COM_ADC_MAXVALUE >> 2) - c);
+            LOG_INF3("TEMP : valeur de la resistance, R = %f, c = %f", r, c);
 
             // Calcul de la température (formule de Steinhart-Hart)
-            this->fan_temp = TEMP_THERM_COEFF / ( (TEMP_THERM_COEFF/TEMP_THERM_DEF_TEMP) + (float) (log(r) - log(TEMP_THERM_COMP)) );
+            this->fan_temp = (TEMP_THERM_COEFF / ( (TEMP_THERM_COEFF/TEMP_THERM_DEF_TEMP) + (float) (log(r) - log(TEMP_THERM_COMP)) ))
+                - TEMP_THERM_K_TEMP;
             //this->fan_temp = 1 / ( (1/TEMP_THERM_DEF_TEMP) + (float) (log( r / TEMP_THERM_COMP ) / TEMP_THERM_COEFF) );
 
             // Validité de la température

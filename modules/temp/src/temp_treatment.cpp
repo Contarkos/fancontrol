@@ -18,8 +18,6 @@ int TEMP::temp_treat_msg()
     int ret = 0, ss;
     t_com_msg m;
 
-    LOG_INF3("TEMP : réception d'un message via socket");
-
     ret = COM_receive_data(this->p_fd[TEMP_FD_SOCKET].fd, &m, &ss);
 
     if (0 > ret)
