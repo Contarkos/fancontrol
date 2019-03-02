@@ -40,7 +40,7 @@ int OS_pwn_enable(t_os_state i_enable)
             break;
         case OS_STATE_OFF:
             // Désactivation du PWM
-            PWM_CTL_REGISTER &= PWM_CTL_PWEN1_MASK;
+            PWM_CTL_REGISTER &= ~(PWM_CTL_PWEN1_MASK);
             break;
         default:
             LOG_ERR("OS : wrong state for PWM");
@@ -75,7 +75,7 @@ int OS_pwm_set_clock_source(t_os_clock_source i_source)
 
     // Set de la source
     CLOCK_PWM_CTL_REGISTER  = (CLOCK_PASSWD_MASK | CLOCK_PWM_CTL_REGISTER) & ~(CLOCK_SRC_MASK);
-    CLOCK_PWM_CTL_REGISTER |=  CLOCK_PASSWD_MASK | (CLOCK_SRC_MASK & os_clock_source);
+    CLOCK_PWM_CTL_REGISTER |=  CLOCK_PASSWD_MASK | (CLOCK_SRC_MASK & os_pwm_source);
 
     // Reactivation de la clock
     CLOCK_PWM_CTL_REGISTER |=  CLOCK_PASSWD_MASK | CLOCK_ENAB_MASK;
@@ -98,7 +98,7 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
     }
     else
     {
-        if (i_freq > os_clock_max_freq[os_clock_source] || i_freq == 0)
+        if (i_freq > os_clock_max_freq[os_pwm_source] || i_freq == 0)
         {
             LOG_ERR("OS : Fréquence d'horloge trop haute, freq = %d", i_freq);
             ret = -2;
@@ -109,8 +109,8 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
             os_pwm_freq = i_freq;
 
             // Calcul du diviseur
-            divi = os_clock_max_freq[os_clock_source] / (os_pwm_freq * os_pwm_prec);
-            divr = os_clock_max_freq[os_clock_source] % (os_pwm_freq * os_pwm_prec);
+            divi = os_clock_max_freq[os_pwm_source] / (os_pwm_freq * os_pwm_prec);
+            divr = os_clock_max_freq[os_pwm_source] % (os_pwm_freq * os_pwm_prec);
             divf = (t_uint32) ((float) (divr * CLOCK_MAX_DIVISOR) / (float) (os_pwm_freq * os_pwm_prec));
 
             LOG_INF3("OS : diviseur pour PWM = %d", divi);
