@@ -12,6 +12,20 @@
 #include "fan.h"
 #include "fan_class.h"
 
+
+/*********************************************************************/
+/*                       Variables globales                          */
+/*********************************************************************/
+
+static float compute_duty_hysteresis    (int i_cons, int i_current);
+static float compute_duty_differential  (int i_ref, int i_current);
+static float compute_duty_linear        (int i_current);
+static float compute_duty_speed         (int i_speed);
+
+/*********************************************************************/
+/*                      Fonctions de classe                          */
+/*********************************************************************/
+
 void FAN::fan_timer_handler(int i_timer_id, void * i_data)
 {
     FAN *p_this = reinterpret_cast<FAN *> (i_data);
@@ -25,49 +39,32 @@ void FAN::fan_timer_handler(int i_timer_id, void * i_data)
 
 int FAN::fan_compute_duty(void)
 {
-    int ret = 0, t;
+    int ret = 0;
     float duty = 0;
-    static bool hysteresis = true;
 
     switch (current_mode)
     {
         case FAN_MODE_AUTO:
             {
-                // Selection de la température de référence
-                t = room_temp;
-
-                // Puis asservissement en température
-                duty = ((float) ( current_temp - t ) * OS_MAX_PERCENT_PWM) / FAN_ECART_MAX_TEMP;
-            }
-            break;
-        case FAN_MODE_TEMP:
-            break;
-            {
-                // Gestion de l'hysteresis
-                if (hysteresis)
+                if (FAN_TEMP_INVALID == this->room_temp)
                 {
-                    t = consigne_temp - 1;
-
-                    if ( abs(t - current_temp) < FAN_PWM_ECART )
-                    {
-                        hysteresis = false;
-                    }
+                    // Calcul en mode lineaire par morceaux
+                    duty = compute_duty_linear(this->current_temp);
                 }
                 else
                 {
-                    t = consigne_temp + 1;
-
-                    if ( current_temp > t )
-                    {
-                        hysteresis = true;
-                    }
+                    // Calcul en mode differentiel
+                    duty = compute_duty_differential(this->room_temp, this->current_temp);
                 }
-
-                // Calcul ecart de température
-                duty = ((float) ( current_temp - t ) * OS_MAX_PERCENT_PWM) / FAN_ECART_MAX_TEMP;
             }
-        case FAN_MODE_RPM:
             break;
+        case FAN_MODE_TEMP:
+            {
+                // Calcul ecart de température
+                duty = compute_duty_hysteresis(this->consigne_temp, this->current_temp);
+            }
+            break;
+        case FAN_MODE_RPM:
             {
                 if (this->consigne_speed > FAN_MAX_SPEED)
                 {
@@ -77,13 +74,15 @@ int FAN::fan_compute_duty(void)
                     ret = 2;
                 }
 
-                duty = ( ((float) this->consigne_speed) * OS_MAX_PERCENT_PWM ) / FAN_MAX_SPEED;
+                duty = compute_duty_speed(this->consigne_speed);
             }
+            break;
         default:
             {
                 LOG_ERR("FAN : Mode de FAN invalide");
                 ret = -1;
             }
+            break;
     }
 
     // En cas d'erreur
@@ -92,9 +91,10 @@ int FAN::fan_compute_duty(void)
         // Borne du dutycycle
         duty = BASE_BORNE(duty, OS_MIN_PERCENT_PWM, OS_MAX_PERCENT_PWM);
 
-        OS_pwm_set_dutycycle(duty);
-
+        // Log de debug
         LOG_INF3("FAN : dutycycle courant = %f", duty);
+
+        OS_pwm_set_dutycycle(duty);
     }
 
     return ret;
@@ -102,6 +102,7 @@ int FAN::fan_compute_duty(void)
 
 int FAN::fan_treat_irq(int i_fd)
 {
+    static int cpt;
     int v, ret = 0;
     t_uint32 ss;
     unsigned long d;
@@ -125,11 +126,100 @@ int FAN::fan_treat_irq(int i_fd)
         {
             // Conversion en vitesse de rotation (RPM)
             v = (int) ( FAN_SEC_TO_MSEC / (float) (FAN_HITS_PER_CYCLE * d) );
+            cpt++;
 
-            //LOG_INF3("FAN : vitesse du fan = %d, d = %ld", v, d);
+            if (cpt > 100000)
+            {
+                LOG_INF3("FAN : vitesse du fan = %d, d = %ld", v, d);
+                cpt = 0;
+            }
             this->fan_setCurSpeed(v);
         }
     }
 
     return ret;
 }
+
+/*********************************************************************/
+/*                      Fonctions statiques                          */
+/*********************************************************************/
+
+static float compute_duty_hysteresis  (int i_cons, int i_current)
+{
+    static bool h = true;
+    int t;
+    float d = 0;
+
+    // Gestion de l'hysteresis
+    if (h)
+    {
+        t = i_cons - 1;
+
+        if ( abs(t - i_current) < FAN_PWM_ECART )
+        {
+            h = false;
+        }
+    }
+    else
+    {
+        t = i_cons + 1;
+
+        if ( i_current > t )
+        {
+            h = true;
+        }
+    }
+
+    d = ((float) ( i_current - t ) * OS_MAX_PERCENT_PWM) / FAN_ECART_MAX_TEMP;
+    return d;
+}
+
+static float compute_duty_differential (int i_ref, int i_current)
+{
+    float d = 0;
+
+    // Puis asservissement en température
+    d = ((float) ( i_current - i_ref ) * OS_MAX_PERCENT_PWM) / FAN_ECART_MAX_TEMP;
+    return d;
+}
+
+static float compute_duty_linear (int i_current)
+{
+    float d = 0;
+
+    // Fonction affine par morceau
+    if (i_current > FAN_TEMP_MAX)
+    {
+        d = FAN_DUTY_MAX;
+    }
+    else if (i_current > FAN_TEMP_VERY_HIGH)
+    {
+        d = ((FAN_DUTY_MAX - FAN_DUTY_VERY_HIGH) / (FAN_TEMP_MAX - FAN_TEMP_VERY_HIGH)) * (float) i_current + FAN_DUTY_VERY_HIGH;
+    }
+    else if (i_current > FAN_TEMP_HIGH)
+    {
+        d = ((FAN_DUTY_VERY_HIGH - FAN_DUTY_HIGH) / (FAN_TEMP_VERY_HIGH - FAN_TEMP_HIGH)) * (float) i_current + FAN_DUTY_HIGH;
+    }
+    else if (i_current > FAN_TEMP_MEDIUM)
+    {
+        d = ((FAN_DUTY_HIGH - FAN_DUTY_MEDIUM) / (FAN_TEMP_HIGH - FAN_TEMP_MEDIUM)) * (float) i_current + FAN_DUTY_MEDIUM;
+    }
+    else if (i_current > FAN_TEMP_LOW)
+    {
+        d = ((FAN_DUTY_MEDIUM - FAN_DUTY_LOW) / (FAN_TEMP_MEDIUM - FAN_TEMP_MEDIUM)) * (float) i_current + FAN_DUTY_LOW;
+    }
+    else
+    {
+        d = ((FAN_DUTY_LOW - FAN_DUTY_MIN) / (FAN_TEMP_LOW - FAN_TEMP_MIN)) * (float) i_current + FAN_DUTY_MIN;
+    }
+
+    return d;
+}
+
+static float compute_duty_speed (int i_speed)
+{
+    float d = ( ((float) i_speed) * OS_MAX_PERCENT_PWM ) / FAN_MAX_SPEED;
+
+    return d;
+}
+
