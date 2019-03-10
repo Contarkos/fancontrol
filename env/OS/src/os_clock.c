@@ -75,6 +75,15 @@ int OS_clock_set_freq(t_uint32 i_freq)
     return ret;
 }
 
+int OS_clock_set_mash(os_mash_mode i_filter)
+{
+    int ret = 0;
+
+    UNUSED_PARAMS(i_filter);
+
+    return ret;
+}
+
 /*********************************************************************/
 /*                       Fonctions locales                           */
 /*********************************************************************/

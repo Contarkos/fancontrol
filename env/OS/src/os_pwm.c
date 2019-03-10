@@ -122,22 +122,20 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
 
                 // Maximum possible pour le diviseur
                 divi = CLOCK_MAX_DIVISOR;
+                divf = 0;
             }
 
             // Mise en forme de la donnée pour le registre de clock
             data = ( CLOCK_DIVI_MASK & (divi << CLOCK_DIVI_SHIFT) ) | ( CLOCK_DIVF_MASK & (divf << CLOCK_DIVF_SHIFT) );
 
-            // Arret de la CLOCK le temps de changer les paramètres
-            CLOCK_PWM_CTL_REGISTER = (CLOCK_PWM_CTL_REGISTER | CLOCK_PASSWD_MASK) & ~(CLOCK_ENAB_MASK);
-
-            // Attente de la descente du flag BUSY
-            while ( CLOCK_PWM_CTL_REGISTER & CLOCK_BUSY_MASK ) {}
+            // On coupe la clock
+            os_enable_pwm(OS_STATE_OFF);
 
             // Set de la fréquence
             CLOCK_PWM_DIV_REGISTER = CLOCK_PASSWD_MASK | data;
 
-            // Reactivation de la clock
-            CLOCK_PWM_CTL_REGISTER |= CLOCK_PASSWD_MASK | CLOCK_ENAB_MASK;
+            // On reactive
+            os_enable_pwm(OS_STATE_ON);
         }
     }
 
@@ -241,6 +239,52 @@ int OS_pwm_set_mode(os_pwm_mode i_mode)
     return ret;
 }
 
+/*
+ * Reglage du filtre MASH pour la division de frequence
+ *
+ *
+ */
+int OS_pwm_set_mash(os_mash_mode i_filter)
+{
+    int ret = 0;
+
+    switch (i_filter)
+    {
+        case OS_PWM_MASH_FILTER_0:
+        case OS_PWM_MASH_FILTER_1:
+        case OS_PWM_MASH_FILTER_2:
+        case OS_PWM_MASH_FILTER_3:
+            break;
+        default:
+            LOG_WNG("OS : wrong value for MASH filter, filter = %d", i_filter);
+            ret = -1;
+            break;
+    }
+
+    if (ret < 0)
+    {
+        // Ne rien faire
+        ;
+    }
+    else
+    {
+        // On coupe la clock
+        os_enable_pwm(OS_STATE_OFF);
+
+        // Update du filtre MASH
+        CLOCK_PWM_CTL_REGISTER = (CLOCK_PWM_CTL_REGISTER | CLOCK_PASSWD_MASK) & ~(CLOCK_MASH_MASK);
+        CLOCK_PWM_CTL_REGISTER = (CLOCK_PWM_CTL_REGISTER | CLOCK_PASSWD_MASK) | (i_filter << CLOCK_MASH_SHIFT);
+
+        // On reactive
+        os_enable_pwm(OS_STATE_ON);
+
+        // On actualise la frequence
+        OS_pwm_set_frequency(os_pwm_freq);
+    }
+
+    return ret;
+}
+
 /*********************************************************************/
 /*                       Fonctions locales                           */
 /*********************************************************************/
@@ -286,6 +330,32 @@ int os_stop_pwm(void)
     {
         // Demapping du PWM
         os_unmap_peripheral(&os_periph_pwm);
+    }
+
+    return ret;
+}
+
+int os_enable_pwm(t_os_state i_enable)
+{
+    int ret = 0;
+
+    if (OS_STATE_OFF == i_enable)
+    {
+        // Arret de la CLOCK le temps de changer les paramètres
+        CLOCK_PWM_CTL_REGISTER = (CLOCK_PWM_CTL_REGISTER | CLOCK_PASSWD_MASK) & ~(CLOCK_ENAB_MASK);
+
+        // Attente de la descente du flag BUSY
+        while ( CLOCK_PWM_CTL_REGISTER & CLOCK_BUSY_MASK ) {}
+    }
+    else if (OS_STATE_ON == i_enable)
+    {
+        // Reactivation de la clock
+        CLOCK_PWM_CTL_REGISTER |= CLOCK_PASSWD_MASK | CLOCK_ENAB_MASK;
+    }
+    else
+    {
+        LOG_WNG("OS : wrong value to enable/disable PWM, value = %d", i_enable);
+        ret = -1;
     }
 
     return ret;

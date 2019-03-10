@@ -61,6 +61,14 @@ typedef enum
 
 typedef enum
 {
+    OS_PWM_MASH_FILTER_0 = 0,
+    OS_PWM_MASH_FILTER_1 = 1,
+    OS_PWM_MASH_FILTER_2 = 2,
+    OS_PWM_MASH_FILTER_3 = 3
+} os_mash_mode;
+
+typedef enum
+{
     OS_CLOCK_SRC_GND = 0,
     OS_CLOCK_SRC_OSC = 1,
     OS_CLOCK_SRC_TST1 = 2,
@@ -199,10 +207,12 @@ int OS_pwm_set_frequency (t_uint32 i_freq);
 int OS_pwm_set_dutycycle (float i_duty);
 int OS_pwm_set_precision (t_uint32 i_prec);
 int OS_pwm_set_mode (os_pwm_mode i_mode);
+int OS_pwm_set_mash(os_mash_mode i_filter);
 
 // Pour CLOCK
 int OS_clock_set_source (t_os_clock_source i_source);
 int OS_clock_set_freq (t_uint32 i_freq);
+int OS_clock_set_mash(os_mash_mode i_filter);
 
 #ifdef __cplusplus
 }

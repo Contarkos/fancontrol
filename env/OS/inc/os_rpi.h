@@ -116,6 +116,8 @@
 #define CLOCK_ENAB_SHIFT        4U
 #define CLOCK_BUSY_MASK         ((v_uint32) 0x00000080)
 #define CLOCK_BUSY_SHIFT        5U
+#define CLOCK_MASH_MASK         ((t_uint32) 0x00000600)
+#define CLOCK_MASH_SHIFT        9U
 
 #define CLOCK_DIVF_MASK         ((t_uint32) 0x00000FFF)
 #define CLOCK_DIVF_SHIFT        0U
@@ -163,6 +165,7 @@ int os_stop_gpio(void);
 // Init du PWM
 int os_init_pwm(void);
 int os_stop_pwm(void);
+int os_enable_pwm(t_os_state i_enable);
 
 // Init de la CLOCK
 int os_init_clock(void);
