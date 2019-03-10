@@ -68,17 +68,20 @@ int FAN::start_module()
         // Set de la pin en sortie pour le controle de l'allumage
         ret += OS_set_gpio(FAN_PIN_OUT, OS_GPIO_FUNC_OUT);
 
-        // Reglage source Clock sur PLL C
-        ret += OS_pwm_set_clock_source(OS_CLOCK_SRC_PLLC);
-
         // Set de la diode en sortie en PWM
         ret += OS_set_gpio(FAN_PIN_PWM, OS_GPIO_FUNC_ALT5);
+
+        // Reglage source Clock sur PLL C
+        ret += OS_pwm_set_clock_source(OS_CLOCK_SRC_PLLC);
 
         // Mode MS pour le PWM
         ret += OS_pwm_set_mode(OS_PWM_MODE_MSMODE);
 
         // Cycle par défaut : 1024
         ret += OS_pwm_set_precision(FAN_DEFAULT_PREC);
+
+        // Reglage du filter MASH par défaut
+        ret += OS_pwm_set_mash(OS_PWM_MASH_FILTER_1);
 
         // Reglage de la fréquence PWM
         ret += OS_pwm_set_frequency(FAN_PWM_FREQ);

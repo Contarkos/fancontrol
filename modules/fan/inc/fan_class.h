@@ -24,6 +24,22 @@
 #define FAN_HITS_PER_CYCLE      2
 #define FAN_SEC_TO_MSEC         1000000
 
+#define FAN_DUTY_MAX            100.0F
+#define FAN_DUTY_VERY_HIGH      100.0F
+#define FAN_DUTY_HIGH           80.0F
+#define FAN_DUTY_MEDIUM         60.0F
+#define FAN_DUTY_LOW            40.0F
+#define FAN_DUTY_MIN            0.0F
+
+#define FAN_TEMP_MAX            50.0F
+#define FAN_TEMP_VERY_HIGH      45.0F
+#define FAN_TEMP_HIGH           40.0F
+#define FAN_TEMP_MEDIUM         35.0F
+#define FAN_TEMP_LOW            30.0F
+#define FAN_TEMP_MIN            10.0F
+
+#define FAN_TEMP_INVALID        (t_int32)0xFFFFFFFF
+
 typedef enum
 {
     FAN_FD_SOCKET = 0,

@@ -75,6 +75,7 @@ int FAN::fan_update_data(t_temp_data *i_data)
     else
     {
         LOG_WNG("FAN : mauvaise température pour le ventilateur, temp = %f", i_data->fan_temp);
+        this->current_temp = (t_uint32) FAN_TEMP_INVALID;
         ret += 1;
     }
 
@@ -86,6 +87,7 @@ int FAN::fan_update_data(t_temp_data *i_data)
     else
     {
         LOG_WNG("FAN : mauvaise température pour la piece, temp = %f", i_data->room_temp);
+        this->room_temp = (t_uint32) FAN_TEMP_INVALID;
         ret += 2;
     }
 
