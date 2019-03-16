@@ -163,8 +163,8 @@ int TEMP::temp_treat_irq()
     }
     else
     {
-        // Conversion de la donnée
-//        LOG_INF1("Résultat : data = %s", i_data);
+        // Lecture de la donnée de l'ADC
+        ;
     }
 
     return ret;

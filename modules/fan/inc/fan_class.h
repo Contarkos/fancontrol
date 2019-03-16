@@ -50,7 +50,7 @@ typedef enum
 class FAN : public MODULE
 {
     public:
-        FAN(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod);
+        FAN(const char mod_name[MAX_LENGTH_MOD_NAME], OS_mutex_t *m_main, OS_mutex_t *m_mod);
         FAN();
         ~FAN();
 

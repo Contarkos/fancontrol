@@ -3,6 +3,8 @@
 #include <pthread.h>
 #include <linux/spi/spidev.h>     //Needed for SPI port
 
+#include "base.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -14,6 +16,12 @@ extern "C" {
 typedef void * (*loop_func) (void *);
 typedef void   (*timer_func)(int i_timer_id, void * i_data);
 
+typedef enum
+{
+    OS_RET_KO = 0,
+    OS_RET_OK = 1
+} t_os_ret_okko;
+
 typedef struct
 {
     pthread_t thread;
@@ -21,11 +29,12 @@ typedef struct
     loop_func loop;
 } OS_thread_t;
 
-typedef enum
+typedef struct
 {
-    OS_RET_KO = 0,
-    OS_RET_OK = 1
-} t_os_ret_okko;
+    pthread_mutex_t mutex;
+    pthread_mutexattr_t attr;
+    t_os_ret_okko is_init;
+} OS_mutex_t;
 
 typedef enum
 {
@@ -111,6 +120,9 @@ typedef enum
 /*                            Defines                                */
 /*********************************************************************/
 
+// Initialisation d'une struct OS_mutex_t
+#define OS_INIT_MUTEX          { PTHREAD_MUTEX_INITIALIZER, {0}, OS_RET_KO }
+
 #define OS_MIN_PERCENT_PWM     0.0F
 #define OS_MAX_PERCENT_PWM     100.0F
 
@@ -181,6 +193,11 @@ int OS_create_thread (OS_thread_t * p_o_thread,
 
 int OS_joint_thread (OS_thread_t * p_i_thread, void **retval);
 int OS_detach_thread (OS_thread_t * p_i_thread);
+
+int OS_init_mutex(OS_mutex_t *i_mutex);
+int OS_destroy_mutex(OS_mutex_t *i_mutex);
+int OS_lock_mutex(OS_mutex_t *i_mutex);
+int OS_unlock_mutex(OS_mutex_t *i_mutex);
 
 // Pour GPIO
 int OS_set_gpio (t_uint32 i_pin, t_os_gpio_func i_inout);

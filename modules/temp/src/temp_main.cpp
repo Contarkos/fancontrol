@@ -21,7 +21,7 @@ TEMP instances_temp[NB_INSTANCES_TEMP];
 /*********************************************************************/
 
 /* Démarrage d'une instance de TEMP */
-int TEMP_start(std::mutex *m_main, std::mutex *m_mod)
+int TEMP_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
 {
     int ret = 0;
     static int ii = 0;

@@ -18,7 +18,7 @@
 #include "fan.h"
 
 /* Définition des constructeurs */
-TEMP::TEMP(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod) : MODULE(mod_name, m_main, m_mod)
+TEMP::TEMP(const char mod_name[MAX_LENGTH_MOD_NAME], OS_mutex_t *m_main, OS_mutex_t *m_mod) : MODULE(mod_name, m_main, m_mod)
 {
     this->temp_init_pollfd();
 }
@@ -72,9 +72,7 @@ int TEMP::start_module()
 
         // Verification du setup
         ret += COM_adc_read_setup(OS_SPI_DEVICE_0, NULL);
-        LOG_INF3("TEMP : ret = %d", ret);
         ret += COM_adc_read_clock(OS_SPI_DEVICE_0, NULL);
-        LOG_INF3("TEMP : ret = %d", ret);
 
         if ( ret < 0 )
         {
@@ -169,7 +167,7 @@ int TEMP::stop_module()
     // Fermeture du device SPI
     ret += OS_spi_close_port(OS_SPI_DEVICE_0);
 
-    LOG_INF3("TEMP : fin du stop_module, ret = %d", ret);
+    LOG_INF1("TEMP : fin du stop_module, ret = %d", ret);
 
     return ret;
 }
@@ -204,7 +202,7 @@ int TEMP::exec_loop()
                         break;
                     case TEMP_FD_NB:
                     default:
-                        LOG_INF3("TEMP : erreur valeur de fd, ii = %d", ii);
+                        LOG_WNG("TEMP : erreur valeur de fd, ii = %d", ii);
                         break;
                 }
             }

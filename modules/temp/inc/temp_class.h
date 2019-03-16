@@ -33,7 +33,7 @@ typedef enum
 class TEMP : public MODULE
 {
     public:
-        TEMP(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod);
+        TEMP(const char mod_name[MAX_LENGTH_MOD_NAME], OS_mutex_t *m_main, OS_mutex_t *m_mod);
         TEMP();
         ~TEMP();
 

@@ -20,7 +20,7 @@
 static float compute_duty_hysteresis    (int i_cons, int i_current);
 static float compute_duty_differential  (int i_ref, int i_current);
 static float compute_duty_linear        (int i_current);
-static float compute_duty_speed         (int i_speed);
+static inline float compute_duty_speed  (int i_speed);
 
 /*********************************************************************/
 /*                      Fonctions de classe                          */
@@ -128,7 +128,7 @@ int FAN::fan_treat_irq(int i_fd)
             v = (int) ( FAN_SEC_TO_MSEC / (float) (FAN_HITS_PER_CYCLE * d) );
             cpt++;
 
-            if (cpt > 100000)
+            if (cpt > 100)
             {
                 LOG_INF3("FAN : vitesse du fan = %d, d = %ld", v, d);
                 cpt = 0;
@@ -185,6 +185,7 @@ static float compute_duty_differential (int i_ref, int i_current)
 
 static float compute_duty_linear (int i_current)
 {
+    static float t = 0;
     float d = 0;
 
     // Fonction affine par morceau
@@ -213,10 +214,22 @@ static float compute_duty_linear (int i_current)
         d = ((FAN_DUTY_LOW - FAN_DUTY_MIN) / (FAN_TEMP_LOW - FAN_TEMP_MIN)) * (float) i_current + FAN_DUTY_MIN;
     }
 
+    if (t > 50)
+    {
+        t = 0;
+    }
+    else
+    {
+        t += 5;
+    }
+
+    d = 50 + t;
+    d = 80;
+
     return d;
 }
 
-static float compute_duty_speed (int i_speed)
+static inline float compute_duty_speed (int i_speed)
 {
     float d = ( ((float) i_speed) * OS_MAX_PERCENT_PWM ) / FAN_MAX_SPEED;
 

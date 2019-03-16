@@ -32,6 +32,6 @@ typedef struct
 // Variables globales
 
 // API pour module FAN
-int FAN_start(std::mutex *m_main, std::mutex *m_mod);
+int FAN_start(OS_mutex_t *m_main, OS_mutex_t *m_mod);
 
 int FAN_stop(void);

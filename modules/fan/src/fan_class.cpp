@@ -19,7 +19,7 @@
 // Variables globales
 
 /* Définition des constructeurs */
-FAN::FAN(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod) : MODULE(mod_name, m_main, m_mod)
+FAN::FAN(const char mod_name[MAX_LENGTH_MOD_NAME], OS_mutex_t *m_main, OS_mutex_t *m_mod) : MODULE(mod_name, m_main, m_mod)
 {
     this->fan_init_pollfd();
 }

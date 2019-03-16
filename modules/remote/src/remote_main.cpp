@@ -21,7 +21,7 @@ REMOTE instances_remote[NB_INSTANCES_REMOTE];
 /*********************************************************************/
 
 /* Démarrage d'une instance de REMOTE */
-int REMOTE_start(std::mutex *m_main, std::mutex *m_mod)
+int REMOTE_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
 {
     int ret = 0;
     static int ii = 0;

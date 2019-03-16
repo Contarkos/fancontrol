@@ -2,8 +2,10 @@
 
 // Includes globaux
 #include <mutex>
+#include <pthread.h>
 
 // Includes locaux
+#include "os.h"
 
 // Macro
 
@@ -14,14 +16,14 @@ class MODULE {
     private:
         bool isRunning = false;
         bool is_init   = false;
-        std::mutex *m_mod_init;
-        std::mutex *m_main_init;
+        OS_mutex_t *m_mod_init;
+        OS_mutex_t *m_main_init;
 
     protected:
         char name[MAX_LENGTH_MOD_NAME];
         OS_thread_t m_thread;
 
-        MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod);
+        MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], OS_mutex_t *m_main, OS_mutex_t *m_mod);
         void set_running(bool isRunning);
 
         // Fonction de démarrage spécifique au module
@@ -44,7 +46,7 @@ class MODULE {
         static void* exit_module(void* p_this);
 
         // Config du module
-        void mod_config(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod);
+        void mod_config(const char mod_name[MAX_LENGTH_MOD_NAME], OS_mutex_t *m_main, OS_mutex_t *m_mod);
 
         bool is_running(void);
 

@@ -18,14 +18,12 @@
 /*                       Variables globales                          */
 /*********************************************************************/
 
-std::mutex t_mod_mutex[NB_MODULE];
-std::mutex t_main_mutex[NB_MODULE];
 int main_is_running = 0;
 
 mod_type t_start[NB_MODULE] = {
-        {&FAN_start, &FAN_stop},
-        {&TEMP_start, &TEMP_stop},
-        {&REMOTE_start, &REMOTE_stop}
+        {&FAN_start, &FAN_stop, OS_INIT_MUTEX, OS_INIT_MUTEX},
+        {&TEMP_start, &TEMP_stop, OS_INIT_MUTEX, OS_INIT_MUTEX},
+        {&REMOTE_start, &REMOTE_stop, OS_INIT_MUTEX, OS_INIT_MUTEX}
 };
 
 /*********************************************************************/
@@ -52,10 +50,10 @@ int main_start_factory()
         {
             // On bloque les mutex de tout le monde
             LOG_INF1("MAIN : lock pour %d", ii);
-            t_mod_mutex[ii].lock();
-            t_main_mutex[ii].unlock();
+            OS_lock_mutex(&(t_start[ii].mutex_mod));
+            OS_unlock_mutex(&(t_start[ii].mutex_main));
 
-            ret_temp = t_start[ii].mod_start(&(t_main_mutex[ii]), &(t_mod_mutex[ii]));
+            ret_temp = t_start[ii].mod_start(&(t_start[ii].mutex_main), &(t_start[ii].mutex_mod));
 
             if (0 != ret_temp)
             {
@@ -68,14 +66,14 @@ int main_start_factory()
         for (ii = 0; ii < NB_MODULE; ii++)
         {
             LOG_INF1("MAIN : lock d'attente pour %d", ii);
-            t_main_mutex[ii].lock();
+            OS_lock_mutex(&(t_start[ii].mutex_main));
         }
 
         // Tous les threads sont lancés on peut démarrer
         for (ii = 0; ii < NB_MODULE; ii++)
         {
             LOG_INF1("MAIN : unlock pour %d", ii);
-            t_mod_mutex[ii].unlock();
+            OS_unlock_mutex(&(t_start[ii].mutex_mod));
         }
 
         // C'est parti
@@ -163,7 +161,7 @@ int main_stop_factory()
         // On attend que tous les threads soient terminés
         for (ii = 0; ii < NB_MODULE; ii++)
         {
-            t_mod_mutex[ii].lock();
+            OS_lock_mutex(&(t_start[ii].mutex_mod));
         }
 
         // Arret des éléments du système

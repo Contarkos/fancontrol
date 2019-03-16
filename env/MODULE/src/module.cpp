@@ -10,7 +10,7 @@
 #include "os.h"
 #include "module.h"
 
-MODULE::MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod) : MODULE()
+MODULE::MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], OS_mutex_t *m_main, OS_mutex_t *m_mod) : MODULE()
 {
     this->mod_config(mod_name, m_main, m_mod);
 }
@@ -27,7 +27,7 @@ MODULE::~MODULE()
 }
 
 // Configuration du module
-void MODULE::mod_config(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_main, std::mutex *m_mod)
+void MODULE::mod_config(const char mod_name[MAX_LENGTH_MOD_NAME], OS_mutex_t *m_main, OS_mutex_t *m_mod)
 {
     // Copie du nom
     strncpy(this->name, mod_name, MAX_LENGTH_MOD_NAME);
@@ -38,7 +38,7 @@ void MODULE::mod_config(const char mod_name[MAX_LENGTH_MOD_NAME], std::mutex *m_
     // Lock de MAIN jusqu'à la fin de l'init
     if (this->m_main_init && this->m_mod_init)
     {
-        this->m_main_init->lock();
+        OS_lock_mutex(this->m_main_init);
         is_init = true;
     }
 }
@@ -83,10 +83,10 @@ int MODULE::wait_and_loop(void)
     if (0 == ret)
     {
         // Déblocage du MAIN
-        this->m_main_init->unlock();
+        OS_unlock_mutex(this->m_main_init);
 
         // Demande de blocage du thread pour attendre que MAIN rende la main
-        this->m_mod_init->lock();
+        OS_lock_mutex(this->m_mod_init);
 
         // Initialisation d'objets spécifiques (ex : connexion aux sockets)
         ret = this->init_after_wait();
@@ -110,7 +110,7 @@ int MODULE::wait_and_loop(void)
     }
 
     // On débloque le mutex pour que MAIN puisse s'arrêter correctement
-    this->m_mod_init->unlock();
+    OS_unlock_mutex(this->m_mod_init);
 
     return ret;
 }

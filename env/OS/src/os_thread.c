@@ -66,6 +66,108 @@ int OS_detach_thread(OS_thread_t * p_i_thread)
    return ret;
 }
 
+// Init d'un mutex
+int OS_init_mutex(OS_mutex_t *i_mutex)
+{
+    int ret = 0;
+
+    if (NULL == i_mutex)
+    {
+        LOG_ERR("OS : mauvais pointeur pour mutex");
+        ret = -1;
+    }
+    else if (OS_RET_OK == i_mutex->is_init)
+    {
+        LOG_WNG("OS : mutex deja initialise");
+        ret = -2;
+    }
+    else
+    {
+        ret = pthread_mutex_init(&(i_mutex->mutex), &(i_mutex->attr));
+
+        if (0 == ret)
+        {
+            i_mutex->is_init = OS_RET_OK;
+        }
+    }
+
+    return ret;
+}
+
+// Destruction d'un mutex
+int OS_destroy_mutex(OS_mutex_t *i_mutex)
+{
+    int ret = 0;
+
+    if (NULL == i_mutex)
+    {
+        LOG_ERR("OS : mauvais pointeur pour mutex");
+        ret = -1;
+    }
+    else if (OS_RET_KO == i_mutex->is_init)
+    {
+        LOG_WNG("OS : mutex deja detruit ou non initialise");
+        ret = -2;
+    }
+    else
+    {
+        ret = pthread_mutex_destroy(&(i_mutex->mutex));
+
+        if (0 == ret)
+        {
+            i_mutex->is_init = OS_RET_KO;
+        }
+    }
+
+    return ret;
+}
+
+// Lock d'un mutex
+int OS_lock_mutex(OS_mutex_t *i_mutex)
+{
+    int ret = 0;
+
+    if (NULL == i_mutex)
+    {
+        LOG_ERR("OS : mauvais pointeur pour mutex");
+        ret = -1;
+    }
+    else if (OS_RET_KO == i_mutex->is_init)
+    {
+        LOG_WNG("OS : mutex non initialise");
+        ret = -2;
+    }
+    else
+    {
+        ret = pthread_mutex_lock(&(i_mutex->mutex));
+    }
+
+    return ret;
+}
+
+// Unlock d'un mutex
+int OS_unlock_mutex(OS_mutex_t *i_mutex)
+{
+    int ret = 0;
+
+    if (NULL == i_mutex)
+    {
+        LOG_ERR("OS : mauvais pointeur pour mutex");
+        ret = -1;
+    }
+    else if (OS_RET_KO == i_mutex->is_init)
+    {
+        LOG_WNG("OS : mutex non initialise");
+        ret = -2;
+    }
+    else
+    {
+        ret = pthread_mutex_unlock(&(i_mutex->mutex));
+    }
+
+    return ret;
+}
+
 /*********************************************************************/
 /*                       Fonctions locales                           */
 /*********************************************************************/

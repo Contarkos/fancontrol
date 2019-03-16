@@ -4,7 +4,7 @@
 #define REMOTE_SOCKET_NAME      "/tmp/remote_socket"
 
 // API pour module REMOTE
-int REMOTE_start(std::mutex *m_main, std::mutex *m_mod);
+int REMOTE_start(OS_mutex_t *m_main, OS_mutex_t *m_mod);
 
 int REMOTE_stop(void);
 

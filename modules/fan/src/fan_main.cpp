@@ -21,7 +21,7 @@ FAN instances_fan[NB_INSTANCES_FAN];
 /*********************************************************************/
 
 /* Démarrage d'une instance de FAN */
-int FAN_start(std::mutex *m_main, std::mutex *m_mod)
+int FAN_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
 {
     int ret = 0;
     static int ii = 0;
