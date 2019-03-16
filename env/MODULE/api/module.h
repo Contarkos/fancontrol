@@ -1,7 +1,6 @@
 #pragma once
 
 // Includes globaux
-#include <mutex>
 #include <pthread.h>
 
 // Includes locaux

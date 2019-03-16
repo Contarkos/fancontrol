@@ -2,7 +2,6 @@
 
 // Include globaux
 #include <string.h>
-#include <mutex>
 
 // Include locaux
 #include "base.h"

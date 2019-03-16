@@ -1,5 +1,4 @@
 // Includes globaux
-#include <mutex>
 
 // Includes locaux
 #include "base.h"

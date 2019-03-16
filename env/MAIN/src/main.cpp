@@ -1,7 +1,6 @@
 // Include globaux
 #include <stdio.h>
 #include <unistd.h>
-#include <mutex>
 
 // Include de base
 #include "base.h"

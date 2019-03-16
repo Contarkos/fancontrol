@@ -1,7 +1,6 @@
 #pragma once
 
 // Includes globaux
-#include <mutex>
 
 // Includes locaux
 #ifdef __cplusplus

@@ -1,7 +1,6 @@
 // Includes globaux
 #include <pthread.h>
 #include <stdio.h>
-#include <mutex>
 
 // Inlcudes locaux
 #include "base.h"
