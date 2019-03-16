@@ -3,6 +3,7 @@
 // Global includes
 #include <stdio.h>
 #include <signal.h>
+#include <stdlib.h>
 
 // Local includes
 #include "base_typ.h"
