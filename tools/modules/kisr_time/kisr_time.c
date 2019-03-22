@@ -164,7 +164,6 @@ static unsigned int kisr_poll(struct file *file, poll_table *table)
         mask |= (POLLIN | POLLRDNORM);
     }
 
-    printk(KERN_INFO "KISR poll - mask = %d\n", mask);
     return mask;
 }
 
