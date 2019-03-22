@@ -96,28 +96,35 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
             // Reset physique
             ret += COM_adc_reset_hard(i_device);
 
-            // Reset de l'ADC
-            ret += COM_adc_reset_soft(i_device);
+            if (ret < 0)
+            {
+               LOG_ERR("COM : erreur reset hard durant l'init de l'ADC, ret = %d", ret);
+            }
+            else
+            {
+               // Reset de l'ADC
+               ret += COM_adc_reset_soft(i_device);
 
-            // Configuration de la clock de l'ADC avec la vitesse demandée
-            ret += COM_adc_set_clock_rate(i_device, i_rate);
+               // Configuration de la clock de l'ADC avec la vitesse demandée
+               ret += COM_adc_set_clock_rate(i_device, i_rate);
 
-// #if 0 pour faire une selfcalibration, #if 1 pour faire une zero calibration
+               // #if 0 pour faire une selfcalibration, #if 1 pour faire une zero calibration
 #ifdef COM_ADC_SELF_CAL
-            // Setup et demarrage de la calibration
-            ret += COM_adc_set_mode(i_device, COM_ADC_MODE_SELFCAL);
+               // Setup et demarrage de la calibration
+               ret += COM_adc_set_mode(i_device, COM_ADC_MODE_SELFCAL);
 #else
-            // Descente de la pin d'activation
-            ret += OS_write_gpio(COM_ADC_PIN_ENB, 0);
+               // Descente de la pin d'activation
+               ret += OS_write_gpio(COM_ADC_PIN_ENB, 0);
 
-            // Attente pour être certain que la pin est down
-            OS_usleep(10);
+               // Attente pour être certain que la pin est down
+               OS_usleep(10);
 
-            // Setup et demarrage de la calibration
-            ret += COM_adc_set_mode(i_device, COM_ADC_MODE_ZEROCAL);
+               // Setup et demarrage de la calibration
+               ret += COM_adc_set_mode(i_device, COM_ADC_MODE_ZEROCAL);
 #endif
-        }
-    }
+            } // Fin if pour reset hard
+        } // Fin if ouverture module SPI
+    } // Fin if selection module
     return ret;
 }
 
@@ -131,10 +138,10 @@ int COM_adc_reset_hard(t_os_spi_device i_device)
     switch (i_device)
     {
         case OS_SPI_DEVICE_0:
-            pin = COM_ADC_PIN_RST0;
+            pin = com_device_0_setup.pin_rst;
             break;
         case OS_SPI_DEVICE_1:
-            pin = COM_ADC_PIN_RST1;
+            pin = com_device_1_setup.pin_rst;
             break;
         default:
             LOG_ERR("COM : device à reset inexistant, device = %d", i_device);
@@ -153,6 +160,8 @@ int COM_adc_reset_hard(t_os_spi_device i_device)
 
         // Remontee de la pin
         ret += OS_write_gpio(pin, 1);
+
+        ret += COM_adc_read_setup(i_device, NULL);
 
         // On attend qu'un mot soit pret
         ret += com_adc_wait_ready(i_device);
