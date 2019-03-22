@@ -14,4 +14,4 @@ int main_init(void);
 int main_loop(void);
 
 int main_stop_factory(void);
-int main_stop();
+int main_stop(void);
