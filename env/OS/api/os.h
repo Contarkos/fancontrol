@@ -121,7 +121,7 @@ typedef enum
 /*********************************************************************/
 
 // Initialisation d'une struct OS_mutex_t
-#define OS_INIT_MUTEX          { PTHREAD_MUTEX_INITIALIZER, {0}, OS_RET_KO }
+#define OS_INIT_MUTEX          { PTHREAD_MUTEX_INITIALIZER, {{0}}, OS_RET_OK }
 
 #define OS_MIN_PERCENT_PWM     0.0F
 #define OS_MAX_PERCENT_PWM     100.0F
