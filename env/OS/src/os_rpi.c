@@ -14,6 +14,9 @@ struct bcm2835_peripheral os_periph_gpio = {GPIO_BASE, 0, NULL, NULL};
 // Init des variables d'environnement
 t_os_ret_okko is_init_gpio = OS_RET_KO;
 
+// Mutex RPI
+OS_mutex_t os_rpi_mutex = OS_INIT_MUTEX;
+
 /*********************************************************************/
 /*                         Fonctions API                             */
 /*********************************************************************/
@@ -23,7 +26,17 @@ int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout)
 {
     int ret = 0;
 
-    if (i_pin <= GPIO_MAX_NB)
+    if (i_pin > GPIO_MAX_NB)
+    {
+        LOG_ERR("OS : Erreur numéro de pin, GPIO = %d", i_pin);
+        ret = -1;
+    }
+    else if (0 != OS_lock_mutex(&os_rpi_mutex))
+    {
+        LOG_ERR("OS : error while locking mutex for GPIO function");
+        ret = -2;
+    }
+    else
     {
         switch (i_inout)
         {
@@ -53,11 +66,7 @@ int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout)
                 break;
         }
 
-    }
-    else
-    {
-        LOG_ERR("OS : Erreur numéro de pin, GPIO = %d", i_pin);
-        ret = -1;
+        ret = OS_unlock_mutex(&os_rpi_mutex);
     }
 
     return ret;
@@ -68,7 +77,17 @@ int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active)
 {
     int ret = 0;
 
-    if (i_pin <= GPIO_MAX_NB)
+    if (i_pin > GPIO_MAX_NB)
+    {
+        LOG_ERR("OS : mauvaise valeur de pin GPIO, pin = %d", i_pin);
+        ret = -1;
+    }
+    else if (0 != OS_lock_mutex(&os_rpi_mutex))
+    {
+        LOG_ERR("OS : error while locking mutex for GPIO writing");
+        ret = -2;
+    }
+    else
     {
         if (bool_active)
         {
@@ -78,11 +97,8 @@ int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active)
         {
             GPIO_CLR(i_pin);
         }
-    }
-    else
-    {
-        LOG_ERR("OS : mauvaise valeur de pin GPIO, pin = %d", i_pin);
-        ret = -1;
+
+        ret = OS_unlock_mutex(&os_rpi_mutex);
     }
 
     return ret;
@@ -93,6 +109,7 @@ int OS_read_gpio(t_uint32 i_pin)
 {
     int data = 0;
 
+    // Pas de mutex sur une lecture
     if (i_pin <= GPIO_MAX_NB)
     {
         data = GPIO_READ(i_pin);
