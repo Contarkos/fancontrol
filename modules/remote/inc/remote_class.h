@@ -6,10 +6,13 @@
 // Includes locaux
 #include "com.h"
 #include "remote.h"
+#include "module.h"
 
 // Define
 #define REMOTE_MODULE_NAME      "REMOTE"
 #define REMOTE_POLL_TIMEOUT     1000
+
+#define REMOTE_TIMER_USEC       500000
 
 typedef enum
 {
@@ -44,10 +47,15 @@ class REMOTE : public MODULE
         /***********************************************/
         /*             Methodes spécifiques            */
         /***********************************************/
+        static void remote_timer_handler(int i_timer_id, void * i_data);
+
         // Methodes de constructeurs
         void remote_init_pollfd();
 
         // Recuperation des donnees
         int remote_treat_msg(int i_fd);
+        int remote_treat_udp(int i_fd);
 
+        // Traitement des messages
+        int remote_send_status(void);
 };
