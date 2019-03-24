@@ -133,25 +133,31 @@ int FAN::fan_update_power(t_fan_power_mode *i_data)
     }
     else
     {
-        switch (i_data->power_mode)
-        {
-            case FAN_POWER_MODE_OFF:
-            case FAN_POWER_MODE_ON:
-                // Sauvegarde de l'état
-                this->current_power_mode = i_data->power_mode;
-
-                // Set de pin selon l'etat en cours
-                ret = OS_write_gpio(FAN_PIN_OUT, this->current_power_mode);
-
-                break;
-            default:
-                LOG_ERR("FAN : mauvaise valeur pour MaJ power mode, power mode = %d", i_data->power_mode);
-                ret = -2;
-                break;
-        }
+        ret = this->fan_set_power(i_data->power_mode);
     }
 
     return ret;
 }
 
+int FAN::fan_set_power(fan_e_power_mode i_mode)
+{
+    int ret = 0;
 
+    switch (i_mode)
+    {
+        case FAN_POWER_MODE_OFF:
+        case FAN_POWER_MODE_ON:
+            // Sauvegarde de l'état
+            this->current_power_mode = i_mode;
+
+            // Set de pin selon l'etat en cours
+            ret = OS_write_gpio(FAN_PIN_OUT, this->current_power_mode);
+
+            break;
+        default:
+            LOG_ERR("FAN : mauvaise valeur pour MaJ power mode, power mode = %d", i_mode);
+            ret = -1;
+            break;
+    }
+    return ret;
+}

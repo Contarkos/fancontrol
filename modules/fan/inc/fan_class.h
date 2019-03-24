@@ -92,6 +92,8 @@ class FAN : public MODULE
         void fan_setCurSpeed(int s)  { this->current_speed = s; }
         int  fan_getCurSpeed(void)   { return current_speed;    }
 
+        int  fan_set_power(fan_e_power_mode i_mode);
+
         // Algorithme de décision pour le dutycycle
         static void fan_timer_handler_old(int i_timer_id, void * i_data);
         static void fan_timer_handler(int i_timer_id, void * i_data);

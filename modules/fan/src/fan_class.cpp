@@ -161,11 +161,8 @@ int FAN::init_after_wait(void)
         }
         else
         {
-            t_fan_power_mode m;
-
             // Allumage du fan
-            m.power_mode = FAN_POWER_MODE_ON;
-            this->fan_update_power(&m);
+            this->fan_set_power(FAN_POWER_MODE_ON);
         }
     }
 
@@ -176,11 +173,9 @@ int FAN::init_after_wait(void)
 int FAN::stop_module()
 {
     int ret = 0;
-    t_fan_power_mode m;
 
     // Arret du ventilateur
-    m.power_mode = FAN_POWER_MODE_OFF;
-    ret += this->fan_update_power(&m);
+    ret += this->fan_set_power(FAN_POWER_MODE_OFF);
 
     // Arret du timer
     ret += OS_stop_timer(this->timer_fd);
