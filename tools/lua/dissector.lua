@@ -40,14 +40,14 @@ do
   local msg = {
     [0] = { name = "MAIN_SHUTDOWN", field = f.main_shutdown, fields = {} }
     [1275] = { name = "FAN_MODE", field = f.fan_mode, fields = {
-        [0] = { field = f.fan_mode_mode, t = "int8", size = 1 }, } },
+        [0] = { field = f.fan_mode_mode, t = "int8", size = 1 },} },
     [1276] = { name = "FAN_POWER", field = f.fan_power, fields = {
-        [0] = { field = f.fan_power_mode, t = "int8", size = 1 }, } },
+        [0] = { field = f.fan_power_mode, t = "int8", size = 1 },} },
     [1530] = { name = "TEMP_DATA", field = f.temp_data, fields = {
         [0] = { field = f.temp_data_fan_temp, t = "float", size = 4 },
         [1] = { field = f.temp_data_room_temp, t = "float", size = 4 },
-        [2] = { field = f.temp_data_fan_temp_valid", t = "int8", size = 1 },
-        [3] = { field = f.temp_data_room_temp_valid", t = "int8", size = 1 }} }
+        [2] = { field = f.temp_data_fan_temp_valid, t = "int8", size = 1 },
+        [3] = { field = f.temp_data_room_temp_valid, t = "int8", size = 1 },} },
   }
   
   -----------------------------------------------------------  
