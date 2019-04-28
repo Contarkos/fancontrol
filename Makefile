@@ -54,6 +54,8 @@ distclean: clean
 		$(MAKE) $(PARALLEL) -C $$directory -f module.mk libclean ; \
 	done
 	$(MAKE) $(PARALLEL) -C $(SUBDIR_MAIN) -f module.mk distclean
+	@echo "Cleaning kernel modules...."
+	$(MAKE) $(PARALLEL) -C $(SUBDIR_KERN) clean
 
 # Compilation des modules d'environnement sauf le main
 env:
