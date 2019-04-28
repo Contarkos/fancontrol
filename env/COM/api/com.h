@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 // Defines
+#define COM_LOCAL_IP_ADDR       "192.168.0.101"
 #define COM_UNIX_PATH_MAX       108
 #define COM_ADC_MAXVALUE        (65535)     // Valeur max en sortie de l'ADC
 #define COM_MAX_NB_MSG          256

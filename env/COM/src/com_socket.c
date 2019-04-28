@@ -94,7 +94,7 @@ int COM_connect_socket(int i_family, int i_type, char * i_data, int *o_fd)
                 break;
             default:
                 LOG_ERR("COM : famille de socket non gérée, famille = %d", i_family);
-                ret = -1;
+                ret = -2;
         }
     }
 
@@ -131,7 +131,7 @@ int COM_socket_listen(int i_fd, int i_backlog)
 // Envoi d'un message avec l'ID définie dans com_msg.h
 int COM_send_data(int i_fd, t_uint32 i_id, void * i_data, size_t i_size, int i_flags)
 {
-    int ret = 0;
+    int ret = 0, ret_s;
     size_t s;
     t_com_msg m;
 
@@ -153,11 +153,19 @@ int COM_send_data(int i_fd, t_uint32 i_id, void * i_data, size_t i_size, int i_f
         s = sizeof(t_uint32) + i_size;
 
         // Envoi des données
-        ret = send(i_fd, &m, s, i_flags);
+        ret_s = send(i_fd, &m, s, i_flags);
 
-        if (ret < 0)
+        if (ret_s < 0)
         {
             LOG_ERR("COM : erreur d'envoi des données, errno = %d", errno);
+        }
+        else if (s != (size_t) ret_s)
+        {
+            LOG_ERR("COM : erreur de taille des donnees envoyees, %d != %d", s, ret_s);
+        }
+        else
+        {
+            ret = 0;
         }
     }
 
@@ -270,7 +278,7 @@ int com_bind_socket_inet(int fd, char *data)
 
     // Init des parametres de la socket
     a.sin_family = AF_INET;
-    a.sin_port = ((t_com_inet_data *)data)->port;
+    a.sin_port = htons( ((t_com_inet_data *)data)->port );
     a.sin_addr.s_addr = ((t_com_inet_data *)data)->addr;
 
     ret = bind(fd, (struct sockaddr *) &a, sizeof(a));

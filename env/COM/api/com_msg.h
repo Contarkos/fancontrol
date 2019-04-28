@@ -30,6 +30,7 @@
 
 // Messages REMOTE
 #define REMOTE_TIMER        (0 + (COM_BASE_REMOTE * COM_NB_MSG_BASE))
+#define REMOTE_STATUS       (1 + (COM_BASE_REMOTE * COM_NB_MSG_BASE))
 
 // Dernier message
 #define COM_TOTAL_MSG       (0 + (COM_BASE_LAST * COM_NB_MSG_BASE))
