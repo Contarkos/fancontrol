@@ -35,6 +35,9 @@ t_os_spi_struct spi_device_1 =
 
 t_os_ret_okko is_init_spi = OS_RET_KO;
 
+// Mutex pour les acces aux registres SPI
+OS_mutex_t os_spi_mutex = OS_INIT_MUTEX;
+
 /***********************************/
 /*          SPI OPEN PORT          */
 /***********************************/
@@ -228,17 +231,28 @@ int OS_spi_set_speed (t_os_spi_device i_spi_id, unsigned int i_speed)
         }
         else
         {
-            ret  = ioctl (spi_device->fd, SPI_IOC_WR_MAX_SPEED_HZ, &(i_speed));
-            ret += ioctl (spi_device->fd, SPI_IOC_RD_MAX_SPEED_HZ, &(i_speed));
+            ret = OS_lock_mutex(&os_spi_mutex);
 
             if (ret < 0)
             {
-                LOG_ERR("[OS] Error while updating speed for SPI %d, speed unchanged = %d", spi_device->fd, spi_device->speed);
+                LOG_ERR("OS : error while locking mutex for SPI set SPEED, ret = %d", ret);
             }
             else
             {
-                spi_device->speed = i_speed;
-                LOG_INF3("[OS] Updated speed for SPI %d, speed = %d", spi_device->fd, spi_device->speed);
+                ret  = ioctl (spi_device->fd, SPI_IOC_WR_MAX_SPEED_HZ, &(i_speed));
+                ret += ioctl (spi_device->fd, SPI_IOC_RD_MAX_SPEED_HZ, &(i_speed));
+
+                OS_unlock_mutex(&os_spi_mutex);
+
+                if (ret < 0)
+                {
+                    LOG_ERR("[OS] Error while updating speed for SPI %d, speed unchanged = %d", spi_device->fd, spi_device->speed);
+                }
+                else
+                {
+                    spi_device->speed = i_speed;
+                    LOG_INF3("[OS] Updated speed for SPI %d, speed = %d", spi_device->fd, spi_device->speed);
+                }
             }
         }
     }
@@ -288,17 +302,28 @@ int OS_spi_set_mode(t_os_spi_device i_spi_id, t_os_spi_mode i_mode)
         }
         else
         {
-            ret  = ioctl (spi_device->fd, SPI_IOC_WR_MODE, &(i_mode));
-            ret += ioctl (spi_device->fd, SPI_IOC_RD_MODE, &(i_mode));
+            ret = OS_lock_mutex(&os_spi_mutex);
 
             if (ret < 0)
             {
-                LOG_ERR("[OS] Error while updating mode for SPI %d, mode unchanged = %d", spi_device->fd, spi_device->mode);
+                LOG_ERR("OS : error while locking mutex for SPI set MODE, ret = %d", ret);
             }
             else
             {
-                spi_device->mode = i_mode;
-                LOG_INF3("[OS] Updated mode for SPI %d, mode = %d", spi_device->fd, spi_device->mode);
+                ret  = ioctl (spi_device->fd, SPI_IOC_WR_MODE, &(i_mode));
+                ret += ioctl (spi_device->fd, SPI_IOC_RD_MODE, &(i_mode));
+
+                OS_unlock_mutex(&os_spi_mutex);
+
+                if (ret < 0)
+                {
+                    LOG_ERR("[OS] Error while updating mode for SPI %d, mode unchanged = %d", spi_device->fd, spi_device->mode);
+                }
+                else
+                {
+                    spi_device->mode = i_mode;
+                    LOG_INF3("[OS] Updated mode for SPI %d, mode = %d", spi_device->fd, spi_device->mode);
+                }
             }
         }
     }
@@ -357,27 +382,38 @@ int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *io_data, int i_l
             spi[ii].cs_change     = 0;
         }
 
-        retVal = ioctl(spi_device->fd, SPI_IOC_MESSAGE(i_length), spi);
+        retVal = OS_lock_mutex(&os_spi_mutex);
 
-        if(retVal < 0)
+        if (retVal < 0)
         {
-            LOG_ERR("Error - Problem transmitting spi data..ioctl");
-            ret = -2;
+           LOG_ERR("OS : error while locking mutex for SPI R/W, ret = %d", retVal);
         }
-        else if (i_length != retVal)
+        else
         {
-            LOG_WNG("COM : warning nombre de messages envoyés incohérents, %d != %d", i_length, retVal);
-            ret = -4;
-        }
+            retVal = ioctl(spi_device->fd, SPI_IOC_MESSAGE(i_length), spi);
+
+            OS_unlock_mutex(&os_spi_mutex);
+
+            if(retVal < 0)
+            {
+                LOG_ERR("Error - Problem transmitting spi data..ioctl");
+                ret = -2;
+            }
+            else if (i_length != retVal)
+            {
+                LOG_WNG("COM : warning nombre de messages envoyés incohérents, %d != %d", i_length, retVal);
+                ret = -4;
+            }
 
 #if defined(INTEGRATION_LOG_LEVEL) && (INTEGRATION_LOG_LEVEL >= 6)
-        printf("[OS] Data RX : ");
-        for (ii = 0; ii < i_length; ii++)
-        {
-            printf("[%d] = %x, ", ii, *(io_data + ii));
-        }
-        printf("\n");
+            printf("[OS] Data RX : ");
+            for (ii = 0; ii < i_length; ii++)
+            {
+                printf("[%d] = %x, ", ii, *(io_data + ii));
+            }
+            printf("\n");
 #endif
+        }
     }
 
     return ret;
