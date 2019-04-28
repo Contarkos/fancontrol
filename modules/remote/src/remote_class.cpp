@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <poll.h>
@@ -74,17 +75,37 @@ int REMOTE::start_module()
             ret += -2;
         }
 
-        // Ouverture socket UDP
-        t_com_inet_data d;
-        d.addr = INADDR_ANY;
-        d.port = 31001;
+        // Configuration de la socket UDP de sortie
+        struct sockaddr_in multi_addr;
+        multi_addr.sin_family = AF_INET;
+        multi_addr.sin_addr.s_addr = inet_addr(REMOTE_MULTICAST_ADDR);
+        multi_addr.sin_port = htons(REMOTE_MULTICAST_PORT);
 
-        this->udp_fd = COM_create_socket(AF_INET, SOCK_DGRAM, 0, (char *) &d);
+        ret = COM_connect_socket(AF_INET, SOCK_DGRAM, (char *) &multi_addr, &(this->udp_fd));
 
         if (this->udp_fd > 0)
         {
-            LOG_INF3("REMOTE : creation socket UDP OK, fd = %d", this->socket_fd);
+            LOG_INF3("REMOTE : creation socket UDP OK, fd = %d", this->udp_fd);
             this->p_fd[REMOTE_FD_UDP].fd = this->udp_fd;
+
+            // Suppression de la boucle de multicast
+            char loop_conf = 0;
+            ret = setsockopt(this->udp_fd, IPPROTO_IP, IP_MULTICAST_LOOP, (char *)&loop_conf, sizeof(loop_conf));
+
+            if (ret < 0)
+            {
+                LOG_ERR("REMOTE : sortie de boucle multicast en erreur, ret = %d", ret);
+            }
+
+            // Ajout de l'interface utilisee pour envoyer les messages
+            struct in_addr local_addr;
+            local_addr.s_addr = inet_addr(COM_LOCAL_IP_ADDR);
+            ret += setsockopt(this->udp_fd, IPPROTO_IP, IP_MULTICAST_IF, (char *)&local_addr, sizeof(local_addr));
+
+            if (ret < 0)
+            {
+                LOG_ERR("REMOTE : binding de l'interface locale en erreur, ret = %d", ret);
+            }
         }
         else
         {
@@ -131,6 +152,9 @@ int REMOTE::stop_module()
 
     // Fermeture socket timeout
     ret += COM_close_socket(this->timeout_fd);
+
+    // Fermeture socket UDP
+    ret += COM_close_socket(this->udp_fd);
 
     return ret;
 }
