@@ -7,7 +7,7 @@ do
 
   -- Dissector permettant de lire les messages envoyés par REMOTE
   local fan = Proto("fan", "FAN CONTROL")
-  local f = fan_control.fields
+  local f = fan.fields
 
   -----------------------------------------------------------
   -- Definition des champs pour les messages
@@ -38,7 +38,7 @@ do
   -----------------------------------------------------------
   -- Tableau pour stocker les messages possibles et leurs champs respectifs
   local msg = {
-    [0] = { name = "MAIN_SHUTDOWN", field = f.main_shutdown, fields = {} }
+    [0] = { name = "MAIN_SHUTDOWN", field = f.main_shutdown, fields = {} },
     [1275] = { name = "FAN_MODE", field = f.fan_mode, fields = {
         [0] = { field = f.fan_mode_mode, t = "int8", size = 1 },} },
     [1276] = { name = "FAN_POWER", field = f.fan_power, fields = {
