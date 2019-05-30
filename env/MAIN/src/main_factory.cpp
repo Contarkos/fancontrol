@@ -13,6 +13,16 @@
 #include "cmd.h"
 #include "com.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "shmd.h"
+
+#ifdef __cplusplus
+}
+#endif
+
 /*********************************************************************/
 /*                       Variables globales                          */
 /*********************************************************************/
@@ -22,7 +32,8 @@ int main_is_running = 0;
 mod_type t_start[NB_MODULE] = {
         {&FAN_start, &FAN_stop, OS_INIT_MUTEX, OS_INIT_MUTEX},
         {&TEMP_start, &TEMP_stop, OS_INIT_MUTEX, OS_INIT_MUTEX},
-        {&REMOTE_start, &REMOTE_stop, OS_INIT_MUTEX, OS_INIT_MUTEX}
+        {&REMOTE_start, &REMOTE_stop, OS_INIT_MUTEX, OS_INIT_MUTEX},
+        {&SHMD_start, &SHMD_stop, OS_INIT_MUTEX, OS_INIT_MUTEX}
 };
 
 /*********************************************************************/
