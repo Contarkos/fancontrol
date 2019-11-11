@@ -1,0 +1,4 @@
+fatload mmc 0:1 ${kernel_addr_r} zImage
+fatload mmc 0:1 ${fdt_addr_r} bcm2708-rpi-b-plus.dtb
+setenv bootargs console=tty1 console=ttyAMA0,115200 earlyprintk root=/dev/ram rootwait panic=0 ip=192.168.0.101
+bootz ${kernel_addr_r} - ${fdt_addr_r}
