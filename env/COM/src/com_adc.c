@@ -55,6 +55,36 @@ t_com_adc_setup com_device_1_setup =
     .filter_sync = COM_STATE_OFF
 };
 
+t_com_adc_setup com_spi_device_array[OS_SPI_DEVICE_NB] =
+{
+    {
+        .pin_rst = COM_ADC_PIN_RST0,
+        .clk_disable = COM_ADC_CLOCK_ON,
+        .clk_div = COM_STATE_OFF,
+        .clk_rate = COM_ADC_CLOCK_2MHZ4,
+        .clk_filter = COM_ADC_CLOCK_FILT_25_60,
+        .pair = COM_ADC_PAIR_0,
+        .mode = COM_ADC_MODE_NORMAL,
+        .gain = COM_ADC_GAIN_1,
+        .bipolarity = COM_STATE_OFF,
+        .buffer_mode = COM_STATE_OFF,
+        .filter_sync = COM_STATE_OFF
+    },
+    {
+        .pin_rst = COM_ADC_PIN_RST1,
+        .clk_disable = COM_ADC_CLOCK_ON,
+        .clk_div = COM_STATE_OFF,
+        .clk_rate = COM_ADC_CLOCK_2MHZ4,
+        .clk_filter = COM_ADC_CLOCK_FILT_25_60,
+        .pair = COM_ADC_PAIR_0,
+        .mode = COM_ADC_MODE_NORMAL,
+        .gain = COM_ADC_GAIN_1,
+        .bipolarity = COM_STATE_OFF,
+        .buffer_mode = COM_STATE_OFF,
+        .filter_sync = COM_STATE_OFF
+    }
+};
+
 /*********************************************************************/
 /*                         Fonctions API                             */
 /*********************************************************************/
@@ -74,6 +104,7 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
             com_device_1_setup.clk_rate = i_rate;
             pin_rst = com_device_1_setup.pin_rst;
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
@@ -143,6 +174,7 @@ int COM_adc_reset_hard(t_os_spi_device i_device)
         case OS_SPI_DEVICE_1:
             pin = com_device_1_setup.pin_rst;
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("COM : device à reset inexistant, device = %d", i_device);
             ret = -1;
@@ -182,6 +214,7 @@ int COM_adc_reset_soft(t_os_spi_device i_device)
         case OS_SPI_DEVICE_0:
         case OS_SPI_DEVICE_1:
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("COM : device à reset inexistant, device = %d", i_device);
             ret = -1;
@@ -217,6 +250,7 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
         case OS_SPI_DEVICE_1:
             com_device_1_setup.pair = i_pair;
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
@@ -280,6 +314,7 @@ int COM_adc_set_filter_sync(t_os_spi_device i_device, t_com_state i_filter_sync)
                 case OS_SPI_DEVICE_1:
                     com_device_1_setup.filter_sync = i_filter_sync;
                     break;
+                case OS_SPI_DEVICE_NB:
                 default:
                     LOG_ERR("COM : device inexistant, device = %d", i_device);
                     ret = -1;
@@ -317,6 +352,7 @@ int COM_adc_set_buffer_mode(t_os_spi_device i_device, t_com_state i_buffer_mode)
                 case OS_SPI_DEVICE_1:
                     com_device_1_setup.buffer_mode = i_buffer_mode;
                     break;
+                case OS_SPI_DEVICE_NB:
                 default:
                     LOG_ERR("COM : device inexistant, device = %d", i_device);
                     ret = -1;
@@ -354,6 +390,7 @@ int COM_adc_set_bipolarity(t_os_spi_device i_device, t_com_state i_bipolarity)
              case OS_SPI_DEVICE_1:
                 com_device_1_setup.bipolarity = i_bipolarity;
                 break;
+             case OS_SPI_DEVICE_NB:
              default:
                 LOG_ERR("COM : device inexistant, device = %d", i_device);
                 ret = -2;
@@ -397,6 +434,7 @@ int COM_adc_set_gain(t_os_spi_device i_device, t_com_adc_gain i_gain)
                 case OS_SPI_DEVICE_1:
                     com_device_1_setup.gain = i_gain;
                     break;
+                case OS_SPI_DEVICE_NB:
                 default:
                     LOG_ERR("COM : device inexistant, device = %d", i_device);
                     ret = -1;
@@ -436,6 +474,7 @@ int COM_adc_set_mode(t_os_spi_device i_device, t_com_adc_mode i_mode)
                 case OS_SPI_DEVICE_1:
                     com_device_1_setup.mode = i_mode;
                     break;
+                case OS_SPI_DEVICE_NB:
                 default:
                     LOG_ERR("COM : device inexistant, device = %d", i_device);
                     ret = -1;
@@ -466,6 +505,7 @@ int COM_adc_set_mode(t_os_spi_device i_device, t_com_adc_mode i_mode)
         case OS_SPI_DEVICE_1:
             com_device_1_setup.mode = COM_ADC_MODE_NORMAL;
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
@@ -492,6 +532,7 @@ int COM_adc_enable_clock(t_os_spi_device i_device, t_com_adc_clock i_clock)
                 case OS_SPI_DEVICE_1:
                     com_device_1_setup.clk_disable = i_clock;
                     break;
+                case OS_SPI_DEVICE_NB:
                 default:
                     LOG_ERR("COM : device inexistant, device = %d", i_device);
                     ret = -1;
@@ -530,6 +571,7 @@ int COM_adc_set_clock_rate(t_os_spi_device i_device, t_com_adc_clock_rate i_rate
                 case OS_SPI_DEVICE_1:
                     com_device_1_setup.clk_rate = i_rate;
                     break;
+                case OS_SPI_DEVICE_NB:
                 default:
                     LOG_ERR("COM : device inexistant, device = %d", i_device);
                     ret = -1;
@@ -567,6 +609,7 @@ int COM_adc_set_clock_div(t_os_spi_device i_device, t_com_state i_div)
                 case OS_SPI_DEVICE_1:
                     com_device_1_setup.clk_div = i_div;
                     break;
+                case OS_SPI_DEVICE_NB:
                 default:
                     LOG_ERR("COM : device inexistant, device = %d", i_device);
                     ret = -1;
@@ -606,6 +649,7 @@ int COM_adc_set_clock_filter(t_os_spi_device i_device, t_com_adc_clock_filt i_fi
                 case OS_SPI_DEVICE_1:
                     com_device_1_setup.clk_filter = i_filter;
                     break;
+                case OS_SPI_DEVICE_NB:
                 default:
                     LOG_ERR("COM : device inexistant, device = %d", i_device);
                     ret = -1;
@@ -642,6 +686,7 @@ int COM_adc_read_setup(t_os_spi_device i_device, t_uint8 *o_setup)
         case OS_SPI_DEVICE_1:
             s = &(com_device_1_setup);
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
@@ -689,6 +734,7 @@ int COM_adc_read_clock(t_os_spi_device i_device, t_uint8 *o_clock)
         case OS_SPI_DEVICE_1:
             s = &(com_device_1_setup);
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
@@ -739,6 +785,7 @@ int com_adc_config_setup(t_os_spi_device i_device)
         case OS_SPI_DEVICE_1:
             s = &(com_device_1_setup);
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
@@ -782,6 +829,7 @@ int com_adc_config_clock(t_os_spi_device i_device)
         case OS_SPI_DEVICE_1:
             s = &(com_device_1_setup);
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;
@@ -823,6 +871,7 @@ int com_adc_wait_ready(t_os_spi_device i_device)
         case OS_SPI_DEVICE_1:
             p = COM_ADC_PIN_RDY1;
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("COM : device inexistant, device = %d", i_device);
             ret = -1;

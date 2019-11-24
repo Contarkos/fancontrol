@@ -1,4 +1,7 @@
-// Global includes
+/*****************************************************************************/
+/*                               Global includes                             */
+/*****************************************************************************/
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -9,22 +12,22 @@
 #include <string.h>
 #include <errno.h>
 
-// Local includes
+/*****************************************************************************/
+/*                                Local includes                             */
+/*****************************************************************************/
+
 #include "integ_log.h"
 #include "com.h"
 #include "com_msg.h"
 #include "com_socket.h"
 
-/*********************************************************************/
-/*                        Variables globales                         */
-/*********************************************************************/
+/*****************************************************************************/
+/*                              Variables globales                           */
+/*****************************************************************************/
 
-// Listes des socket à prévenir par message
-t_com_msg_list com_list_msg[COM_TOTAL_MSG];
-
-/*********************************************************************/
-/*                         Fonctions API                             */
-/*********************************************************************/
+/*****************************************************************************/
+/*                                Fonctions API                              */
+/*****************************************************************************/
 
 // Creation et binding d'une socket
 int COM_create_socket(int i_family, int i_type, int i_proto, char *i_data)
@@ -249,9 +252,9 @@ int COM_close_socket(int i_fd)
     return ret;
 }
 
-/*********************************************************************/
-/*                       Fonctions locales                           */
-/*********************************************************************/
+/*****************************************************************************/
+/*                             Fonctions locales                             */
+/*****************************************************************************/
 
 int com_bind_socket_unix(int fd, char *data)
 {
@@ -260,7 +263,7 @@ int com_bind_socket_unix(int fd, char *data)
 
     // Init des parametres de la socket
     a.sun_family = AF_UNIX;
-    strncpy(a.sun_path, data, COM_UNIX_PATH_MAX);
+    strncpy(a.sun_path, data, BASE_MIN(strlen(a.sun_path), COM_UNIX_PATH_MAX));
 
     // Suppression de l'ancienne socket
     (void)unlink(a.sun_path);
@@ -293,7 +296,7 @@ int com_connect_unix(int fd, char *data)
 
     // Init des parametres de la socket
     a.sun_family = AF_UNIX;
-    strncpy(a.sun_path, data, COM_UNIX_PATH_MAX);
+    strncpy(a.sun_path, data, BASE_MIN(strlen(a.sun_path), COM_UNIX_PATH_MAX));
 
     LOG_INF1("COM : nom de la socket = %s", a.sun_path);
 
