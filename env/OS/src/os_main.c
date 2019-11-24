@@ -1,4 +1,4 @@
-// Global includes
+/* Global includes */
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-// Local includes
+/* Local includes */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
@@ -22,43 +22,43 @@
 /*                         Fonctions API                             */
 /*********************************************************************/
 
-// Init de toutes les fonctions nécessaires au Rpi
+/* Init de toutes les fonctions nécessaires au Rpi */
 int OS_init(void)
 {
     int ret = 0;
 
-    // Init des GPIO
+    /* Init des GPIO */
     ret += os_init_gpio();
 
-    // Init des PWM
+    /* Init des PWM */
     ret += os_init_pwm();
 
-    // Init de la CLOCK
+    /* Init de la CLOCK */
     ret += os_init_clock();
 
-    // Init COM
+    /* Init COM */
 
-    // Init des timers
+    /* Init des timers */
     ret += os_init_timer();
 
     return ret;
 }
 
-// Arret de toutes les fonctions du Rpi
+/* Arret de toutes les fonctions du Rpi */
 int OS_stop(void)
 {
     int ret = 0;
 
-    // Stop des GPIO
+    /* Stop des GPIO */
     ret += os_stop_gpio();
 
-    // Stop PWM
+    /* Stop PWM */
     ret += os_stop_pwm();
 
-    // Stop CLOCK
+    /* Stop CLOCK */
     ret += os_stop_clock();
 
-    // Stop timer
+    /* Stop timer */
     ret += os_end_timer();
 
     return ret;
@@ -68,12 +68,12 @@ int OS_stop(void)
 /*                       Fonctions locales                           */
 /*********************************************************************/
 
-// Exposes the physical address defined in the passed structure using mmap on /dev/mem
+/* Exposes the physical address defined in the passed structure using mmap on /dev/mem */
 int os_map_peripheral(struct bcm2835_peripheral *p)
 {
     int ret = 0;
 #if 1
-    // Open /dev/mem
+    /* Open /dev/mem */
     if ((p->mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0)
     {
         LOG_ERR("OS : Failed to open /dev/mem, try checking permissions.");
@@ -81,14 +81,14 @@ int os_map_peripheral(struct bcm2835_peripheral *p)
     }
     else
     {
-        // On va mapper le composant mémoire
+        /* On va mapper le composant mémoire */
         p->map = mmap(
                 NULL,
                 BLOCK_SIZE,
                 PROT_READ|PROT_WRITE,
                 MAP_SHARED,
-                p->mem_fd,      // File descriptor to physical memory virtual file '/dev/mem'
-                p->addr_p       // Address in physical map that we want this memory block to expose
+                p->mem_fd,      /* File descriptor to physical memory virtual file '/dev/mem' */
+                p->addr_p       /* Address in physical map that we want this memory block to expose */
                 );
 
         if (p->map == MAP_FAILED)
@@ -108,7 +108,7 @@ int os_map_peripheral(struct bcm2835_peripheral *p)
     return ret;
 }
 
-// Close the memory mapping
+/* Close the memory mapping */
 void os_unmap_peripheral(struct bcm2835_peripheral *p)
 {
 #if 1

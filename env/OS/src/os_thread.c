@@ -1,84 +1,85 @@
-// Gestion des threads de manière globale
+/* API for thread handling */
 
-// Includes globaux
+/*********************************************************************/
+/*                         Global includes                           */
+/*********************************************************************/
+
 #include <stdio.h>
 #include <pthread.h>
+#include <signal.h>
 
-// Includes locaux
+/*********************************************************************/
+/*                          Local includes                           */
+/*********************************************************************/
+
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
 
 /*********************************************************************/
-/*                       Variables globales                          */
+/*                         Global variables                          */
 /*********************************************************************/
 
 /*********************************************************************/
-/*                         Fonctions API                             */
+/*                         API functions                             */
 /*********************************************************************/
 
-// Creation d'un thread sans options
+/* Creation of a thread without any options nor arguments */
 int OS_create_thread(OS_thread_t *p_o_thread,
                      void *args)
 {
    int ret = 0;
 
-   // Creation du thread
+   /* Creation of the thread */
    ret = pthread_create(&(p_o_thread->thread), NULL, p_o_thread->loop, args);
 
    if (ret != 0)
-   {
-      LOG_ERR("OS : Erreur pendant la création d'un thread (code = %d)", ret);
-   }
+      LOG_ERR("OS : Error while creating thread (code = %d)", ret);
 
    return ret;
 }
 
-// Permet de joindre un thread pour qu'il se termine correctement
-int OS_joint_thread(OS_thread_t * p_i_thread, void **retval)
+/* Allow the caller to join a thread for it to end correctly */
+int OS_joint_thread(OS_thread_t * i_p_thread, void **retval)
 {
    int ret = 0;
 
-   // Creation du thread
-   ret = pthread_join(p_i_thread->thread, retval);
+   /* Joining thread here */
+   ret = pthread_join(i_p_thread->thread, retval);
 
    if (ret != 0)
-   {
-      LOG_ERR("OS : Erreur pendant la jonction d'un thread (code = %d)", ret);
-   }
+      LOG_ERR("OS : Error joining thread (code = %d)", ret);
 
    return ret;
 }
 
-// Permet de lancer le thread en question en tant que daemon
-int OS_detach_thread(OS_thread_t * p_i_thread)
+/* Allow to detach thread in argument and run it as a daemon */
+int OS_detach_thread(OS_thread_t * i_p_thread)
 {
    int ret = 0;
 
-   // Creation du thread
-   ret = pthread_detach(p_i_thread->thread);
+   /* Detaching thread here */
+   ret = pthread_detach(i_p_thread->thread);
 
    if (ret != 0)
-   {
-      LOG_ERR("OS : Erreur pendant le detachement d'un thread (code = %d)", ret);
-   }
+      LOG_ERR("OS : Error detaching thread (code = %d)", ret);
 
    return ret;
 }
 
-// Init d'un mutex
-int OS_init_mutex(OS_mutex_t *i_mutex)
+/* Initialisation of a mutex */
+int OS_mutex_init(OS_mutex_t *i_mutex)
 {
     int ret = 0;
 
     if (NULL == i_mutex)
     {
-        LOG_ERR("OS : mauvais pointeur pour mutex");
+        LOG_ERR("OS : bad pointer to mutex");
         ret = -1;
     }
     else if (OS_RET_OK == i_mutex->is_init)
     {
-        LOG_WNG("OS : mutex deja initialise");
+        LOG_WNG("OS : mutex already initialised");
         ret = -2;
     }
     else
@@ -94,19 +95,19 @@ int OS_init_mutex(OS_mutex_t *i_mutex)
     return ret;
 }
 
-// Destruction d'un mutex
-int OS_destroy_mutex(OS_mutex_t *i_mutex)
+/* Destruction of a mutex */
+int OS_mutex_destroy(OS_mutex_t *i_mutex)
 {
     int ret = 0;
 
     if (NULL == i_mutex)
     {
-        LOG_ERR("OS : mauvais pointeur pour mutex");
+        LOG_ERR("OS : bad pointer to mutex");
         ret = -1;
     }
     else if (OS_RET_KO == i_mutex->is_init)
     {
-        LOG_WNG("OS : mutex deja detruit ou non initialise");
+        LOG_WNG("OS : mutex already destroyed or not initialised");
         ret = -2;
     }
     else
@@ -122,19 +123,19 @@ int OS_destroy_mutex(OS_mutex_t *i_mutex)
     return ret;
 }
 
-// Lock d'un mutex
-int OS_lock_mutex(OS_mutex_t *i_mutex)
+/* Lock mutex in argument if already initialised */
+int OS_mutex_lock(OS_mutex_t *i_mutex)
 {
     int ret = 0;
 
     if (NULL == i_mutex)
     {
-        LOG_ERR("OS : mauvais pointeur pour mutex");
+        LOG_ERR("OS : bad pointer to mutex");
         ret = -1;
     }
     else if (OS_RET_KO == i_mutex->is_init)
     {
-        LOG_WNG("OS : mutex non initialise");
+        LOG_WNG("OS : mutex not initialised");
         ret = -2;
     }
     else
@@ -145,24 +146,50 @@ int OS_lock_mutex(OS_mutex_t *i_mutex)
     return ret;
 }
 
-// Unlock d'un mutex
-int OS_unlock_mutex(OS_mutex_t *i_mutex)
+/* Unlock the mutex in argument if already initialised */
+int OS_mutex_unlock(OS_mutex_t *i_mutex)
 {
     int ret = 0;
 
     if (NULL == i_mutex)
     {
-        LOG_ERR("OS : mauvais pointeur pour mutex");
+        LOG_ERR("OS : bad pointer to mutex");
         ret = -1;
     }
     else if (OS_RET_KO == i_mutex->is_init)
     {
-        LOG_WNG("OS : mutex non initialise");
+        LOG_WNG("OS : mutex not initialised");
         ret = -2;
     }
     else
     {
         ret = pthread_mutex_unlock(&(i_mutex->mutex));
+    }
+
+    return ret;
+}
+
+/* Send <i_signal> to the <i_p_thread> in argument */
+int OS_signal_send(OS_thread_t *i_p_thread, int i_signal)
+{
+    int ret = 0;
+
+    if (!i_p_thread)
+    {
+        LOG_ERR("OS : wrong pointer to thread");
+        ret = -1;
+    }
+
+    if (0 == ret)
+    {
+        /* Send a signal to the thread */
+        ret = pthread_kill(i_p_thread->thread, i_signal);
+
+        if (0 != ret)
+        {
+            LOG_ERR("OS : error while sending signal to a thread, ret = %d", ret);
+            ret = -2;
+        }
     }
 
     return ret;

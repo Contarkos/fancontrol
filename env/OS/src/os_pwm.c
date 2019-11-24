@@ -1,7 +1,7 @@
-// Global includes
+/* Global includes */
 #include <stdio.h>
 
-// Local includes
+/* Local includes */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
@@ -11,31 +11,31 @@
 /*                       Variables globales                          */
 /*********************************************************************/
 
-// Initialisation de la zone mémoire PWM
+/* Initialisation de la zone mémoire PWM */
 struct bcm2835_peripheral os_periph_pwm = {PWM_BASE, 0, NULL, NULL};
 
-// Init des variables d'environnement
+/* Init des variables d'environnement */
 t_os_ret_okko is_init_pwm = OS_RET_KO;
 
-// Variables statiques
+/* Variables statiques */
 static t_uint32 os_pwm_freq = 25000;
 static float os_pwm_duty = 0.0F;
 static t_uint32 os_pwm_prec = 255;
 static t_os_clock_source os_pwm_source = OS_CLOCK_SRC_PLLC;
 
-// Mutex pour les acces aux registres PWM
+/* Mutex pour les acces aux registres PWM */
 OS_mutex_t os_pwm_mutex = OS_INIT_MUTEX;
 
 /*********************************************************************/
 /*                         Fonctions API                             */
 /*********************************************************************/
 
-// Activation du PWM
+/* Activation du PWM */
 int OS_pwn_enable(t_os_state i_enable)
 {
     int ret = 0;
 
-    ret = OS_lock_mutex(&os_pwm_mutex);
+    ret = OS_mutex_lock(&os_pwm_mutex);
 
     if (0 != ret)
     {
@@ -46,11 +46,11 @@ int OS_pwn_enable(t_os_state i_enable)
         switch (i_enable)
         {
             case OS_STATE_ON:
-                // Activation sans configuration du PWM1
+                /* Activation sans configuration du PWM1 */
                 PWM_CTL_REGISTER |= PWM_CTL_PWEN1_MASK;
                 break;
             case OS_STATE_OFF:
-                // Désactivation du PWM
+                /* Désactivation du PWM */
                 PWM_CTL_REGISTER &= ~(PWM_CTL_PWEN1_MASK);
                 break;
             default:
@@ -61,22 +61,22 @@ int OS_pwn_enable(t_os_state i_enable)
 
         if (0 == ret)
         {
-            // Petit temps d'arret pour éviter un crash du module PWM
+            /* Petit temps d'arret pour éviter un crash du module PWM */
             OS_usleep(10);
         }
 
-        ret = OS_unlock_mutex(&os_pwm_mutex);
+        ret = OS_mutex_unlock(&os_pwm_mutex);
     }
 
     return ret;
 }
 
-// Sélection de la source pour la clock
+/* Sélection de la source pour la clock */
 int OS_pwm_set_clock_source(t_os_clock_source i_source)
 {
     int ret = 0;
 
-    // Sauvegarde de la valeur
+    /* Sauvegarde de la valeur */
     switch (i_source)
     {
         case OS_CLOCK_SRC_GND :
@@ -103,8 +103,8 @@ int OS_pwm_set_clock_source(t_os_clock_source i_source)
     {
         os_enable_pwm(OS_STATE_OFF);
 
-        // Prise de mutex pour la clock
-        ret = OS_lock_mutex(&os_pwm_mutex);
+        /* Prise de mutex pour la clock */
+        ret = OS_mutex_lock(&os_pwm_mutex);
 
         if (0 != ret)
         {
@@ -112,12 +112,12 @@ int OS_pwm_set_clock_source(t_os_clock_source i_source)
         }
         else
         {
-            // Set de la source
+            /* Set de la source */
             CLOCK_PWM_CTL_REGISTER  = (CLOCK_PASSWD_MASK | CLOCK_PWM_CTL_REGISTER) & ~(CLOCK_SRC_MASK);
             CLOCK_PWM_CTL_REGISTER |=  CLOCK_PASSWD_MASK | (CLOCK_SRC_MASK & os_pwm_source);
 
-            // Libération mutex pour la clock
-            ret = OS_unlock_mutex(&os_pwm_mutex);
+            /* Libération mutex pour la clock */
+            ret = OS_mutex_unlock(&os_pwm_mutex);
         }
 
         os_enable_pwm(OS_STATE_ON);
@@ -126,7 +126,7 @@ int OS_pwm_set_clock_source(t_os_clock_source i_source)
     return ret;
 }
 
-// Reglage de la fréquence d'émission des données
+/* Reglage de la fréquence d'émission des données */
 int OS_pwm_set_frequency(t_uint32 i_freq)
 {
     int ret = 0;
@@ -146,10 +146,10 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
         }
         else
         {
-            // Sauvagarde de la valeur de la fréquence
+            /* Sauvagarde de la valeur de la fréquence */
             os_pwm_freq = i_freq;
 
-            // Calcul du diviseur
+            /* Calcul du diviseur */
             divi = os_clock_max_freq[os_pwm_source] / (os_pwm_freq * os_pwm_prec);
             divr = os_clock_max_freq[os_pwm_source] % (os_pwm_freq * os_pwm_prec);
             divf = (t_uint32) ((float) (divr * CLOCK_MAX_DIVISOR) / (float) (os_pwm_freq * os_pwm_prec));
@@ -161,18 +161,18 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
                 LOG_WNG("OS : la fréquence sera plus haute qu'attendue. Diviseur max atteint");
                 ret = 1;
 
-                // Maximum possible pour le diviseur
+                /* Maximum possible pour le diviseur */
                 divi = CLOCK_MAX_DIVISOR;
                 divf = 0;
             }
 
-            // Mise en forme de la donnée pour le registre de clock
+            /* Mise en forme de la donnée pour le registre de clock */
             data = ( CLOCK_DIVI_MASK & (divi << CLOCK_DIVI_SHIFT) ) | ( CLOCK_DIVF_MASK & (divf << CLOCK_DIVF_SHIFT) );
 
-            // On coupe la clock
+            /* On coupe la clock */
             os_enable_pwm(OS_STATE_OFF);
 
-            ret = OS_lock_mutex(&os_pwm_mutex);
+            ret = OS_mutex_lock(&os_pwm_mutex);
 
             if (0 != ret)
             {
@@ -180,13 +180,13 @@ int OS_pwm_set_frequency(t_uint32 i_freq)
             }
             else
             {
-                // Set de la fréquence
+                /* Set de la fréquence */
                 CLOCK_PWM_DIV_REGISTER = CLOCK_PASSWD_MASK | data;
 
-                ret = OS_unlock_mutex(&os_pwm_mutex);
+                ret = OS_mutex_unlock(&os_pwm_mutex);
             }
 
-            // On reactive
+            /* On reactive */
             os_enable_pwm(OS_STATE_ON);
         }
     }
@@ -211,11 +211,11 @@ int OS_pwm_set_dutycycle(float i_duty)
     }
     else
     {
-        // Sauvegarde de la valeur
+        /* Sauvegarde de la valeur */
         os_pwm_duty = i_duty;
 
-        // Lock mutex PWM
-        ret = OS_lock_mutex(&os_pwm_mutex);
+        /* Lock mutex PWM */
+        ret = OS_mutex_lock(&os_pwm_mutex);
 
         if (0 != ret)
         {
@@ -223,13 +223,13 @@ int OS_pwm_set_dutycycle(float i_duty)
         }
         else
         {
-            // Ecriture de la valeur dans le registre
+            /* Ecriture de la valeur dans le registre */
             PWM_DAT1_REGISTER = ((t_uint32) ((os_pwm_duty / OS_MAX_PERCENT_PWM) * (float) os_pwm_prec) );
 
             LOG_INF3("OS : dutycycle value = %d", PWM_DAT1_REGISTER);
 
-            // Release mutex PWM
-            ret = OS_unlock_mutex(&os_pwm_mutex);
+            /* Release mutex PWM */
+            ret = OS_mutex_unlock(&os_pwm_mutex);
         }
     }
 
@@ -252,10 +252,10 @@ int OS_pwm_set_precision(t_uint32 i_prec)
     }
     else
     {
-        // Sauvegarde la valeur
+        /* Sauvegarde la valeur */
         os_pwm_prec = i_prec;
 
-        ret = OS_lock_mutex(&os_pwm_mutex);
+        ret = OS_mutex_lock(&os_pwm_mutex);
 
         if (0 != ret)
         {
@@ -263,22 +263,22 @@ int OS_pwm_set_precision(t_uint32 i_prec)
         }
         else
         {
-            // Configuration du registre RNG1
+            /* Configuration du registre RNG1 */
             PWM_RNG1_REGISTER = os_pwm_prec;
 
-            // Release mutex PWM
-            if (0 != OS_unlock_mutex(&os_pwm_mutex))
+            /* Release mutex PWM */
+            if (0 != OS_mutex_unlock(&os_pwm_mutex))
             {
                 LOG_ERR("OS  : error while unlocking mutex");
                 ret = -2;
             }
-            // Reconfiguration de la frequence de la clock
+            /* Reconfiguration de la frequence de la clock */
             else if (0 != OS_pwm_set_frequency(os_pwm_freq))
             {
                 LOG_ERR("OS : error while recalibrating PWM frequency");
                 ret = -4;
             }
-            // Reconfiguration du dutycycle
+            /* Reconfiguration du dutycycle */
             else if (0 != OS_pwm_set_dutycycle(os_pwm_duty))
             {
                 LOG_ERR("OS : error while recalibrating PWM dutycyle");
@@ -302,8 +302,8 @@ int OS_pwm_set_mode(os_pwm_mode i_mode)
 {
     int ret = 0;
 
-    // Lock mutex PWM
-    ret = OS_lock_mutex(&os_pwm_mutex);
+    /* Lock mutex PWM */
+    ret = OS_mutex_lock(&os_pwm_mutex);
 
     if (0 != ret)
     {
@@ -325,7 +325,7 @@ int OS_pwm_set_mode(os_pwm_mode i_mode)
                 break;
         }
 
-        ret = OS_unlock_mutex(&os_pwm_mutex);
+        ret = OS_mutex_unlock(&os_pwm_mutex);
     }
 
     return ret;
@@ -355,15 +355,15 @@ int OS_pwm_set_mash(os_mash_mode i_filter)
 
     if (ret < 0)
     {
-        // Ne rien faire
+        /* Ne rien faire */
         ;
     }
     else
     {
-        // On coupe la clock
+        /* On coupe la clock */
         os_enable_pwm(OS_STATE_OFF);
 
-        ret = OS_lock_mutex(&os_pwm_mutex);
+        ret = OS_mutex_lock(&os_pwm_mutex);
 
         if (0 != ret)
         {
@@ -371,16 +371,16 @@ int OS_pwm_set_mash(os_mash_mode i_filter)
         }
         else
         {
-            // Update du filtre MASH
+            /* Update du filtre MASH */
             CLOCK_PWM_CTL_REGISTER = (CLOCK_PWM_CTL_REGISTER | CLOCK_PASSWD_MASK) & ~(CLOCK_MASH_MASK);
             CLOCK_PWM_CTL_REGISTER = (CLOCK_PWM_CTL_REGISTER | CLOCK_PASSWD_MASK) | (i_filter << CLOCK_MASH_SHIFT);
 
-            ret = OS_unlock_mutex(&os_pwm_mutex);
+            ret = OS_mutex_unlock(&os_pwm_mutex);
 
-            // On reactive
+            /* On reactive */
             os_enable_pwm(OS_STATE_ON);
 
-            // On actualise la frequence
+            /* On actualise la frequence */
             OS_pwm_set_frequency(os_pwm_freq);
         }
 
@@ -404,7 +404,7 @@ int os_init_pwm(void)
     }
     else
     {
-        // Mapping du fichier mémoire
+        /* Mapping du fichier mémoire */
         ret += os_map_peripheral(&os_periph_pwm);
 
         if (0 != ret)
@@ -432,7 +432,7 @@ int os_stop_pwm(void)
     }
     else
     {
-        // Demapping du PWM
+        /* Demapping du PWM */
         os_unmap_peripheral(&os_periph_pwm);
     }
 
@@ -443,7 +443,7 @@ int os_enable_pwm(t_os_state i_enable)
 {
     int ret = 0;
 
-    ret = OS_lock_mutex(&os_pwm_mutex);
+    ret = OS_mutex_lock(&os_pwm_mutex);
 
     if (0 != ret)
     {
@@ -453,15 +453,15 @@ int os_enable_pwm(t_os_state i_enable)
     {
         if (OS_STATE_OFF == i_enable)
         {
-            // Arret de la CLOCK le temps de changer les paramètres
+            /* Arret de la CLOCK le temps de changer les paramètres */
             CLOCK_PWM_CTL_REGISTER = (CLOCK_PWM_CTL_REGISTER | CLOCK_PASSWD_MASK) & ~(CLOCK_ENAB_MASK);
 
-            // Attente de la descente du flag BUSY
+            /* Attente de la descente du flag BUSY */
             while ( CLOCK_PWM_CTL_REGISTER & CLOCK_BUSY_MASK ) {}
         }
         else if (OS_STATE_ON == i_enable)
         {
-            // Reactivation de la clock
+            /* Reactivation de la clock */
             CLOCK_PWM_CTL_REGISTER |= CLOCK_PASSWD_MASK | CLOCK_ENAB_MASK;
         }
         else
@@ -470,7 +470,7 @@ int os_enable_pwm(t_os_state i_enable)
             ret = -1;
         }
 
-        ret = OS_unlock_mutex(&os_pwm_mutex);
+        ret = OS_mutex_unlock(&os_pwm_mutex);
     }
 
     return ret;

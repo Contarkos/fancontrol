@@ -1,15 +1,15 @@
-// Global includes
-#include <fcntl.h>                //Needed for SPI port
-#include <sys/ioctl.h>            //Needed for SPI port
-#include <linux/spi/spidev.h>     //Needed for SPI port
-#include <unistd.h>               //Needed for SPI port
+/* Global includes */
+#include <fcntl.h>                /*Needed for SPI port */
+#include <sys/ioctl.h>            /*Needed for SPI port */
+#include <linux/spi/spidev.h>     /*Needed for SPI port */
+#include <unistd.h>               /*Needed for SPI port */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
 
-// Local includes
+/* Local includes */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
@@ -18,30 +18,30 @@
 t_os_spi_struct spi_device_0 =
 {
     .fd = 0,
-    .mode = SPI_MODE_0, // CPOL = 0 et CPHA = 0
-    .bits_per_word = 8, // 8 bits par mots
-    .speed = 1000000,   // 1MHz
+    .mode = SPI_MODE_0, /* CPOL = 0 et CPHA = 0 */
+    .bits_per_word = 8, /* 8 bits par mots */
+    .speed = 1000000,   /* 1MHz */
     .id = OS_SPI_DEVICE_0
 };
 
 t_os_spi_struct spi_device_1 =
 {
     .fd = 0,
-    .mode = SPI_MODE_0, // CPOL = 0 et CPHA = 0
-    .bits_per_word = 8, // 8 bits par mots
-    .speed = 1000000,   // 1MHz
+    .mode = SPI_MODE_0, /* CPOL = 0 et CPHA = 0 */
+    .bits_per_word = 8, /* 8 bits par mots */
+    .speed = 1000000,   /* 1MHz */
     .id = OS_SPI_DEVICE_1
 };
 
 t_os_ret_okko is_init_spi = OS_RET_KO;
 
-// Mutex pour les acces aux registres SPI
+/* Mutex pour les acces aux registres SPI */
 OS_mutex_t os_spi_mutex = OS_INIT_MUTEX;
 
 /***********************************/
 /*          SPI OPEN PORT          */
 /***********************************/
-//spi_device    0=CS0, 1=CS1
+/*spi_device    0=CS0, 1=CS1 */
 int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned char i_bits, unsigned int i_speed)
 {
     int ret = 0;
@@ -57,6 +57,7 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
             spi_device = &spi_device_1;
             spi_device->fd = open(OS_FILE_SPI1, O_RDWR | O_NONBLOCK);
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("OS : device SPI inexistant");
             ret = -1;
@@ -64,11 +65,11 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
 
     if (0 == ret)
     {
-        //----- SET SPI MODE -----
-        //SPI_MODE_0 (0,0)     CPOL = 0, CPHA = 0, Clock idle low, data is clocked in on rising edge, output data (change) on falling edge
-        //SPI_MODE_1 (0,1)     CPOL = 0, CPHA = 1, Clock idle low, data is clocked in on falling edge, output data (change) on rising edge
-        //SPI_MODE_2 (1,0)     CPOL = 1, CPHA = 0, Clock idle high, data is clocked in on falling edge, output data (change) on rising edge
-        //SPI_MODE_3 (1,1)     CPOL = 1, CPHA = 1, Clock idle high, data is clocked in on rising, edge output data (change) on falling edge
+        /*----- SET SPI MODE ----- */
+        /*SPI_MODE_0 (0,0)     CPOL = 0, CPHA = 0, Clock idle low, data is clocked in on rising edge, output data (change) on falling edge */
+        /*SPI_MODE_1 (0,1)     CPOL = 0, CPHA = 1, Clock idle low, data is clocked in on falling edge, output data (change) on rising edge */
+        /*SPI_MODE_2 (1,0)     CPOL = 1, CPHA = 0, Clock idle high, data is clocked in on falling edge, output data (change) on rising edge */
+        /*SPI_MODE_3 (1,1)     CPOL = 1, CPHA = 1, Clock idle high, data is clocked in on rising, edge output data (change) on falling edge */
         switch (i_mode)
         {
             case SPI_MODE_0:
@@ -82,7 +83,7 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
                 break;
         }
 
-        //----- SET BITS PER WORD -----
+        /*----- SET BITS PER WORD ----- */
         switch (i_bits)
         {
             case OS_SPI_BITS_WORD_8:
@@ -94,7 +95,7 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
                 break;
         }
 
-        //----- SET SPI BUS SPEED -----
+        /*----- SET SPI BUS SPEED ----- */
         if (i_speed <= OS_MAX_SPI_SPEED)
         {
             spi_device->speed = i_speed;
@@ -183,6 +184,7 @@ int OS_spi_close_port (t_os_spi_device i_spi_id)
         case OS_SPI_DEVICE_1:
             spi_device = &spi_device_1;
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("OS : device SPI inexistant");
             ret = -1;
@@ -217,6 +219,7 @@ int OS_spi_set_speed (t_os_spi_device i_spi_id, unsigned int i_speed)
         case OS_SPI_DEVICE_1:
             spi_device = &spi_device_1;
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("OS : device SPI inexistant");
             ret = -1;
@@ -231,7 +234,7 @@ int OS_spi_set_speed (t_os_spi_device i_spi_id, unsigned int i_speed)
         }
         else
         {
-            ret = OS_lock_mutex(&os_spi_mutex);
+            ret = OS_mutex_lock(&os_spi_mutex);
 
             if (ret < 0)
             {
@@ -242,7 +245,7 @@ int OS_spi_set_speed (t_os_spi_device i_spi_id, unsigned int i_speed)
                 ret  = ioctl (spi_device->fd, SPI_IOC_WR_MAX_SPEED_HZ, &(i_speed));
                 ret += ioctl (spi_device->fd, SPI_IOC_RD_MAX_SPEED_HZ, &(i_speed));
 
-                OS_unlock_mutex(&os_spi_mutex);
+                OS_mutex_unlock(&os_spi_mutex);
 
                 if (ret < 0)
                 {
@@ -277,6 +280,7 @@ int OS_spi_set_mode(t_os_spi_device i_spi_id, t_os_spi_mode i_mode)
         case OS_SPI_DEVICE_1:
             spi_device = &spi_device_1;
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("OS : device SPI inexistant");
             ret = -1;
@@ -302,7 +306,7 @@ int OS_spi_set_mode(t_os_spi_device i_spi_id, t_os_spi_mode i_mode)
         }
         else
         {
-            ret = OS_lock_mutex(&os_spi_mutex);
+            ret = OS_mutex_lock(&os_spi_mutex);
 
             if (ret < 0)
             {
@@ -313,7 +317,7 @@ int OS_spi_set_mode(t_os_spi_device i_spi_id, t_os_spi_mode i_mode)
                 ret  = ioctl (spi_device->fd, SPI_IOC_WR_MODE, &(i_mode));
                 ret += ioctl (spi_device->fd, SPI_IOC_RD_MODE, &(i_mode));
 
-                OS_unlock_mutex(&os_spi_mutex);
+                OS_mutex_unlock(&os_spi_mutex);
 
                 if (ret < 0)
                 {
@@ -334,7 +338,7 @@ int OS_spi_set_mode(t_os_spi_device i_spi_id, t_os_spi_mode i_mode)
 /*******************************************/
 /*          SPI WRITE & READ DATA          */
 /*******************************************/
-//io_data        Bytes to write.  Contents is overwritten with bytes read.
+/*io_data        Bytes to write.  Contents is overwritten with bytes read. */
 int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *io_data, int i_length)
 {
     struct spi_ioc_transfer spi[i_length];
@@ -350,6 +354,7 @@ int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *io_data, int i_l
         case OS_SPI_DEVICE_1:
             spi_device = &spi_device_1;
             break;
+        case OS_SPI_DEVICE_NB:
         default:
             LOG_ERR("OS : device SPI inexistant");
             ret = -1;
@@ -366,15 +371,15 @@ int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *io_data, int i_l
         printf("\n");
 #endif
 
-        //one spi transfer for each byte
+        /*one spi transfer for each byte */
         for (ii = 0 ; ii < i_length ; ii++)
         {
-            // init de la zone memoire
+            /* init de la zone memoire */
             memset(&spi[ii], 0, sizeof (spi[ii]));
 
-            // Remplissage de la demande de transfert
-            spi[ii].tx_buf        = (unsigned long)(io_data + ii); // transmit from "io_data"
-            spi[ii].rx_buf        = (unsigned long)(io_data + ii); // receive into "io_data"
+            /* Remplissage de la demande de transfert */
+            spi[ii].tx_buf        = (unsigned long)(io_data + ii); /* transmit from "io_data" */
+            spi[ii].rx_buf        = (unsigned long)(io_data + ii); /* receive into "io_data" */
             spi[ii].len           = sizeof(*(io_data + ii));
             spi[ii].delay_usecs   = 0;
             spi[ii].speed_hz      = spi_device->speed;
@@ -382,7 +387,7 @@ int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *io_data, int i_l
             spi[ii].cs_change     = 0;
         }
 
-        retVal = OS_lock_mutex(&os_spi_mutex);
+        retVal = OS_mutex_lock(&os_spi_mutex);
 
         if (retVal < 0)
         {
@@ -392,7 +397,7 @@ int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *io_data, int i_l
         {
             retVal = ioctl(spi_device->fd, SPI_IOC_MESSAGE(i_length), spi);
 
-            OS_unlock_mutex(&os_spi_mutex);
+            OS_mutex_unlock(&os_spi_mutex);
 
             if(retVal < 0)
             {

@@ -1,10 +1,10 @@
-// Global includes
+/* Global includes */
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <errno.h>
 
-// Local includes
+/* Local includes */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
@@ -19,7 +19,7 @@
 /*                         Fonctions API                             */
 /*********************************************************************/
 
-// Demande d'ouverture d'un fichier d'interruption
+/* Demande d'ouverture d'un fichier d'interruption */
 int OS_irq_request(const char *i_irq, int i_flags)
 {
     int fd = 0;
@@ -41,7 +41,7 @@ int OS_irq_request(const char *i_irq, int i_flags)
     return fd;
 }
 
-// Fermeture du fichier d'interruption
+/* Fermeture du fichier d'interruption */
 int OS_irq_close(int i_fd)
 {
     int ret = 0;

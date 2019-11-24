@@ -1,38 +1,56 @@
 #pragma once
 
-// Adresse des zones de la mémoire pour BCM2835. A verifier pour 2708
+/* IO Access */
+struct bcm2835_peripheral
+{
+    __off_t addr_p;
+    int mem_fd;
+    void *map;
+    volatile unsigned int *addr;
+};
+
+/* Structure mémoire pour GPIO */
+extern struct bcm2835_peripheral os_periph_gpio;
+/* Structure mémoire pour PWM */
+extern struct bcm2835_peripheral os_periph_pwm;
+/* Structure mémoire pour CLOCK */
+extern struct bcm2835_peripheral os_periph_clock;
+/* Structure mémoire pour SPI */
+extern struct bcm2835_peripheral os_periph_spi;
+
+/* Adresse des zones de la mémoire pour BCM2835. A verifier pour 2708 */
 #define BCM2708_PERI_BASE       0x20000000
-#define GPIO_BASE               (BCM2708_PERI_BASE + 0x200000) // GPIO controller
-#define PWM_BASE                (BCM2708_PERI_BASE + 0x20C000) // PWM controller
-#define SPI_BASE                (BCM2708_PERI_BASE + 0x214000) // SPI controller
-#define CLOCK_BASE              (BCM2708_PERI_BASE + 0x101000) // CLOCK controller
+#define GPIO_BASE               (BCM2708_PERI_BASE + 0x200000) /* GPIO controller */
+#define PWM_BASE                (BCM2708_PERI_BASE + 0x20C000) /* PWM controller */
+#define SPI_BASE                (BCM2708_PERI_BASE + 0x214000) /* SPI controller */
+#define CLOCK_BASE              (BCM2708_PERI_BASE + 0x101000) /* CLOCK controller */
 
 #define BLOCK_SIZE              (4*1024)
 
-// Macros d'acces aux registres des GPIO
+/* Macros d'acces aux registres des GPIO */
 #define INP_GPIO(g)             *( os_periph_gpio.addr + ((g)/10) ) &= (unsigned int) ~( 7 << ( ((g)%10)*3 ) )
 #define OUT_GPIO(g)        {\
                                 INP_GPIO(g);\
                                 *( os_periph_gpio.addr + ((g)/10) ) |= (unsigned int)  ( 1 << ( ((g)%10)*3 ) );\
-                           } // Toujours utiliser INP avant OUT
+                           } /* Toujours utiliser INP avant OUT */
 
 #define SET_GPIO_ALT(g,a)  {\
                                  INP_GPIO(g);\
                                  *(os_periph_gpio.addr + ((g)/10) ) |= (((a)<=3?(a) + 4:(a)==4?3:2)<<(((g)%10)*3));\
                            }
 
-// Macros de base GPIO pour modifier les valeurs
+/* Macros de base GPIO pour modifier les valeurs */
 #define GPIO_SET_REGISTER        *( os_periph_gpio.addr + 7  )
-#define GPIO_SET(g)              GPIO_SET_REGISTER = (unsigned int) 1 << (g) // sets   bits which are 1 ignores bits which are 0
+#define GPIO_SET(g)              GPIO_SET_REGISTER = (unsigned int) 1 << (g) /* sets   bits which are 1 ignores bits which are 0 */
 #define GPIO_CLR_REGISTER        *( os_periph_gpio.addr + 10 )
-#define GPIO_CLR(g)              GPIO_CLR_REGISTER = (unsigned int) 1 << (g) // clears bits which are 1 ignores bits which are 0
+#define GPIO_CLR(g)              GPIO_CLR_REGISTER = (unsigned int) 1 << (g) /* clears bits which are 1 ignores bits which are 0 */
  
 #define GPIO_READ_REGISTER       *( os_periph_gpio.addr + 13 )
 #define GPIO_READ(g)             ( (int) (GPIO_READ_REGISTER & (t_uint32) (1 << (g))) >> (g) )
 
 #define GPIO_MAX_NB              27U
 
-// Macros de base PWM pour modifier les paramètres
+/* Macros de base PWM pour modifier les paramètres */
 #define PWM_CTL_OFFSET           0U
 #define PWM_CTL_REGISTER         *( os_periph_pwm.addr + PWM_CTL_OFFSET )
 #define PWM_STA_OFFSET           1U
@@ -100,7 +118,7 @@
 #define PWM_STA_STAO4_MASK       ((t_uint32) 0x00001000)
 #define PWM_STA_STAO4_SHIFT      12U
 
-// Macros pour les registres de CLOCK
+/* Macros pour les registres de CLOCK */
 #define CLOCK_GP0_CTL_OFFSET    28
 #define CLOCK_GP0_CTL_REGISTER  *( os_periph_clock.addr + CLOCK_GP0_CTL_OFFSET )
 #define CLOCK_GP0_DIV_OFFSET    29
@@ -130,51 +148,33 @@
 #define CLOCK_MAX_DIVISOR       0xFFF
 #define CLOCK_MAX_FREQ          19200000U
 
-// IO Access
-struct bcm2835_peripheral
-{
-    __off_t addr_p;
-    int mem_fd;
-    void *map;
-    volatile unsigned int *addr;
-};
-
-// Structure mémoire pour GPIO
-extern struct bcm2835_peripheral os_periph_gpio;
-// Structure mémoire pour PWM
-extern struct bcm2835_peripheral os_periph_pwm;
-// Structure mémoire pour CLOCK
-extern struct bcm2835_peripheral os_periph_clock;
-// Structure mémoire pour SPI
-extern struct bcm2835_peripheral os_periph_spi;
-
-// Variables d'initialisation
+/* Variables d'initialisation */
 extern t_os_ret_okko is_init_gpio;
 extern t_os_ret_okko is_init_pwm;
 extern t_os_ret_okko is_init_clock;
 extern t_os_ret_okko is_init_spi;
 
-// Variables globales
+/* Variables globales */
 extern t_os_clock_source os_clock_source;
 extern t_uint32 os_clock_max_freq[];
 
-// Init des GPIO
+/* Init des GPIO */
 int os_init_gpio(void);
 int os_stop_gpio(void);
 
-// Init du PWM
+/* Init du PWM */
 int os_init_pwm(void);
 int os_stop_pwm(void);
 int os_enable_pwm(t_os_state i_enable);
 
-// Init de la CLOCK
+/* Init de la CLOCK */
 int os_init_clock(void);
 int os_stop_clock(void);
 
-// Init des timers
+/* Init des timers */
 int os_init_timer(void);
 int os_end_timer(void);
 
-// Mapping des zones mémoires
+/* Mapping des zones mémoires */
 int os_map_peripheral(struct bcm2835_peripheral *p);
 void os_unmap_peripheral(struct bcm2835_peripheral *p);
