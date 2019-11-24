@@ -1,9 +1,14 @@
 # Makefile générique pour les modules
-CROSS_COMPILE = /opt/arm-bcm2708/arm-linux-gnueabihf/bin/arm-linux-gnueabihf-
+TOOLCHAIN_DIR=/opt/arm-bcm2708/arm-linux-gnueabihf
+TOOLCHAIN_DIR=/opt/armv6-rpi-linux-gnueabihf
+
 ARCH = arm
+ARCH_EXT = v6
 DEBUG = -g
-LIB_ROOTFS = /opt/arm-bcm2708/arm-linux-gnueabihf/lib
-BIN_ROOTFS = /opt/arm-bcm2708/arm-linux-gnueabihf/include
+LIB_ROOTFS = $(TOOLCHAIN_DIR)/lib
+BIN_ROOTFS = $(TOOLCHAIN_DIR)/include
+
+CROSS_COMPILE = $(TOOLCHAIN_DIR)/bin/$(ARCH)$(ARCH_EXT)-linux-gnueabihf-
 
 INCLUDES = \
 	-Iinc \
@@ -30,16 +35,17 @@ C_CPLUS_FLAGS = -Wextra -Wall -Wundef -Wfloat-equal -Wshadow -Wpointer-arith -Wc
 C_CPLUS_FLAGS += -O2 -pedantic
 C_CPLUS_FLAGS += -Wswitch-default -Wswitch-enum
 C_CPLUS_FLAGS += -Wunreachable-code -Wconversion -Wcast-qual
-C_CPLUS_FLAGS += -mcpu=arm1176jzf-s -mfpu=vfp
+C_CPLUS_FLAGS += -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -marm -march=armv6kz+fp
 C_CPLUS_FLAGS += $(INTEG_LOG_LEVEL)
 
 C_FLAGS 	+= $(C_CPLUS_FLAGS) -Wstrict-prototypes -std=c99
-C_FLAGS 	+= -D_POSIX_C_SOURCE=199309L
+C_FLAGS 	+= -D_POSIX_C_SOURCE=199506L
 CPLUS_FLAGS += $(C_CPLUS_FLAGS) -std=c++11
 
 AR = ar
 CC = gcc
 CXX = g++
+STRIP = strip
 RM = rm -rf
 
 LIB = lib$(notdir $(shell pwd)).a
