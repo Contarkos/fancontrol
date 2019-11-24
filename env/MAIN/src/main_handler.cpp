@@ -1,11 +1,11 @@
-// Ajout du support des handlers
+/* Ajout du support des handlers */
 
-// Global includes
+/* Global includes */
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
 
-// Local includes
+/* Local includes */
 #include "base_typ.h"
 #include "integ_log.h"
 #include "main.h"
@@ -27,7 +27,7 @@ void main_sigint_handler(int signum)
         }
         else
         {
-            // Arret de MAIN
+            /* Arret de MAIN */
             main_is_running = 0;
         }
 
@@ -54,7 +54,7 @@ void main_sigkill_handler(int signum)
         }
         else
         {
-            // Arret de MAIN
+            /* Arret de MAIN */
             main_is_running = 0;
         }
 
@@ -70,16 +70,16 @@ int main_add_handlers(void)
 {
     int ret = 0;
 
-    // Ajout de tous les handlers pour les signaux simples
+    /* Ajout de tous les handlers pour les signaux simples */
     LOG_INF1("MAIN : Ajout des handlers simples");
 
-    // Gestion du <C-c>
+    /* Gestion du <C-c> */
     signal(SIGINT, &main_sigint_handler);
 
-    // Gestion du kill
+    /* Gestion du kill */
     signal(SIGKILL, &main_sigkill_handler);
 
-    // Ignore du broken pipe
+    /* Ignore du broken pipe */
     signal(SIGPIPE, SIG_IGN);
 
     return ret;

@@ -1,13 +1,13 @@
-// Include globaux
+/* Include globaux */
 #include <stdio.h>
 #include <unistd.h>
 
-// Include de base
+/* Include de base */
 #include "base.h"
 #include "base_typ.h"
 #include "integ_log.h"
 
-// Include locaux
+/* Include locaux */
 #include "main_handler.h"
 #include "main_factory.h"
 
@@ -22,7 +22,7 @@ static int main_config(int argc, char *argv[])
 
         for (ii = 0, a = argv[0]; ii < argc; ii++, a = argv[ii])
         {
-            // Traitement des arguments
+            /* Traitement des arguments */
             printf("%s, ", a);
         }
 
@@ -33,7 +33,7 @@ static int main_config(int argc, char *argv[])
         printf("No args here...");
     }
 
-    // Ajout des handlers pour les signaux systemes
+    /* Ajout des handlers pour les signaux systemes */
     main_add_handlers();
 
     return 0;
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 {
     int ret = 0;
 
-    // Recuperation des arguments
+    /* Recuperation des arguments */
     main_config(argc, argv);
 
     printf("Hello World in ARM arch\n");
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
         LOG_ERR("MAIN : erreur de démarrage. EXIT (code %d)\n", ret);
     }
 
-    // Arret du système
+    /* Arret du système */
     ret = main_stop_factory();
 
     return ret;

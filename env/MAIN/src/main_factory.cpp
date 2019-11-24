@@ -1,6 +1,6 @@
-// Includes globaux
+/* Includes globaux */
 
-// Includes locaux
+/* Includes locaux */
 #include "base.h"
 #include "base_typ.h"
 #include "integ_log.h"
@@ -46,7 +46,7 @@ int main_start_factory()
 
     ret = 0;
 
-    // Init des librairies
+    /* Init des librairies */
     ret_temp = main_init();
 
     if (0 != ret_temp)
@@ -55,13 +55,13 @@ int main_start_factory()
     }
     else
     {
-        // On démarre les modules.
+        /* On démarre les modules. */
         for (ii = 0; ii < NB_MODULE; ii++)
         {
-            // On bloque les mutex de tout le monde
+            /* On bloque les mutex de tout le monde */
             LOG_INF1("MAIN : lock pour %d", ii);
-            OS_lock_mutex(&(t_start[ii].mutex_mod));
-            OS_unlock_mutex(&(t_start[ii].mutex_main));
+            OS_mutex_lock(&(t_start[ii].mutex_mod));
+            OS_mutex_unlock(&(t_start[ii].mutex_main));
 
             ret_temp = t_start[ii].mod_start(&(t_start[ii].mutex_main), &(t_start[ii].mutex_mod));
 
@@ -72,24 +72,24 @@ int main_start_factory()
             }
         }
 
-        // Attente du retour des threads du module
+        /* Attente du retour des threads du module */
         for (ii = 0; ii < NB_MODULE; ii++)
         {
             LOG_INF1("MAIN : lock d'attente pour %d", ii);
-            OS_lock_mutex(&(t_start[ii].mutex_main));
+            OS_mutex_lock(&(t_start[ii].mutex_main));
         }
 
-        // Tous les threads sont lancés on peut démarrer
+        /* Tous les threads sont lancés on peut démarrer */
         for (ii = 0; ii < NB_MODULE; ii++)
         {
             LOG_INF1("MAIN : unlock pour %d", ii);
-            OS_unlock_mutex(&(t_start[ii].mutex_mod));
+            OS_mutex_unlock(&(t_start[ii].mutex_mod));
         }
 
-        // C'est parti
+        /* C'est parti */
         main_is_running = 1;
 
-        // On va chercher des commandes rentrées par l'utilisateur
+        /* On va chercher des commandes rentrées par l'utilisateur */
         ret = main_loop();
     }
 
@@ -100,22 +100,22 @@ int main_init(void)
 {
     int ret = 0;
 
-    // Init de l'OS
+    /* Init de l'OS */
     ret = OS_init();
 
-    // Init de COM
+    /* Init de COM */
     if (ret != 0)
     {
         LOG_ERR("MAIN : erreur à l'init de l'OS, code : %d", ret);
     }
     else
     {
-        // Init de la socket UDP
+        /* Init de la socket UDP */
         if (0 != (ret = COM_init()))
         {
             LOG_ERR("MAIN : erreur à l'init de COM, code : %d", ret);
         }
-        // Init des regex de parsing des commandes
+        /* Init des regex de parsing des commandes */
         else if (0 != (ret = CMD_init()))
         {
             LOG_ERR("MAIN : erreur à l'init de CMD, code : %d", ret);
@@ -149,7 +149,7 @@ int main_stop_factory()
 
     LOG_INF1("MAIN : extinction des modules");
 
-    // Pour éviter les arrets multiples
+    /* Pour éviter les arrets multiples */
     if (is_called)
     {
         LOG_WNG("MAIN : Appel d'arret déjà effectué pour factory");
@@ -159,22 +159,22 @@ int main_stop_factory()
     {
         is_called = 1;
 
-        // On lance les demandes d'arrets
+        /* On lance les demandes d'arrets */
         for (ii = 0; ii < NB_MODULE; ii++)
         {
-            // TODO envoi des messages MAIN_SHUTDOWN
+            /* TODO envoi des messages MAIN_SHUTDOWN */
             t_start[ii].mod_stop();
         }
 
         LOG_INF1("MAIN : Attente des locks à libérer pour les modules");
 
-        // On attend que tous les threads soient terminés
+        /* On attend que tous les threads soient terminés */
         for (ii = 0; ii < NB_MODULE; ii++)
         {
-            OS_lock_mutex(&(t_start[ii].mutex_mod));
+            OS_mutex_lock(&(t_start[ii].mutex_mod));
         }
 
-        // Arret des éléments du système
+        /* Arret des éléments du système */
         LOG_INF1("MAIN : Arret des modules systemes");
         ret += main_stop();
     }
@@ -186,13 +186,13 @@ int main_stop(void)
 {
     int ret = 0;
 
-    // Arret de la COM exterieure
+    /* Arret de la COM exterieure */
     ret += COM_stop();
 
-    // Arret du parsing des regex
+    /* Arret du parsing des regex */
     ret += CMD_stop();
 
-    // Arret de l'OS
+    /* Arret de l'OS */
     ret += OS_stop();
 
     return ret;

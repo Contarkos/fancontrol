@@ -1,13 +1,13 @@
 #pragma once
-// Contient les prototypes pour les fonctions de démarrage et d'arret des modules
+/* Contient les prototypes pour les fonctions de démarrage et d'arret des modules */
 
-// Defines
+/* Defines */
 #define NB_MODULE 4
 
-// Variables globales
+/* Variables globales */
 extern mod_type t_start[NB_MODULE];
 
-// Fonctions
+/* Fonctions */
 int main_start_factory(void);
 int main_init(void);
 
