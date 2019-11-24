@@ -1,14 +1,14 @@
 #pragma once
 
-// Includes globaux
+/* Includes globaux */
 #include <pthread.h>
 
-// Includes locaux
+/* Includes locaux */
 #include "os.h"
 
-// Macro
+/* Macro */
 
-// Define variables
+/* Define variables */
 #define MAX_LENGTH_MOD_NAME     64
 
 class MODULE {
@@ -25,14 +25,14 @@ class MODULE {
         MODULE(const char mod_name[MAX_LENGTH_MOD_NAME], OS_mutex_t *m_main, OS_mutex_t *m_mod);
         void set_running(bool isRunning);
 
-        // Fonction de démarrage spécifique au module
+        /* Fonction de démarrage spécifique au module */
         virtual int start_module(void) = 0;
         virtual int stop_module(void) = 0;
 
         virtual int init_after_wait(void) = 0;
         virtual int exec_loop(void) = 0;
 
-        // Démarrage et arret du module
+        /* Démarrage et arret du module */
         int wait_and_loop(void);
         int stop_and_exit(void);
 
@@ -40,15 +40,15 @@ class MODULE {
         MODULE();
         virtual ~MODULE();
 
-        // Init utilisé par MAIN pour que chaque module attende son tour.
+        /* Init utilisé par MAIN pour que chaque module attende son tour. */
         static void* init_module(void* p_this);
         static void* exit_module(void* p_this);
 
-        // Config du module
+        /* Config du module */
         void mod_config(const char mod_name[MAX_LENGTH_MOD_NAME], OS_mutex_t *m_main, OS_mutex_t *m_mod);
 
         bool is_running(void);
 
-        // Pour le thread
+        /* Pour le thread */
         OS_thread_t* MOD_getThread(void) { return &(this->m_thread); }
 };

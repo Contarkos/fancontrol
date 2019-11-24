@@ -1,7 +1,7 @@
 
-// Includes globaux
+/* Includes globaux */
 
-// Includes locaux
+/* Includes locaux */
 #include "os.h"
 #include "module_bis.h"
 
