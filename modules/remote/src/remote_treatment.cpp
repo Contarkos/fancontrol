@@ -1,8 +1,8 @@
-// Includes globaux
+/* Includes globaux */
 #include <stdio.h>
 #include <unistd.h>
 
-// Includes locaux
+/* Includes locaux */
 #include "base.h"
 #include "integ_log.h"
 #include "com.h"
@@ -37,7 +37,7 @@ int REMOTE::remote_treat_msg(int i_fd)
     }
     else
     {
-        // Recuperation des données du message
+        /* Recuperation des données du message */
         ret = COM_receive_data(i_fd, &m, &ss);
 
         if (0 == ss)
@@ -65,7 +65,7 @@ int REMOTE::remote_treat_msg(int i_fd)
     return ret;
 }
 
-// Traitement des messages UDP venant de l'exterieur
+/* Traitement des messages UDP venant de l'exterieur */
 int REMOTE::remote_treat_udp(int i_fd)
 {
     int ret = 0, ss;
@@ -78,7 +78,7 @@ int REMOTE::remote_treat_udp(int i_fd)
     }
     else
     {
-        // Recuperation des données du message
+        /* Recuperation des données du message */
         ret = COM_receive_data(i_fd, &m, &ss);
 
         if (0 == ss)

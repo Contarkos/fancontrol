@@ -1,4 +1,4 @@
-// Includes globaux
+/* Includes globaux */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -8,7 +8,7 @@
 #include <poll.h>
 #include <fcntl.h>
 
-// Includes locaux
+/* Includes locaux */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
@@ -17,9 +17,9 @@
 #include "remote.h"
 #include "remote_class.h"
 
-// Variables globales
+/* Variables globales */
 
-// Definition des constructeurs
+/* Definition des constructeurs */
 REMOTE::REMOTE(const char mod_name[MAX_LENGTH_MOD_NAME], OS_mutex_t *m_main, OS_mutex_t *m_mod) : MODULE(mod_name, m_main, m_mod)
 {
     this->remote_init_pollfd();
@@ -51,7 +51,7 @@ int REMOTE::start_module()
     int ret = 0;
     char s[] = REMOTE_SOCKET_NAME;
 
-    // Init timer regulier
+    /* Init timer regulier */
     this->timer_fd = OS_create_timer(REMOTE_TIMER_USEC, &REMOTE::remote_timer_handler, OS_TIMER_PERIODIC, (void *) this);
 
     if (this->timer_fd < 0)
@@ -61,7 +61,7 @@ int REMOTE::start_module()
     }
     else
     {
-        // Ouverture socket UNIX
+        /* Ouverture socket UNIX */
         this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s);
 
         if (this->socket_fd > 0)
@@ -75,11 +75,11 @@ int REMOTE::start_module()
             ret += -2;
         }
 
-        // Configuration de la socket UDP de sortie
+        /* Configuration de la socket UDP de sortie */
         struct sockaddr_in multi_addr;
         multi_addr.sin_family = AF_INET;
-        multi_addr.sin_addr.s_addr = inet_addr(REMOTE_MULTICAST_ADDR);
         multi_addr.sin_port = htons(REMOTE_MULTICAST_PORT);
+        inet_aton(REMOTE_MULTICAST_ADDR, &multi_addr.sin_addr);
 
         ret = COM_connect_socket(AF_INET, SOCK_DGRAM, (char *) &multi_addr, &(this->udp_fd));
 
@@ -88,7 +88,7 @@ int REMOTE::start_module()
             LOG_INF3("REMOTE : creation socket UDP OK, fd = %d", this->udp_fd);
             this->p_fd[REMOTE_FD_UDP].fd = this->udp_fd;
 
-            // Suppression de la boucle de multicast
+            /* Suppression de la boucle de multicast */
             char loop_conf = 0;
             ret = setsockopt(this->udp_fd, IPPROTO_IP, IP_MULTICAST_LOOP, (char *)&loop_conf, sizeof(loop_conf));
 
@@ -97,9 +97,9 @@ int REMOTE::start_module()
                 LOG_ERR("REMOTE : sortie de boucle multicast en erreur, ret = %d", ret);
             }
 
-            // Ajout de l'interface utilisee pour envoyer les messages
+            /* Ajout de l'interface utilisee pour envoyer les messages */
             struct in_addr local_addr;
-            local_addr.s_addr = inet_addr(COM_LOCAL_IP_ADDR);
+            inet_aton(COM_LOCAL_IP_ADDR, &local_addr);
             ret += setsockopt(this->udp_fd, IPPROTO_IP, IP_MULTICAST_IF, (char *)&local_addr, sizeof(local_addr));
 
             if (ret < 0)
@@ -110,6 +110,7 @@ int REMOTE::start_module()
         else
         {
             LOG_ERR("REMOTE : error creating socket UDP");
+            /* TODO : fermer proprement la socket sur erreur */
             ret += -4;
         }
     }
@@ -117,13 +118,13 @@ int REMOTE::start_module()
     return ret;
 }
 
-// Initialisation après l'init de tous les modules
+/* Initialisation après l'init de tous les modules */
 int REMOTE::init_after_wait(void)
 {
     int ret = 0;
     char t[] = REMOTE_SOCKET_NAME;
 
-    // Connexion a la socket temp pour envoyer le message de timer
+    /* Connexion a la socket temp pour envoyer le message de timer */
     ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, t, &(this->timeout_fd));
 
     if (ret != 0)
@@ -132,28 +133,28 @@ int REMOTE::init_after_wait(void)
     }
     else
     {
-        // Demarrage du timer REMOTE
+        /* Demarrage du timer REMOTE */
         ret = OS_start_timer(this->timer_fd);
     }
 
     return ret;
 }
 
-// Arret spécifique à ce module
+/* Arret spécifique à ce module */
 int REMOTE::stop_module()
 {
     int ret = 0;
 
-    // Arret du timer
+    /* Arret du timer */
     ret += OS_stop_timer(this->timer_fd);
 
-    // Fermeture de la socket
+    /* Fermeture de la socket */
     ret += COM_close_socket(this->socket_fd);
 
-    // Fermeture socket timeout
+    /* Fermeture socket timeout */
     ret += COM_close_socket(this->timeout_fd);
 
-    // Fermeture socket UDP
+    /* Fermeture socket UDP */
     ret += COM_close_socket(this->udp_fd);
 
     return ret;
@@ -163,13 +164,13 @@ int REMOTE::exec_loop()
 {
     int ret = 0, read_fd = 0, ii;
 
-    // Ecoute sur les fd
+    /* Ecoute sur les fd */
     read_fd = poll(this->p_fd, REMOTE_FD_NB, REMOTE_POLL_TIMEOUT);
 
-    // Test de non timeout
+    /* Test de non timeout */
     if (read_fd <= 0)
     {
-        // Timeout expiré
+        /* Timeout expiré */
         LOG_WNG("REMOTE : expired timeout poll");
         ret = 1;
     }

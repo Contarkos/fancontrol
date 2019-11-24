@@ -1,6 +1,6 @@
-// Includes globaux
+/* Includes globaux */
 
-// Includes locaux
+/* Includes locaux */
 #include "base.h"
 #include "com_msg.h"
 #include "integ_log.h"
