@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
-// Includes locaux
+/* Includes locaux */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
@@ -55,7 +55,7 @@ int TEMP::temp_retrieve_data(void)
     t_uint16 d;
     float r = 1, c;
 
-    // Activation de la pin connectée au thermistor
+    /* Activation de la pin connectée au thermistor */
     ret = OS_write_gpio(TEMP_PIN_OUT, 1);
 
     if (ret < 0)
@@ -64,10 +64,10 @@ int TEMP::temp_retrieve_data(void)
     }
     else
     {
-        // Lecture de la donnée dans le AD7705
-        d = COM_adc_read_result(OS_SPI_DEVICE_0, COM_ADC_PAIR_0);
+        /* Lecture de la donnée dans le AD7705 */
+        d = COM_adc_read_result(OS_SPI_DEVICE_0, COM_ADC_PAIR_1);
 
-        // Désactivation de la pin connectée au thermistor
+        /* Désactivation de la pin connectée au thermistor */
         ret = OS_write_gpio(TEMP_PIN_OUT, 0);
 
         if ( (0 == d) || (d == COM_ADC_MAXVALUE) )
@@ -75,26 +75,26 @@ int TEMP::temp_retrieve_data(void)
             LOG_WNG("TEMP : donnée invalide pour la température, value = %d", d);
             ret = 1;
 
-            // Validité fausse pour la température
+            /* Validité fausse pour la température */
             this->fan_temp_valid = false;
         }
         else
         {
-            // Calcul de la résistance équivalente
+            /* Calcul de la résistance équivalente */
             c = (TEMP_VREF_ADC / (float) ((float) this->adc_gain * TEMP_VDD_ADC)) * (float) ( d - (COM_ADC_MAXVALUE >> 1) );
             r = (float) TEMP_THERM_COMP * (c + (COM_ADC_MAXVALUE >> 2)) / ((COM_ADC_MAXVALUE >> 2) - c);
             LOG_INF3("TEMP : valeur de la resistance, R = %f, c = %f", r, c);
 
-            // Calcul de la température (formule de Steinhart-Hart)
+            /* Calcul de la température (formule de Steinhart-Hart) */
             this->fan_temp = (TEMP_THERM_COEFF / ( (TEMP_THERM_COEFF/TEMP_THERM_DEF_TEMP) + (float) (log(r) - log(TEMP_THERM_COMP)) ))
                 - TEMP_THERM_K_TEMP;
-            //this->fan_temp = 1 / ( (1/TEMP_THERM_DEF_TEMP) + (float) (log( r / TEMP_THERM_COMP ) / TEMP_THERM_COEFF) );
+            /*this->fan_temp = 1 / ( (1/TEMP_THERM_DEF_TEMP) + (float) (log( r / TEMP_THERM_COMP ) / TEMP_THERM_COEFF) ); */
 
-            // Validité de la température
+            /* Validité de la température */
             this->fan_temp_valid = true;
         }
 
-        // Envoi de la donnée à FAN
+        /* Envoi de la donnée à FAN */
         ret = temp_send_data();
     }
 
@@ -121,13 +121,13 @@ int TEMP::temp_send_data(void)
     }
     else
     {
-        // On remplit la structure
+        /* On remplit la structure */
         d.fan_temp = this->fan_temp;
         d.fan_temp_valid = this->fan_temp_valid ? TEMP_VALIDITY_VALID : TEMP_VALIDITY_INVALID;
         d.room_temp = this->room_temp;
         d.room_temp_valid = this->room_temp_valid ? TEMP_VALIDITY_VALID : TEMP_VALIDITY_INVALID;
 
-        // On envoie le tout
+        /* On envoie le tout */
         LOG_INF1("TEMP : envoi des données");
         ret = COM_send_data(this->fan_fd, TEMP_DATA, &d, sizeof(d), 0);
 
@@ -153,7 +153,7 @@ int TEMP::temp_treat_irq()
     int ret= 0, ss;
     unsigned long d;
 
-    // Récupération des données
+    /* Récupération des données */
     ss = read(this->p_fd[TEMP_FD_IRQ].fd, &d, sizeof(unsigned long));
 
     if (0 > ss)
@@ -163,7 +163,7 @@ int TEMP::temp_treat_irq()
     }
     else
     {
-        // Lecture de la donnée de l'ADC
+        /* Lecture de la donnée de l'ADC */
         ;
     }
 

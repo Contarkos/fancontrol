@@ -1,8 +1,8 @@
-// Includes globaux
+/* Includes globaux */
 #include <stdio.h>
 #include <unistd.h>
 
-// Includes locaux
+/* Includes locaux */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
@@ -32,7 +32,7 @@ int TEMP::temp_treat_msg()
     }
     else
     {
-        // Tout va bien, on lance les traitements
+        /* Tout va bien, on lance les traitements */
         switch (m.id)
         {
             case MAIN_SHUTDOWN:

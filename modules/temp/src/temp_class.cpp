@@ -1,4 +1,4 @@
-// Includes globaux
+/* Includes globaux */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdio.h>
@@ -6,7 +6,7 @@
 #include <math.h>
 #include <fcntl.h>
 
-// Includes locaux
+/* Includes locaux */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
@@ -29,7 +29,7 @@ TEMP::TEMP() : MODULE()
 
 TEMP::~TEMP()
 {
-    // Pas de pointeurs à liberer
+    /* Pas de pointeurs à liberer */
     ;
 }
 
@@ -51,7 +51,7 @@ int TEMP::start_module()
 
     LOG_INF1("TEMP : Démarrage de la classe du module");
 
-    // Démarrage du timer pour la boucle
+    /* Démarrage du timer pour la boucle */
     this->timer_fd = OS_create_timer(TEMP_TIMER_USEC, &TEMP::temp_timer_handler, OS_TIMER_PERIODIC, (void *) this);
 
     if (0 > this->timer_fd)
@@ -63,13 +63,13 @@ int TEMP::start_module()
     {
         LOG_INF3("TEMP : timer id start = %d", timer_fd);
 
-        // Configuration du GPIO
+        /* Configuration du GPIO */
         ret += OS_set_gpio(TEMP_PIN_OUT, OS_GPIO_FUNC_OUT);
 
-        // Init de l'ADC
+        /* Init de l'ADC */
         ret += COM_adc_init(OS_SPI_DEVICE_0, COM_ADC_CLOCK_2MHZ4);
 
-        // Verification du setup
+        /* Verification du setup */
         ret += COM_adc_read_setup(OS_SPI_DEVICE_0, NULL);
         ret += COM_adc_read_clock(OS_SPI_DEVICE_0, NULL);
 
@@ -80,7 +80,7 @@ int TEMP::start_module()
         }
     }
 
-    // Ouverture socket UNIX
+    /* Ouverture socket UNIX */
     this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s);
 
     if (0 == this->socket_fd)
@@ -90,11 +90,11 @@ int TEMP::start_module()
     }
     else
     {
-        // Enregistrement de la socket
+        /* Enregistrement de la socket */
         this->p_fd[TEMP_FD_SOCKET].fd = this->socket_fd;
     }
 
-    // Requete interruption
+    /* Requete interruption */
     this->irq_fd = OS_irq_request(OS_IRQ_ADC_NAME, O_RDONLY);
 
     if (0 == this->irq_fd)
@@ -117,14 +117,14 @@ int TEMP::init_after_wait(void)
 
     LOG_INF1("TEMP : connexion en cours à la socket UNIX");
 
-    // Connexion a la socket de FAN
+    /* Connexion a la socket de FAN */
     ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, s, &(this->fan_fd));
 
     if (0 == ret)
     {
         LOG_INF1("TEMP : connexion à la socket UNIX OK, fd = %d", this->fan_fd);
 
-        // Connexion a la socket temp pour envoyer le message de timout
+        /* Connexion a la socket temp pour envoyer le message de timout */
         ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, t, &(this->timeout_fd));
 
         if (ret != 0)
@@ -133,7 +133,7 @@ int TEMP::init_after_wait(void)
         }
         else
         {
-            // Démarrage du timer pour looper
+            /* Démarrage du timer pour looper */
             ret = OS_start_timer(this->timer_fd);
 
             if (ret < 0)
@@ -146,24 +146,24 @@ int TEMP::init_after_wait(void)
     return ret;
 }
 
-// Arret spécifique pour le module
+/* Arret spécifique pour le module */
 int TEMP::stop_module()
 {
     int ret = 0;
 
-    // Arret du timer
+    /* Arret du timer */
     ret = OS_stop_timer(this->timer_fd);
 
-    // Fermeture de la socket d'écoute
+    /* Fermeture de la socket d'écoute */
     ret += COM_close_socket(this->socket_fd);
 
-    // Fermeture de la socket d'écoute
+    /* Fermeture de la socket d'écoute */
     ret += COM_close_socket(this->fan_fd);
 
-    // Fermeture socket timeout
+    /* Fermeture socket timeout */
     ret += COM_close_socket(this->timeout_fd);
 
-    // Fermeture du device SPI
+    /* Fermeture du device SPI */
     ret += OS_spi_close_port(OS_SPI_DEVICE_0);
 
     LOG_INF1("TEMP : fin du stop_module, ret = %d", ret);
@@ -176,13 +176,13 @@ int TEMP::exec_loop()
     int ret = 0;
     int read_fd = 0, ii;
 
-    // Lecture des sockets
+    /* Lecture des sockets */
     read_fd = poll(this->p_fd, TEMP_FD_NB, TEMP_POLL_TIMEOUT);
 
-    // Test de non timeout
+    /* Test de non timeout */
     if (read_fd <= 0)
     {
-        // Timeout expiré
+        /* Timeout expiré */
         ret = 1;
     }
     else

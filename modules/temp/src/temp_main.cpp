@@ -1,8 +1,8 @@
-// Includes globaux
+/* Includes globaux */
 #include <pthread.h>
 #include <stdio.h>
 
-// Inlcudes locaux
+/* Inlcudes locaux */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
@@ -28,16 +28,16 @@ int TEMP_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
 
     if (ii < NB_INSTANCES_TEMP)
     {
-        // Creation du nom de l'instance
+        /* Creation du nom de l'instance */
         snprintf(n, MAX_LENGTH_MOD_NAME, "%s_tsk%d", TEMP_MODULE_NAME, ii);
 
-        // Création de l'instance
+        /* Création de l'instance */
         instances_temp[ii].mod_config(n, m_main, m_mod);
 
-        // Creation du thread
+        /* Creation du thread */
         OS_create_thread(instances_temp[ii].MOD_getThread(),(void *) &(instances_temp[ii]));
 
-        // Init des instances
+        /* Init des instances */
         ii++;
     }
     else
@@ -58,13 +58,13 @@ int TEMP_stop(void)
 
     if (ii < NB_INSTANCES_TEMP)
     {
-        // On coupe l'execution
+        /* On coupe l'execution */
         MODULE::exit_module( &(instances_temp[ii]) );
 
-        // On réattache le thread pour éviter les zombies
+        /* On réattache le thread pour éviter les zombies */
         OS_joint_thread(instances_temp[ii].MOD_getThread(), NULL);
 
-        // Incrementation du nombre d'instances stoppées
+        /* Incrementation du nombre d'instances stoppées */
         ii++;
     }
 

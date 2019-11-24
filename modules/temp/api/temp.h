@@ -1,10 +1,10 @@
 #pragma once
 
-// Defines
+/* Defines */
 #define NB_INSTANCES_TEMP       1
 #define TEMP_SOCKET_NAME        "/tmp/temp_sock"
 
-// Typedef
+/* Typedef */
 typedef enum
 {
     TEMP_VALIDITY_INVALID = 0,
@@ -19,7 +19,7 @@ typedef struct
     t_temp_validity room_temp_valid;
 } __attribute__((packed)) t_temp_data;
 
-// API pour module TEMP
+/* API pour module TEMP */
 int TEMP_start(OS_mutex_t *m_main, OS_mutex_t *m_mod);
 
 int TEMP_stop(void);
