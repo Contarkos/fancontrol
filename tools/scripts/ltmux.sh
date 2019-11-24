@@ -15,9 +15,3 @@ echo "Launching tmux"
 /usr/bin/tmux split-window -h "htop; exec bash"
 /usr/bin/tmux split-window -v "echo Welcome aboard, captain; exec bash"
 /usr/bin/tmux select-pane -t 0
-
-# Nouvelle session pour VIM
-/usr/bin/tmux new-window -n "vim"
-/usr/bin/tmux split-window -h
-
-/usr/bin/tmux select-window -t ${SESSION}:0
