@@ -1,10 +1,10 @@
-// Includes globaux
+/* Includes globaux */
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 
-// Includes locaux
+/* Includes locaux */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
@@ -49,19 +49,19 @@ int FAN::fan_compute_duty(void)
             {
                 if (FAN_TEMP_INVALID == this->room_temp)
                 {
-                    // Calcul en mode lineaire par morceaux
+                    /* Calcul en mode lineaire par morceaux */
                     duty = compute_duty_linear(this->current_temp);
                 }
                 else
                 {
-                    // Calcul en mode differentiel
+                    /* Calcul en mode differentiel */
                     duty = compute_duty_differential(this->room_temp, this->current_temp);
                 }
             }
             break;
         case FAN_MODE_TEMP:
             {
-                // Calcul ecart de température
+                /* Calcul ecart de température */
                 duty = compute_duty_hysteresis(this->consigne_temp, this->current_temp);
             }
             break;
@@ -86,13 +86,13 @@ int FAN::fan_compute_duty(void)
             break;
     }
 
-    // En cas d'erreur
+    /* En cas d'erreur */
     if (ret >= 0)
     {
-        // Borne du dutycycle
+        /* Borne du dutycycle */
         duty = BASE_BORNE(duty, OS_MIN_PERCENT_PWM, OS_MAX_PERCENT_PWM);
 
-        // Log de debug
+        /* Log de debug */
         LOG_INF3("FAN : dutycycle courant = %f", duty);
 
         OS_pwm_set_dutycycle(duty);
@@ -115,7 +115,7 @@ int FAN::fan_treat_irq(int i_fd)
     }
     else
     {
-        // Lecture des données
+        /* Lecture des données */
         ss = read(i_fd, &(d), sizeof(d));
 
         if (sizeof(d) > ss)
@@ -125,7 +125,7 @@ int FAN::fan_treat_irq(int i_fd)
         }
         else
         {
-            // Conversion en vitesse de rotation (RPM)
+            /* Conversion en vitesse de rotation (RPM) */
             v = (int) ( FAN_SEC_TO_MSEC / (float) (FAN_HITS_PER_CYCLE * d) );
             cpt++;
 
@@ -151,7 +151,7 @@ static float compute_duty_hysteresis  (int i_cons, int i_current)
     int t;
     float d = 0;
 
-    // Gestion de l'hysteresis
+    /* Gestion de l'hysteresis */
     if (h)
     {
         t = i_cons - 1;
@@ -179,7 +179,7 @@ static float compute_duty_differential (int i_ref, int i_current)
 {
     float d = 0;
 
-    // Puis asservissement en température
+    /* Puis asservissement en température */
     d = ((float) ( i_current - i_ref ) * OS_MAX_PERCENT_PWM) / FAN_ECART_MAX_TEMP;
     return d;
 }
@@ -189,7 +189,7 @@ static float compute_duty_linear (int i_current)
     static float t = 0;
     float d = 0;
 
-    // Fonction affine par morceau
+    /* Fonction affine par morceau */
     if (i_current > FAN_TEMP_MAX)
     {
         d = FAN_DUTY_MAX;

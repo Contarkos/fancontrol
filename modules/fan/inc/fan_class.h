@@ -1,17 +1,17 @@
 #pragma once
 
-// Includes globaux
+/* Includes globaux */
 #include <poll.h>
 
-// Includes locaux
+/* Includes locaux */
 #include "os.h"
 #include "com.h"
 #include "temp.h"
 
 #define FAN_MODULE_NAME         "FAN"
-#define FAN_PIN_PWM             (OS_GPIO_PWM_0)    // Pin de sortie du signal PWM
-#define FAN_PIN_IN              (OS_GPIO_BCM_23)   // Pin non utilisee car gestion interruption
-#define FAN_PIN_OUT             (OS_GPIO_BCM_24)   // Activation/desactivation du relais de puissance
+#define FAN_PIN_PWM             (OS_GPIO_PWM_0)    /* Pin de sortie du signal PWM */
+#define FAN_PIN_IN              (OS_GPIO_BCM_23)   /* Pin non utilisee car gestion interruption */
+#define FAN_PIN_OUT             (OS_GPIO_BCM_24)   /* Activation/desactivation du relais de puissance */
 #define FAN_DEFAULT_PREC        (1024)
 #define FAN_DEFAULT_CYCLE       (0.0F)
 #define FAN_TIMER_USEC          (500000)
@@ -55,21 +55,21 @@ class FAN : public MODULE
         ~FAN();
 
     private:
-        struct pollfd p_fd[FAN_FD_NB];  // Structure pour polling
-        int timer_fd;                   // Index du timer requested
-        int timeout_fd;                 // File descriptor donné au timer pour envoyer les messages de timeout
-        int socket_fd;                  // File descriptor pour recevoir les messages
-        int irq_fd;                     // File descriptor pour recevoir les interruptions
+        struct pollfd p_fd[FAN_FD_NB];  /* Structure pour polling */
+        int timer_fd;                   /* Index du timer requested */
+        int timeout_fd;                 /* File descriptor donné au timer pour envoyer les messages de timeout */
+        int socket_fd;                  /* File descriptor pour recevoir les messages */
+        int irq_fd;                     /* File descriptor pour recevoir les interruptions */
 
         fan_e_mode current_mode;
         fan_e_power_mode current_power_mode;
 
-        int consigne_speed;     // Consigne de vitesse
-        int consigne_temp;      // Température consigne à atteindre
-        int current_temp;       // Température de l'élément à refroidir
-        int room_temp;          // Température de la pièce
+        int consigne_speed;     /* Consigne de vitesse */
+        int consigne_temp;      /* Température consigne à atteindre */
+        int current_temp;       /* Température de l'élément à refroidir */
+        int room_temp;          /* Température de la pièce */
 
-        int current_speed;      // Vitesse du ventilateur
+        int current_speed;      /* Vitesse du ventilateur */
 
         /***********************************************/
         /*             Methodes virtuelles             */
@@ -83,7 +83,7 @@ class FAN : public MODULE
         /***********************************************/
         /*             Methodes spécifiques            */
         /***********************************************/
-        // Methodes de constructeurs
+        /* Methodes de constructeurs */
         void fan_init_pollfd();
 
         void fan_setConsSpeed(int s) { this->consigne_speed = s; }
@@ -94,18 +94,18 @@ class FAN : public MODULE
 
         int  fan_set_power(fan_e_power_mode i_mode);
 
-        // Algorithme de décision pour le dutycycle
+        /* Algorithme de décision pour le dutycycle */
         static void fan_timer_handler_old(int i_timer_id, void * i_data);
         static void fan_timer_handler(int i_timer_id, void * i_data);
         int fan_compute_duty(void);
 
-        // Recuperation des données
+        /* Recuperation des données */
         int fan_treat_msg(int i_fd);
         int fan_update_mode(t_fan_mode *i_data);
         int fan_update_power(t_fan_power_mode *i_data);
         int fan_update_data(t_temp_data *i_data);
 
-        // Gestion IT
+        /* Gestion IT */
         int fan_treat_irq(int i_fd);
 };
 

@@ -1,8 +1,8 @@
-// Includes globaux
+/* Includes globaux */
 #include <stdio.h>
 #include <unistd.h>
 
-// Includes locaux
+/* Includes locaux */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
@@ -25,7 +25,7 @@ int FAN::fan_treat_msg(int i_fd)
     }
     else
     {
-        // Recuperation des données du message
+        /* Recuperation des données du message */
         ret = COM_receive_data(i_fd, &m, &ss);
 
         if (0 == ss)
@@ -66,7 +66,7 @@ int FAN::fan_update_data(t_temp_data *i_data)
 {
     int ret = 0;
 
-    // Mise à jour des données venant du module de température
+    /* Mise à jour des données venant du module de température */
     if (TEMP_VALIDITY_VALID == i_data->fan_temp_valid)
     {
         LOG_INF3("FAN : température ventilateur mise à jour, T = %f", i_data->fan_temp);
@@ -147,10 +147,10 @@ int FAN::fan_set_power(fan_e_power_mode i_mode)
     {
         case FAN_POWER_MODE_OFF:
         case FAN_POWER_MODE_ON:
-            // Sauvegarde de l'état
+            /* Sauvegarde de l'état */
             this->current_power_mode = i_mode;
 
-            // Set de pin selon l'etat en cours
+            /* Set de pin selon l'etat en cours */
             ret = OS_write_gpio(FAN_PIN_OUT, this->current_power_mode);
 
             break;

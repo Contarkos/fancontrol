@@ -1,4 +1,4 @@
-// Includes globaux
+/* Includes globaux */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdio.h>
@@ -6,7 +6,7 @@
 #include <poll.h>
 #include <fcntl.h>
 
-// Includes locaux
+/* Includes locaux */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
@@ -15,7 +15,7 @@
 #include "fan.h"
 #include "fan_class.h"
 
-// Variables globales
+/* Variables globales */
 
 /* Définition des constructeurs */
 FAN::FAN(const char mod_name[MAX_LENGTH_MOD_NAME], OS_mutex_t *m_main, OS_mutex_t *m_mod) : MODULE(mod_name, m_main, m_mod)
@@ -51,7 +51,7 @@ int FAN::start_module()
 
     LOG_INF1("FAN : Démarrage de la classe du module");
 
-    // Démarrage du timer pour la boucle
+    /* Démarrage du timer pour la boucle */
     this->timer_fd = OS_create_timer(FAN_TIMER_USEC, &FAN::fan_timer_handler, OS_TIMER_PERIODIC, (void *) this);
 
     if (0 > this->timer_fd)
@@ -61,34 +61,34 @@ int FAN::start_module()
     }
     else
     {
-        // Set de la diode en entrée pour lire la vitesse
+        /* Set de la diode en entrée pour lire la vitesse */
         ret += OS_set_gpio(FAN_PIN_IN, OS_GPIO_FUNC_IN);
 
-        // Set de la pin en sortie pour le controle de l'allumage
+        /* Set de la pin en sortie pour le controle de l'allumage */
         ret += OS_set_gpio(FAN_PIN_OUT, OS_GPIO_FUNC_OUT);
 
-        // Set de la diode en sortie en PWM
+        /* Set de la diode en sortie en PWM */
         ret += OS_set_gpio(FAN_PIN_PWM, OS_GPIO_FUNC_ALT5);
 
-        // Reglage source Clock sur PLL C
+        /* Reglage source Clock sur PLL C */
         ret += OS_pwm_set_clock_source(OS_CLOCK_SRC_PLLC);
 
-        // Mode MS pour le PWM
+        /* Mode MS pour le PWM */
         ret += OS_pwm_set_mode(OS_PWM_MODE_MSMODE);
 
-        // Cycle par défaut : 1024
+        /* Cycle par défaut : 1024 */
         ret += OS_pwm_set_precision(FAN_DEFAULT_PREC);
 
-        // Reglage du filter MASH par défaut
+        /* Reglage du filter MASH par défaut */
         ret += OS_pwm_set_mash(OS_PWM_MASH_FILTER_1);
 
-        // Reglage de la fréquence PWM
+        /* Reglage de la fréquence PWM */
         ret += OS_pwm_set_frequency(FAN_PWM_FREQ);
 
-        // Reglage du duty cycle par defaut : 50%
+        /* Reglage du duty cycle par defaut : 50% */
         ret += OS_pwm_set_dutycycle(FAN_DEFAULT_CYCLE);
 
-        // Activation...
+        /* Activation... */
         ret += OS_pwn_enable(OS_STATE_ON);
 
         if (ret < 0)
@@ -98,10 +98,10 @@ int FAN::start_module()
         }
         else
         {
-            // Creation socket
+            /* Creation socket */
             LOG_INF1("FAN : création de la socket d'écoute");
 
-            // Ouverture socket UNIX
+            /* Ouverture socket UNIX */
             this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s);
 
             if (this->socket_fd > 0)
@@ -119,7 +119,7 @@ int FAN::start_module()
 
     if (0 == ret)
     {
-        // Requete interruption
+        /* Requete interruption */
         this->irq_fd = OS_irq_request(OS_IRQ_TIME_NAME, O_RDONLY);
 
         if (0 == this->irq_fd)
@@ -137,13 +137,13 @@ int FAN::start_module()
     return ret;
 }
 
-// Initialisation après l'init de tous les modules
+/* Initialisation après l'init de tous les modules */
 int FAN::init_after_wait(void)
 {
     int ret = 0;
     char t[] = FAN_SOCKET_NAME;
 
-    // Connexion a la socket temp pour envoyer le message de timer
+    /* Connexion a la socket temp pour envoyer le message de timer */
     ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, t, &(this->timeout_fd));
 
     if (ret != 0)
@@ -152,7 +152,7 @@ int FAN::init_after_wait(void)
     }
     else
     {
-        // Demarrage du timer
+        /* Demarrage du timer */
         ret = OS_start_timer(this->timer_fd);
 
         if (ret < 0)
@@ -161,7 +161,7 @@ int FAN::init_after_wait(void)
         }
         else
         {
-            // Allumage du fan
+            /* Allumage du fan */
             this->fan_set_power(FAN_POWER_MODE_ON);
         }
     }
@@ -169,24 +169,24 @@ int FAN::init_after_wait(void)
     return ret;
 }
 
-// Arret spécifique à ce module
+/* Arret spécifique à ce module */
 int FAN::stop_module()
 {
     int ret = 0;
 
-    // Arret du ventilateur
+    /* Arret du ventilateur */
     ret += this->fan_set_power(FAN_POWER_MODE_OFF);
 
-    // Arret du timer
+    /* Arret du timer */
     ret += OS_stop_timer(this->timer_fd);
 
-    // Fermeture de la socket
+    /* Fermeture de la socket */
     ret += COM_close_socket(this->socket_fd);
 
-    // Fermeture socket timeout
+    /* Fermeture socket timeout */
     ret += COM_close_socket(this->timeout_fd);
 
-    // Fermeture IRQ
+    /* Fermeture IRQ */
     ret += OS_irq_close(this->irq_fd);
 
     LOG_INF3("FAN : fin du stop_module, ret = %d", ret);
@@ -197,13 +197,13 @@ int FAN::exec_loop()
 {
     int ret = 0, read_fd = 0, ii;
 
-    // Ecoute sur les fd
+    /* Ecoute sur les fd */
     read_fd = poll(this->p_fd, FAN_FD_NB, FAN_POLL_TIMEOUT);
 
-    // Test de non timeout
+    /* Test de non timeout */
     if (read_fd <= 0)
     {
-        // Timeout expiré
+        /* Timeout expiré */
         LOG_WNG("FAN : timeout poll expiré");
         ret = 1;
     }

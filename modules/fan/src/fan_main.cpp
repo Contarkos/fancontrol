@@ -1,8 +1,8 @@
-// Includes globaux
+/* Includes globaux */
 #include <stdio.h>
 #include <pthread.h>
 
-// Inlcudes locaux
+/* Inlcudes locaux */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
@@ -28,16 +28,16 @@ int FAN_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
 
     if (ii < NB_INSTANCES_FAN)
     {
-        // Creation du nom de l'instance
+        /* Creation du nom de l'instance */
         snprintf(n, MAX_LENGTH_MOD_NAME, "%s_tsk%d", FAN_MODULE_NAME, ii);
 
-        // Création de l'instance
+        /* Création de l'instance */
         instances_fan[ii].mod_config(n, m_main, m_mod);
 
-        // Creation du thread
+        /* Creation du thread */
         OS_create_thread(instances_fan[ii].MOD_getThread(),(void *) &(instances_fan[ii]));
 
-        // Init des instances
+        /* Init des instances */
         ii++;
     }
     else
@@ -58,13 +58,13 @@ int FAN_stop(void)
 
     if (ii < NB_INSTANCES_FAN)
     {
-        // On coupe l'execution
+        /* On coupe l'execution */
         MODULE::exit_module( &(instances_fan[ii]) );
 
-        // On réattache le thread pour éviter les zombies
+        /* On réattache le thread pour éviter les zombies */
         OS_joint_thread(instances_fan[ii].MOD_getThread(), NULL);
 
-        // Incrementation du nombre d'instances stoppées
+        /* Incrementation du nombre d'instances stoppées */
         ii++;
     }
 

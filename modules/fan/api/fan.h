@@ -1,11 +1,11 @@
 #pragma once
 
-// Defines
+/* Defines */
 #define NB_INSTANCES_FAN        1
 #define FAN_MAX_SPEED           1350
 #define FAN_SOCKET_NAME         "/tmp/fan_sock"
 
-// Types
+/* Types */
 typedef enum
 {
     FAN_MODE_AUTO = 0,
@@ -29,9 +29,9 @@ typedef struct
     fan_e_power_mode power_mode;
 } __attribute__((packed)) t_fan_power_mode;
 
-// Variables globales
+/* Variables globales */
 
-// API pour module FAN
+/* API pour module FAN */
 int FAN_start(OS_mutex_t *m_main, OS_mutex_t *m_mod);
 
 int FAN_stop(void);
