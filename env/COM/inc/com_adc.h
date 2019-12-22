@@ -42,10 +42,11 @@
 #define COM_ADC_CLK_DIS_MASK    ((t_uint8) 0x10)
 
 /* Variables globales */
-extern t_com_adc_setup com_device_0_setup;
-extern t_com_adc_setup com_device_1_setup;
+extern t_com_adc_setup com_spi_device_array[OS_SPI_DEVICE_NB];
 
 /* Fonctions locales */
+t_com_adc_setup* com_adc_get_device(t_os_spi_device i_device);
+
 int com_adc_config_setup(t_os_spi_device i_device);
 int com_adc_config_clock(t_os_spi_device i_device);
 

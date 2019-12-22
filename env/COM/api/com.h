@@ -72,6 +72,7 @@ typedef enum
     COM_ADC_PAIR_1 = 1, /* AIN2(+) / AIN2(-) */
     COM_ADC_PAIR_2 = 2, /* AIN1(-) / AIN1(-) */
     COM_ADC_PAIR_3 = 3, /* AIN1(-) / AIN2(-) */
+    COM_ADC_PAIR_NB
 } t_com_adc_pair;
 
 typedef enum
@@ -117,6 +118,7 @@ typedef enum
 typedef struct
 {
     t_uint32 pin_rst;
+    t_uint32 pin_rdy;
     t_com_adc_clock clk_disable;
     t_com_state clk_div;
     t_com_adc_clock_rate clk_rate;
