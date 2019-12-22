@@ -96,24 +96,25 @@ int FAN::start_module()
             LOG_ERR("FAN : erreur lors du parametrage du PWM, ret = %d", ret);
             return ret;
         }
+    }
+
+    if (0 == ret)
+    {
+        /* Creation socket */
+        LOG_INF1("FAN : création de la socket d'écoute");
+
+        /* Ouverture socket UNIX */
+        this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s, sizeof(s));
+
+        if (this->socket_fd > 0)
+        {
+            LOG_INF3("FAN : creation socket OK, fd = %d", this->socket_fd);
+            this->p_fd[FAN_FD_SOCKET].fd = this->socket_fd;
+        }
         else
         {
-            /* Creation socket */
-            LOG_INF1("FAN : création de la socket d'écoute");
-
-            /* Ouverture socket UNIX */
-            this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s);
-
-            if (this->socket_fd > 0)
-            {
-                LOG_INF3("FAN : creation socket OK, fd = %d", this->socket_fd);
-                this->p_fd[FAN_FD_SOCKET].fd = this->socket_fd;
-            }
-            else
-            {
-                LOG_ERR("FAN : erreur à la création de la socket");
-                ret = -1;
-            }
+            LOG_ERR("FAN : erreur à la création de la socket");
+            ret = -1;
         }
     }
 
@@ -144,7 +145,7 @@ int FAN::init_after_wait(void)
     char t[] = FAN_SOCKET_NAME;
 
     /* Connexion a la socket temp pour envoyer le message de timer */
-    ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, t, &(this->timeout_fd));
+    ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, t, sizeof(t), &(this->timeout_fd));
 
     if (ret != 0)
     {

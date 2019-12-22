@@ -64,12 +64,12 @@ class FAN : public MODULE
         fan_e_mode current_mode;
         fan_e_power_mode current_power_mode;
 
-        int consigne_speed;     /* Consigne de vitesse */
+        t_uint32 consigne_speed;     /* Consigne de vitesse */
         int consigne_temp;      /* Température consigne à atteindre */
         int current_temp;       /* Température de l'élément à refroidir */
         int room_temp;          /* Température de la pièce */
 
-        int current_speed;      /* Vitesse du ventilateur */
+        t_uint32 current_speed;      /* Vitesse du ventilateur */
 
         /***********************************************/
         /*             Methodes virtuelles             */

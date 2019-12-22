@@ -81,7 +81,7 @@ int TEMP::start_module()
     }
 
     /* Ouverture socket UNIX */
-    this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s);
+    this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s, sizeof(s));
 
     if (0 == this->socket_fd)
     {
@@ -118,14 +118,14 @@ int TEMP::init_after_wait(void)
     LOG_INF1("TEMP : connexion en cours à la socket UNIX");
 
     /* Connexion a la socket de FAN */
-    ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, s, &(this->fan_fd));
+    ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, s, sizeof(s), &(this->fan_fd));
 
     if (0 == ret)
     {
         LOG_INF1("TEMP : connexion à la socket UNIX OK, fd = %d", this->fan_fd);
 
         /* Connexion a la socket temp pour envoyer le message de timout */
-        ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, t, &(this->timeout_fd));
+        ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, t, sizeof(t), &(this->timeout_fd));
 
         if (ret != 0)
         {

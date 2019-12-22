@@ -62,7 +62,7 @@ int REMOTE::start_module()
     else
     {
         /* Ouverture socket UNIX */
-        this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s);
+        this->socket_fd = COM_create_socket(AF_UNIX, SOCK_DGRAM, 0, s, sizeof(s));
 
         if (this->socket_fd > 0)
         {
@@ -81,7 +81,7 @@ int REMOTE::start_module()
         multi_addr.sin_port = htons(REMOTE_MULTICAST_PORT);
         inet_aton(REMOTE_MULTICAST_ADDR, &multi_addr.sin_addr);
 
-        ret = COM_connect_socket(AF_INET, SOCK_DGRAM, (char *) &multi_addr, &(this->udp_fd));
+        ret = COM_connect_socket(AF_INET, SOCK_DGRAM, (char *) &multi_addr, sizeof(struct sockaddr_in), &(this->udp_fd));
 
         if (this->udp_fd > 0)
         {
@@ -124,8 +124,10 @@ int REMOTE::init_after_wait(void)
     int ret = 0;
     char t[] = REMOTE_SOCKET_NAME;
 
+    printf("Taille pour t = %d", sizeof(t));
+
     /* Connexion a la socket temp pour envoyer le message de timer */
-    ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, t, &(this->timeout_fd));
+    ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, t, sizeof(t), &(this->timeout_fd));
 
     if (ret != 0)
     {
