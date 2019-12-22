@@ -24,7 +24,7 @@ int COM_init(void)
     if (0 == ret)
     {
         /* Open the external socket */
-        com_extern_socket = COM_create_socket(AF_INET, SOCK_STREAM, 0, (char *) &d);
+        com_extern_socket = COM_create_socket(AF_INET, SOCK_STREAM, 0, (char *) &d, sizeof(t_com_inet_data));
 
         if (-1 == com_extern_socket)
         {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pthread.h>
+#include <semaphore.h>
 #include <linux/spi/spidev.h>     /* Needed for SPI port */
 
 #include "base.h"
@@ -38,6 +39,20 @@ typedef struct
     pthread_mutexattr_t attr;
     t_os_ret_okko is_init;
 } OS_mutex_t;
+
+typedef struct
+{
+    sem_t semaphore;
+    t_uint32 init_value;
+    t_os_ret_okko is_init;
+} OS_semaphore_t;
+
+typedef struct
+{
+    int fd;
+    t_uint32 init_value;
+    t_os_ret_okko is_init;
+} OS_semfd_t;
 
 typedef enum
 {
@@ -204,6 +219,20 @@ int OS_mutex_lock(OS_mutex_t *i_mutex);
 int OS_mutex_unlock(OS_mutex_t *i_mutex);
 
 int OS_signal_send(OS_thread_t *i_p_thread, int i_signal);
+
+/* Semaphores handling */
+int OS_sem_init         (OS_semaphore_t *i_sem, t_uint32 i_value);
+int OS_sem_destroy      (OS_semaphore_t *i_sem);
+int OS_sem_post         (OS_semaphore_t *i_sem);
+int OS_sem_wait         (OS_semaphore_t *i_sem);
+int OS_sem_trywait      (OS_semaphore_t *i_sem);
+
+int OS_semfd_init       (OS_semfd_t *i_sem, t_uint32 i_value);
+int OS_semfd_destroy    (OS_semfd_t *i_sem);
+int OS_semfd_post       (OS_semfd_t *i_sem);
+int OS_semfd_wait       (OS_semfd_t *i_sem);
+int OS_semfd_trywait    (OS_semfd_t *i_sem);
+int OS_semfd_timedwait  (OS_semfd_t *i_sem, int i_timeout);
 
 /* About GPIO */
 int OS_set_gpio (t_uint32 i_pin, t_os_gpio_func i_inout);

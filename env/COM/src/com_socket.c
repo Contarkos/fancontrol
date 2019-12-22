@@ -30,7 +30,7 @@
 /*****************************************************************************/
 
 // Creation et binding d'une socket
-int COM_create_socket(int i_family, int i_type, int i_proto, char *i_data)
+int COM_create_socket(int i_family, int i_type, int i_proto, char *i_data, size_t i_size)
 {
     int fd = 0, ret = 0;
 
@@ -47,7 +47,7 @@ int COM_create_socket(int i_family, int i_type, int i_proto, char *i_data)
         switch (i_family)
         {
             case AF_UNIX:
-                ret = com_bind_socket_unix(fd, i_data);
+                ret = com_bind_socket_unix(fd, i_data, i_size);
                 break;
             case AF_INET:
                 ret = com_bind_socket_inet(fd, i_data);
@@ -72,7 +72,7 @@ int COM_create_socket(int i_family, int i_type, int i_proto, char *i_data)
 }
 
 // TODO gestion des protocoles
-int COM_connect_socket(int i_family, int i_type, char * i_data, int *o_fd)
+int COM_connect_socket(int i_family, int i_type, char * i_data, size_t i_size, int *o_fd)
 {
     int ret = 0;
 
@@ -90,7 +90,7 @@ int COM_connect_socket(int i_family, int i_type, char * i_data, int *o_fd)
         switch (i_family)
         {
             case AF_UNIX:
-                ret = com_connect_unix(*o_fd, i_data);
+                ret = com_connect_unix(*o_fd, i_data, i_size);
                 break;
             case AF_INET:
                 ret = com_connect_inet(*o_fd, i_data);
@@ -161,10 +161,12 @@ int COM_send_data(int i_fd, t_uint32 i_id, void * i_data, size_t i_size, int i_f
         if (ret_s < 0)
         {
             LOG_ERR("COM : erreur d'envoi des données, errno = %d", errno);
+            ret = -4;
         }
         else if (s != (size_t) ret_s)
         {
             LOG_ERR("COM : erreur de taille des donnees envoyees, %d != %d", s, ret_s);
+            ret = -8;
         }
         else
         {
@@ -256,14 +258,14 @@ int COM_close_socket(int i_fd)
 /*                             Fonctions locales                             */
 /*****************************************************************************/
 
-int com_bind_socket_unix(int fd, char *data)
+int com_bind_socket_unix(int fd, char *data, size_t size_data)
 {
     int ret = 0;
     struct sockaddr_un a;
 
     // Init des parametres de la socket
     a.sun_family = AF_UNIX;
-    strncpy(a.sun_path, data, BASE_MIN(strlen(a.sun_path), COM_UNIX_PATH_MAX));
+    strncpy(a.sun_path, data, size_data);
 
     // Suppression de l'ancienne socket
     (void)unlink(a.sun_path);
@@ -289,14 +291,14 @@ int com_bind_socket_inet(int fd, char *data)
     return ret;
 }
 
-int com_connect_unix(int fd, char *data)
+int com_connect_unix(int fd, char *data, size_t size_data)
 {
     int ret = 0;
     struct sockaddr_un a;
 
     // Init des parametres de la socket
     a.sun_family = AF_UNIX;
-    strncpy(a.sun_path, data, BASE_MIN(strlen(a.sun_path), COM_UNIX_PATH_MAX));
+    strncpy(a.sun_path, data, size_data);
 
     LOG_INF1("COM : nom de la socket = %s", a.sun_path);
 

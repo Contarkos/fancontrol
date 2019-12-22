@@ -63,6 +63,12 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
             ret = -1;
     }
 
+    if (0 == ret && 0 > spi_device->fd)
+    {
+        LOG_ERR("OS : bad file descriptor, fd = %d, err = %d", spi_device->fd, errno);
+        ret = -2;
+    }
+
     if (0 == ret)
     {
         /*----- SET SPI MODE ----- */
@@ -157,8 +163,9 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
                 return(1);
             }
 
-            LOG_INF3("OS : SPI status for SPI%d : mode = %d, BPW = %d, speed = %d",
+            LOG_INF3("OS : SPI status for SPI%d : fd = %d, mode = %d, BPW = %d, speed = %d",
                      spi_device->id,
+                     spi_device->fd,
                      spi_device->mode,
                      spi_device->bits_per_word,
                      spi_device->speed);
@@ -196,7 +203,7 @@ int OS_spi_close_port (t_os_spi_device i_spi_id)
 
         if(ret < 0)
         {
-            LOG_ERR("OS : Could not close SPI device %d", spi_device->id);
+            LOG_ERR("OS : Could not close SPI device %d with fd = %d, err = %d", spi_device->id, spi_device->fd, errno);
         }
     }
 

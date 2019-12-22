@@ -23,7 +23,7 @@ extern "C" {
 /*****************************************************************************/
 
 #define COM_LOCAL_IP_ADDR       "192.168.0.101"
-#define COM_UNIX_PATH_MAX       108
+#define COM_UNIX_PATH_MAX       108U
 #define COM_ADC_MAXVALUE        (65535)     /* Max output value for the ADC */
 #define COM_EXTERN_BACKLOG      128
 
@@ -150,8 +150,8 @@ int COM_init(void);
 int COM_stop(void);
 
 /* Functions API */
-int COM_create_socket(int i_family, int i_type, int i_proto, char *i_data);
-int COM_connect_socket(int i_family, int i_type, char * i_data, int *o_fd);
+int COM_create_socket(int i_family, int i_type, int i_proto, char *i_data, size_t i_size);
+int COM_connect_socket(int i_family, int i_type, char * i_data, size_t i_size, int *o_fd);
 int COM_socket_listen(int i_fd, int i_backlog);
 int COM_send_data(int i_fd, t_uint32 i_id, void * i_data, size_t i_size, int i_flags);
 int COM_receive_data(int i_sock, t_com_msg *o_m, int *o_size);
@@ -165,7 +165,7 @@ int COM_msg_unsub(t_com_id_modules i_module, t_uint32 i_msg);
 int COM_msg_unsub_array(t_com_id_modules i_module, t_uint32 *i_msg, t_uint32 i_size);
 
 int COM_msg_send(t_uint32 i_msg, char* i_data, t_uint32 i_size);
-int COM_msg_register(t_com_id_modules i_module, OS_thread_t *i_thread, int i_signal);
+int COM_msg_register(t_com_id_modules i_module, OS_semfd_t **o_semfd);
 
 /*---------------------------------------------------------------------------*/
 /* AD7705 handling                                                           */

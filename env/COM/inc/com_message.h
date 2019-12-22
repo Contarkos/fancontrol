@@ -29,9 +29,7 @@ typedef struct
     /* Mutex to protect access to the queue */
     OS_mutex_t mutex;
     /* Signal number to raise when a new message is here */
-    int signal;
-    /* Module to send the data to */
-    OS_thread_t *module;
+    OS_semfd_t semfd;
     /* Points to the current index of the first unread message in the array */
     t_uint32 cur_index;
     /* Number of messages to be read */

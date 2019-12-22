@@ -100,6 +100,7 @@ int COM_msg_subscribe(t_com_id_modules i_module, t_uint32 i_msg)
     return ret;
 }
 
+/* Add multiple messages at once. */
 int COM_msg_subscribe_array(t_com_id_modules i_module, t_uint32* i_msg_array, t_uint32 i_size)
 {
     int ret = 0;
@@ -298,7 +299,7 @@ int COM_msg_send(t_uint32 i_msg, char* i_data, t_uint32 i_size)
             msg_queue = &com_list_queues[id_module];
 
             if (OS_RET_OK == msg_queue->is_init)
-                ret = OS_signal_send(msg_queue->module, msg_queue->signal);
+                ret = OS_semfd_post(&msg_queue->semfd);
             else
                 ret = -8;
         }
@@ -308,7 +309,7 @@ int COM_msg_send(t_uint32 i_msg, char* i_data, t_uint32 i_size)
 }
 
 /* Register a module with its subscribing list */
-int COM_msg_register(t_com_id_modules i_module, OS_thread_t *i_thread, int i_signal)
+int COM_msg_register(t_com_id_modules i_module, OS_semfd_t **o_semfd)
 {
     int ret = 0;
     t_com_msg_list *msg_queue;
@@ -335,10 +336,8 @@ int COM_msg_register(t_com_id_modules i_module, OS_thread_t *i_thread, int i_sig
     {
         msg_queue = &com_list_queues[i_module];
 
-        msg_queue->signal = i_signal;
-
-        if (i_thread)
-            msg_queue->module = i_thread;
+        if (msg_queue->semfd.is_init == OS_RET_OK)
+            *o_semfd = &msg_queue->semfd;
         else
             ret = -2;
     }
@@ -358,12 +357,18 @@ int com_init_msg(void)
     /* Init all the mutexes for the queues */
     for (ii = 0; ii < COM_BASE_LAST; ii++)
     {
-        com_list_queues[ii].module = NULL;
-        com_list_queues[ii].signal = 0;
         com_list_queues[ii].cur_index = 0;
         com_list_queues[ii].nb_msg = 0;
 
         ret = OS_mutex_init(&com_list_queues[ii].mutex);
+
+        if (0 != ret)
+        {
+            com_list_queues[ii].is_init = OS_RET_KO;
+            continue;
+        }
+
+        ret = OS_semfd_init(&com_list_queues[ii].semfd, 0);
 
         if (0 != ret)
             com_list_queues[ii].is_init = OS_RET_KO;
@@ -380,7 +385,15 @@ int com_stop_msg(void)
     /* Destroy all the mutexes for the queues */
     for (ii = 0; ii < COM_BASE_LAST; ii++)
     {
-        ret = OS_mutex_destroy(&com_list_queues[ii].mutex);
+        ret += OS_mutex_destroy(&com_list_queues[ii].mutex);
+
+        if (ret)
+           LOG_ERR("OS : error while destroying queue's mutex, index = %d", ii);
+
+        ret += OS_semfd_destroy(&com_list_queues[ii].semfd);
+
+        if (ret)
+           LOG_ERR("OS : error while destroying queue's semfd, index = %d", ii);
     }
 
     return ret;
