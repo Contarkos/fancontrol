@@ -15,24 +15,6 @@
 #include "os.h"
 #include "os_spi.h"
 
-t_os_spi_struct spi_device_0 =
-{
-    .fd = 0,
-    .mode = SPI_MODE_0, /* CPOL = 0 et CPHA = 0 */
-    .bits_per_word = 8, /* 8 bits par mots */
-    .speed = 1000000,   /* 1MHz */
-    .id = OS_SPI_DEVICE_0
-};
-
-t_os_spi_struct spi_device_1 =
-{
-    .fd = 0,
-    .mode = SPI_MODE_0, /* CPOL = 0 et CPHA = 0 */
-    .bits_per_word = 8, /* 8 bits par mots */
-    .speed = 1000000,   /* 1MHz */
-    .id = OS_SPI_DEVICE_1
-};
-
 t_os_spi_struct spi_devices_array[OS_SPI_DEVICE_NB] = 
 {
     {
