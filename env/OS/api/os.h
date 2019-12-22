@@ -152,6 +152,8 @@ typedef enum
 
 #define OS_MAX_LENGTH_LONG      10
 
+#define OS_MAX_LENGTH_FILENAME  256
+
 /* Define for the pins of the GPIOs on a Rpi */
 #define OS_GPIO_BCM_0           0U
 #define OS_GPIO_BCM_1           1U

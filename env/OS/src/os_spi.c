@@ -33,6 +33,26 @@ t_os_spi_struct spi_device_1 =
     .id = OS_SPI_DEVICE_1
 };
 
+t_os_spi_struct spi_devices_array[OS_SPI_DEVICE_NB] = 
+{
+    {
+        .filename = OS_FILE_SPI0,
+        .fd = 0,
+        .mode = SPI_MODE_0, /* CPOL = 0 et CPHA = 0 */
+        .bits_per_word = 8, /* 8 bits par mots */
+        .speed = 1000000,   /* 1MHz */
+        .id = OS_SPI_DEVICE_0
+    },
+    {
+        .filename = OS_FILE_SPI1,
+        .fd = 0,
+        .mode = SPI_MODE_0, /* CPOL = 0 et CPHA = 0 */
+        .bits_per_word = 8, /* 8 bits par mots */
+        .speed = 1000000,   /* 1MHz */
+        .id = OS_SPI_DEVICE_1
+    },
+};
+
 t_os_ret_okko is_init_spi = OS_RET_KO;
 
 /* Mutex pour les acces aux registres SPI */
@@ -47,26 +67,23 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
     int ret = 0;
     t_os_spi_struct *spi_device;
 
-    switch (i_spi_id)
+    spi_device = os_spi_get_device(i_spi_id);
+
+    if (NULL == spi_device)
     {
-        case OS_SPI_DEVICE_0:
-            spi_device = &spi_device_0;
-            spi_device->fd = open(OS_FILE_SPI0, O_RDWR | O_NONBLOCK);
-            break;
-        case OS_SPI_DEVICE_1:
-            spi_device = &spi_device_1;
-            spi_device->fd = open(OS_FILE_SPI1, O_RDWR | O_NONBLOCK);
-            break;
-        case OS_SPI_DEVICE_NB:
-        default:
-            LOG_ERR("OS : device SPI inexistant");
-            ret = -1;
+        LOG_ERR("OS : device SPI inexistant");
+        ret = -1;
     }
 
-    if (0 == ret && 0 > spi_device->fd)
+    if (0 == ret)
     {
-        LOG_ERR("OS : bad file descriptor, fd = %d, err = %d", spi_device->fd, errno);
-        ret = -2;
+        spi_device->fd = open(spi_device->filename, O_RDWR | O_NONBLOCK);
+
+        if (spi_device->fd < 0)
+        {
+            LOG_ERR("OS : bad file descriptor, fd = %d, err = %d", spi_device->fd, errno);
+            ret = -2;
+        }
     }
 
     if (0 == ret)
@@ -103,76 +120,72 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
 
         /*----- SET SPI BUS SPEED ----- */
         if (i_speed <= OS_MAX_SPI_SPEED)
-        {
             spi_device->speed = i_speed;
-        }
         else
-        {
             ret += -8;
-        }
-
-        if (0 == ret)
-        {
-            LOG_INF1("OS : ouverture fichier SPI%d", spi_device->id);
-
-            if (spi_device->fd < 0)
-            {
-                LOG_ERR("OS : Error - Could not open SPI device");
-                return(1);
-            }
-
-            ret = ioctl(spi_device->fd, SPI_IOC_WR_MODE, &(spi_device->mode));
-            if(ret < 0)
-            {
-                LOG_ERR("OS : Could not set SPIMode (WR)...ioctl fail");
-                return(1);
-            }
-
-            ret = ioctl(spi_device->fd, SPI_IOC_RD_MODE, &(spi_device->mode));
-            if(ret < 0)
-            {
-                LOG_ERR("OS : Could not set SPIMode (RD)...ioctl fail");
-                return(1);
-            }
-
-            ret = ioctl(spi_device->fd, SPI_IOC_WR_BITS_PER_WORD, &(spi_device->bits_per_word));
-            if(ret < 0)
-            {
-                LOG_ERR("OS : Could not set SPI bitsPerWord (WR)...ioctl fail, errno = %d", errno);
-                return(1);
-            }
-
-            ret = ioctl(spi_device->fd, SPI_IOC_RD_BITS_PER_WORD, &(spi_device->bits_per_word));
-            if(ret < 0)
-            {
-                LOG_ERR("OS : Could not set SPI bitsPerWord(RD)...ioctl fail");
-                return(1);
-            }
-
-            ret = ioctl(spi_device->fd, SPI_IOC_WR_MAX_SPEED_HZ, &(spi_device->speed));
-            if(ret < 0)
-            {
-                LOG_ERR("OS : Could not set SPI speed (WR)...ioctl fail");
-                return(1);
-            }
-
-            ret = ioctl(spi_device->fd, SPI_IOC_RD_MAX_SPEED_HZ, &(spi_device->speed));
-            if(ret < 0)
-            {
-                LOG_ERR("OS : Could not set SPI speed (RD)...ioctl fail");
-                return(1);
-            }
-
-            LOG_INF3("OS : SPI status for SPI%d : fd = %d, mode = %d, BPW = %d, speed = %d",
-                     spi_device->id,
-                     spi_device->fd,
-                     spi_device->mode,
-                     spi_device->bits_per_word,
-                     spi_device->speed);
-        }
     }
 
-    return(ret);
+    if (0 == ret)
+    {
+        LOG_INF1("OS : ouverture fichier SPI%d", spi_device->id);
+
+        if (spi_device->fd < 0)
+        {
+            LOG_ERR("OS : Error - Could not open SPI device");
+            return 1;
+        }
+
+        ret = ioctl(spi_device->fd, SPI_IOC_WR_MODE, &(spi_device->mode));
+        if(ret < 0)
+        {
+            LOG_ERR("OS : Could not set SPIMode (WR)...ioctl fail");
+            return 1;
+        }
+
+        ret = ioctl(spi_device->fd, SPI_IOC_RD_MODE, &(spi_device->mode));
+        if(ret < 0)
+        {
+            LOG_ERR("OS : Could not set SPIMode (RD)...ioctl fail");
+            return 1;
+        }
+
+        ret = ioctl(spi_device->fd, SPI_IOC_WR_BITS_PER_WORD, &(spi_device->bits_per_word));
+        if(ret < 0)
+        {
+            LOG_ERR("OS : Could not set SPI bitsPerWord (WR)...ioctl fail, errno = %d", errno);
+            return 1;
+        }
+
+        ret = ioctl(spi_device->fd, SPI_IOC_RD_BITS_PER_WORD, &(spi_device->bits_per_word));
+        if(ret < 0)
+        {
+            LOG_ERR("OS : Could not set SPI bitsPerWord(RD)...ioctl fail");
+            return 1;
+        }
+
+        ret = ioctl(spi_device->fd, SPI_IOC_WR_MAX_SPEED_HZ, &(spi_device->speed));
+        if(ret < 0)
+        {
+            LOG_ERR("OS : Could not set SPI speed (WR)...ioctl fail");
+            return 1;
+        }
+
+        ret = ioctl(spi_device->fd, SPI_IOC_RD_MAX_SPEED_HZ, &(spi_device->speed));
+        if(ret < 0)
+        {
+            LOG_ERR("OS : Could not set SPI speed (RD)...ioctl fail");
+            return 1;
+        }
+
+        LOG_INF3("OS : SPI status for SPI%d : fd = %d, mode = %d, BPW = %d, speed = %d",
+                 spi_device->id,
+                 spi_device->fd,
+                 spi_device->mode,
+                 spi_device->bits_per_word,
+                 spi_device->speed);
+    }
+
+    return ret;
 }
 
 /************************************/
@@ -183,18 +196,12 @@ int OS_spi_close_port (t_os_spi_device i_spi_id)
     int ret = 0;
     t_os_spi_struct *spi_device;
 
-    switch (i_spi_id)
+    spi_device = os_spi_get_device(i_spi_id);
+
+    if (NULL == spi_device)
     {
-        case OS_SPI_DEVICE_0:
-            spi_device = &spi_device_0;
-            break;
-        case OS_SPI_DEVICE_1:
-            spi_device = &spi_device_1;
-            break;
-        case OS_SPI_DEVICE_NB:
-        default:
-            LOG_ERR("OS : device SPI inexistant");
-            ret = -1;
+        LOG_ERR("OS : device SPI inexistant");
+        ret = -1;
     }
 
     if (0 == ret)
@@ -218,18 +225,12 @@ int OS_spi_set_speed (t_os_spi_device i_spi_id, unsigned int i_speed)
     int ret = 0;
     t_os_spi_struct *spi_device;
 
-    switch (i_spi_id)
+    spi_device = os_spi_get_device(i_spi_id);
+
+    if (NULL == spi_device)
     {
-        case OS_SPI_DEVICE_0:
-            spi_device = &spi_device_0;
-            break;
-        case OS_SPI_DEVICE_1:
-            spi_device = &spi_device_1;
-            break;
-        case OS_SPI_DEVICE_NB:
-        default:
-            LOG_ERR("OS : device SPI inexistant");
-            ret = -1;
+        LOG_ERR("OS : device SPI inexistant");
+        ret = -1;
     }
 
     if (0 == ret)
@@ -279,18 +280,12 @@ int OS_spi_set_mode(t_os_spi_device i_spi_id, t_os_spi_mode i_mode)
     int ret = 0;
     t_os_spi_struct *spi_device;
 
-    switch (i_spi_id)
+    spi_device = os_spi_get_device(i_spi_id);
+
+    if (NULL == spi_device)
     {
-        case OS_SPI_DEVICE_0:
-            spi_device = &spi_device_0;
-            break;
-        case OS_SPI_DEVICE_1:
-            spi_device = &spi_device_1;
-            break;
-        case OS_SPI_DEVICE_NB:
-        default:
-            LOG_ERR("OS : device SPI inexistant");
-            ret = -1;
+        LOG_ERR("OS : device SPI inexistant");
+        ret = -1;
     }
 
     if (0 == ret)
@@ -309,7 +304,7 @@ int OS_spi_set_mode(t_os_spi_device i_spi_id, t_os_spi_mode i_mode)
 
         if (ret < 0)
         {
-            LOG_ERR("[OS] Wrong value for SPI mode : %d", i_mode);
+            LOG_ERR("OS : Wrong value for SPI mode : %d", i_mode);
         }
         else
         {
@@ -353,21 +348,15 @@ int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *io_data, int i_l
     int retVal = 0, ret = 0;
     t_os_spi_struct *spi_device = NULL;
 
-    switch (i_spi_id)
+    spi_device = os_spi_get_device(i_spi_id);
+
+    if (NULL == spi_device)
     {
-        case OS_SPI_DEVICE_0:
-            spi_device = &spi_device_0;
-            break;
-        case OS_SPI_DEVICE_1:
-            spi_device = &spi_device_1;
-            break;
-        case OS_SPI_DEVICE_NB:
-        default:
-            LOG_ERR("OS : device SPI inexistant");
-            ret = -1;
+        LOG_ERR("OS : device SPI inexistant");
+        ret = -1;
     }
 
-    if ( spi_device )
+    if (0 == ret)
     {
 #if defined(INTEGRATION_LOG_LEVEL) && (INTEGRATION_LOG_LEVEL >= 6)
         printf("[OS] Data TX : ");
@@ -429,4 +418,16 @@ int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *io_data, int i_l
     }
 
     return ret;
+}
+
+/*********************************************************************/
+/*                       Fonctions locales                           */
+/*********************************************************************/
+
+t_os_spi_struct* os_spi_get_device(t_os_spi_device i_device)
+{
+    if (i_device < OS_SPI_DEVICE_NB)
+        return &spi_devices_array[i_device];
+    else
+        return NULL;
 }

@@ -68,7 +68,7 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
     int ret = 0;
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -134,7 +134,7 @@ int COM_adc_reset_hard(t_os_spi_device i_device)
     int ret = 0;
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -171,7 +171,7 @@ int COM_adc_reset_soft(t_os_spi_device i_device)
     t_uint8 a[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
 
     /* Verification du device a resetter */
-    if (NULL == com_adc_get_device(i_device))
+    if (NULL == com_adc_get_setup(i_device))
     {
         LOG_ERR("COM : device à reset inexistant, device = %d", i_device);
         ret = -1;
@@ -202,7 +202,7 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
     t_uint16 result = 0;
     t_uint8 data[COM_DATA_LENGTH + 1];
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -267,7 +267,7 @@ int COM_adc_set_filter_sync(t_os_spi_device i_device, t_com_state i_filter_sync)
     int ret = 0;
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -302,7 +302,7 @@ int COM_adc_set_buffer_mode(t_os_spi_device i_device, t_com_state i_buffer_mode)
     int ret = 0;
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -337,7 +337,7 @@ int COM_adc_set_bipolarity(t_os_spi_device i_device, t_com_state i_bipolarity)
     int ret = 0;
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -372,7 +372,7 @@ int COM_adc_set_gain(t_os_spi_device i_device, t_com_adc_gain i_gain)
     int ret = 0;
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -413,7 +413,7 @@ int COM_adc_set_mode(t_os_spi_device i_device, t_com_adc_mode i_mode)
     int ret = 0;
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -459,7 +459,7 @@ int COM_adc_enable_clock(t_os_spi_device i_device, t_com_adc_clock i_clock)
     int ret = 0;
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -495,7 +495,7 @@ int COM_adc_set_clock_rate(t_os_spi_device i_device, t_com_adc_clock_rate i_rate
     int ret = 0;
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -530,7 +530,7 @@ int COM_adc_set_clock_div(t_os_spi_device i_device, t_com_state i_div)
     int ret = 0;
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -565,7 +565,7 @@ int COM_adc_set_clock_filter(t_os_spi_device i_device, t_com_adc_clock_filt i_fi
     int ret = 0;
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -604,7 +604,7 @@ int COM_adc_read_setup(t_os_spi_device i_device, t_uint8 *o_setup)
     t_uint8 data[COM_SETUP_LENGTH + 1];
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -649,7 +649,7 @@ int COM_adc_read_clock(t_os_spi_device i_device, t_uint8 *o_clock)
     t_uint8 data[COM_SETUP_LENGTH + 1];
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -690,7 +690,7 @@ int COM_adc_read_clock(t_os_spi_device i_device, t_uint8 *o_clock)
 /*********************************************************************/
 
 /* Get the setup associated with the device in argument */
-t_com_adc_setup* com_adc_get_device(t_os_spi_device i_device)
+t_com_adc_setup* com_adc_get_setup(t_os_spi_device i_device)
 {
    if (i_device < OS_SPI_DEVICE_NB)
       return &com_spi_device_array[i_device];
@@ -705,7 +705,7 @@ int com_adc_config_setup(t_os_spi_device i_device)
     t_uint8 data[COM_SETUP_LENGTH + 1];
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -743,7 +743,7 @@ int com_adc_config_clock(t_os_spi_device i_device)
     t_uint8 data[COM_CLOCK_LENGTH + 1];
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
@@ -779,7 +779,7 @@ int com_adc_wait_ready(t_os_spi_device i_device)
     int ret = 0, cpt = COM_ADC_MAX_WAIT;
     t_com_adc_setup *s;
 
-    s = com_adc_get_device(i_device);
+    s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
