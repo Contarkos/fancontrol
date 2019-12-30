@@ -169,14 +169,14 @@ int OS_semfd_init(OS_semfd_t *i_sem, t_uint32 i_value)
 
             if (-1 == i_sem->fd)
             {
-                i_sem->is_init = OS_RET_OK;
-                ret = 0;
-            }
-            else
-            {
                 LOG_ERR("OS : error while creating semaphore file descriptor, errno = %d", errno);
                 i_sem->is_init = OS_RET_KO;
                 ret = -2;
+            }
+            else
+            {
+                i_sem->is_init = OS_RET_OK;
+                ret = 0;
             }
         }
     }
