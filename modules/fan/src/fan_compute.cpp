@@ -50,15 +50,11 @@ int FAN::fan_compute_duty(void)
         case FAN_MODE_AUTO:
             {
                 if (FAN_TEMP_INVALID == this->room_temp)
-                {
                     /* Calcul en mode lineaire par morceaux */
                     duty = compute_duty_linear(this->current_temp);
-                }
                 else
-                {
                     /* Calcul en mode differentiel */
                     duty = compute_duty_differential(this->room_temp, this->current_temp);
-                }
             }
             break;
         case FAN_MODE_TEMP:
@@ -135,7 +131,7 @@ int FAN::fan_treat_irq(int i_fd)
         else
         {
             /* Conversion en vitesse de rotation (RPM) */
-            v = (t_uint32) ( FAN_SEC_TO_MSEC / (float) (FAN_HITS_PER_CYCLE * d) );
+            v = (t_uint32) ( (60 * FAN_SEC_TO_MSEC) / (float) (FAN_HITS_PER_CYCLE * d) );
             cpt++;
 
             if (cpt > 100U)
