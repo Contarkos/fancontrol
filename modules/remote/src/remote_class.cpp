@@ -165,9 +165,6 @@ int REMOTE::init_after_wait(void)
 
     printf("Taille pour t = %d", sizeof(t));
 
-    /* Connexion a la socket temp pour envoyer le message de timer */
-    ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, t, sizeof(t), &(this->timeout_fd));
-
     if (ret != 0)
     {
         LOG_ERR("REMOTE : timer not started, ret = %d", ret);
@@ -191,9 +188,6 @@ int REMOTE::stop_module()
 
     /* Fermeture de la socket */
     ret += COM_close_socket(this->socket_fd);
-
-    /* Fermeture socket timeout */
-    ret += COM_close_socket(this->timeout_fd);
 
 #ifndef REMOTE_UDP_KO
     /* Fermeture socket UDP */

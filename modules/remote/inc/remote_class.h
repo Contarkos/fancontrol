@@ -32,7 +32,6 @@ class REMOTE : public MODULE
     private:
         struct pollfd p_fd[REMOTE_FD_NB];  /* Structure pour polling */
         int timer_fd;                   /* Index du timer requested */
-        int timeout_fd;                 /* File descriptor donné au timer pour envoyer les messages de timeout */
         int socket_fd;                  /* File descriptor pour recevoir les messages */
         int udp_fd;                     /* File descriptor pour recevoir les interruptions */
         OS_semfd_t *remote_semfd;       /* File descriptor pour recevoir les messages de la queue */
@@ -49,7 +48,6 @@ class REMOTE : public MODULE
         /***********************************************/
         /*             Methodes spécifiques            */
         /***********************************************/
-        static void remote_timer_handler(int i_timer_id, void * i_data);
 
         /* Methodes de constructeurs */
         void remote_init_pollfd();

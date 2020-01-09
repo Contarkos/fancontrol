@@ -13,20 +13,6 @@
 /*                      Fonctions de classe                          */
 /*********************************************************************/
 
-void REMOTE::remote_timer_handler(int i_timer_id, void *i_data)
-{
-    REMOTE *p_this = reinterpret_cast<REMOTE *> (i_data);
-    int dum;
-
-    if (p_this && (p_this->timer_fd == i_timer_id))
-    {
-        LOG_INF1("REMOTE : before sending to remote");
-        COM_send_data(p_this->timeout_fd, REMOTE_TIMER, &dum, sizeof(dum), 0);
-        LOG_INF1("REMOTE : after  sending to remote");
-    }
-}
-
-
 int REMOTE::remote_treat_msg(int i_fd)
 {
     int ret = 0, ss;
