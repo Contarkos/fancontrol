@@ -28,22 +28,13 @@ static inline float compute_duty_speed  (t_uint32 i_speed);
 /*                      Fonctions de classe                          */
 /*********************************************************************/
 
-void FAN::fan_timer_handler(int i_timer_id, void * i_data)
-{
-    FAN *p_this = reinterpret_cast<FAN *> (i_data);
-    int dum = 0;
-
-    if (p_this && (p_this->timer_fd == i_timer_id))
-    {
-        COM_send_data(p_this->timeout_fd, FAN_TIMER, &dum, sizeof(dum), 0);
-    }
-}
-
 int FAN::fan_compute_duty(void)
 {
+    static float d = 0;
+    static float sign = 1;
+
     int ret = 0;
     float duty = 0;
-    static float d = 0;
 
     switch (current_mode)
     {
@@ -93,12 +84,15 @@ int FAN::fan_compute_duty(void)
         /* Log de debug */
         LOG_INF3("FAN : dutycycle courant = %f", duty);
 
-        if (d < 100.0F)
-            d += 10.0F;
-        else
-            d = 0;
+        if (d >= 100.0F)
+            sign = -1;
+        else if (d <= 0.0F)
+            sign = 1;
+
+        d = d + sign * 2.5F;
 
         duty = d;
+        LOG_INF3("FAN : dutycycle courant = %f", duty);
 
         OS_pwm_set_dutycycle(duty);
     }
@@ -134,7 +128,7 @@ int FAN::fan_treat_irq(int i_fd)
             v = (t_uint32) ( (60 * FAN_SEC_TO_MSEC) / (float) (FAN_HITS_PER_CYCLE * d) );
             cpt++;
 
-            if (cpt > 100U)
+            if (cpt > 10U)
             {
                 LOG_INF3("FAN : vitesse du fan = %d, d = %ld", v, d);
                 cpt = 0;
@@ -192,7 +186,6 @@ static float compute_duty_differential (int i_ref, int i_current)
 
 static float compute_duty_linear (int i_current)
 {
-    static float t = 0;
     float d = 0;
 
     /* Fonction affine par morceau */
@@ -220,19 +213,6 @@ static float compute_duty_linear (int i_current)
     {
         d = ((FAN_DUTY_LOW - FAN_DUTY_MIN) / (FAN_TEMP_LOW - FAN_TEMP_MIN)) * (float) i_current + FAN_DUTY_MIN;
     }
-
-    if (t > 50)
-    {
-        t = 0;
-    }
-    else
-    {
-        t += 5;
-    }
-
-    /* FIXME : debug value, to delete */
-    d = 50 + t;
-    d = 80;
 
     return d;
 }

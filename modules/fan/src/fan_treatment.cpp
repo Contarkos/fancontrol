@@ -62,6 +62,48 @@ int FAN::fan_treat_msg(int i_fd)
     return ret;
 }
 
+int FAN::fan_treat_com(void)
+{
+    int ret = 0;
+    t_com_msg_struct m;
+
+    if (0 == ret)
+        ret = COM_msg_read(COM_ID_FAN, &m);
+
+    if (0 == ret)
+    {
+        LOG_INF1("FAN : received a message, ID = %d", m.header.id);
+
+        switch (m.header.id)
+        {
+            case MAIN_START:
+                break;
+            case MAIN_SHUTDOWN:
+                ret = this->stop_and_exit();
+                break;
+            case FAN_MODE:
+                ret = this->fan_update_mode((t_fan_mode *) m.body);
+                break;
+            case FAN_POWER:
+                ret = this->fan_update_power((t_fan_power_mode *) m.body);
+                break;
+            case FAN_TIMER:
+                LOG_INF3("FAN : just received FAN_TIMER");
+                ret = this->fan_compute_duty();
+                break;
+            case TEMP_DATA:
+                ret = this->fan_update_data((t_temp_data *) m.body);
+                break;
+            default:
+                LOG_ERR("FAN : wrong ID for message, id = %d", m.header.id);
+                ret = 1;
+                break;
+        }
+    }
+
+    return ret;
+}
+
 int FAN::fan_update_data(t_temp_data *i_data)
 {
     int ret = 0;
@@ -159,5 +201,14 @@ int FAN::fan_set_power(fan_e_power_mode i_mode)
             ret = -1;
             break;
     }
+
+    return ret;
+}
+
+/* Update the PWM registers based on the setup */
+int FAN::fan_set_pwm(void)
+{
+    int ret = 0;
+
     return ret;
 }

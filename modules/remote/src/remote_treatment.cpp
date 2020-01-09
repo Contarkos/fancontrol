@@ -58,12 +58,8 @@ int REMOTE::remote_treat_com()
     int ret = 0;
     t_com_msg_struct m;
 
-    ret = OS_semfd_wait(this->remote_semfd);
-
     if (0 == ret)
         ret = COM_msg_read(COM_ID_REMOTE, &m);
-    else
-        LOG_ERR("REMOTE : error while acknowledging semfd, ret = %d", ret);
 
     if (0 == ret)
     {

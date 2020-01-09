@@ -17,6 +17,18 @@
 
 /* Variables globales */
 
+static t_uint32 fan_msg_array[] =
+{
+    MAIN_START,
+    MAIN_SHUTDOWN,
+    FAN_MODE,
+    FAN_POWER,
+    FAN_TIMER,
+    TEMP_DATA
+};
+
+static t_uint32 fan_msg_array_size = sizeof(fan_msg_array) / sizeof(fan_msg_array[0]);
+
 /* Définition des constructeurs */
 FAN::FAN(const char mod_name[MAX_LENGTH_MOD_NAME], OS_mutex_t *m_main, OS_mutex_t *m_mod) : MODULE(mod_name, m_main, m_mod)
 {
@@ -52,9 +64,9 @@ int FAN::start_module()
     LOG_INF1("FAN : Démarrage de la classe du module");
 
     /* Démarrage du timer pour la boucle */
-    this->timer_fd = OS_create_timer(FAN_TIMER_USEC, &FAN::fan_timer_handler, OS_TIMER_PERIODIC, (void *) this);
+    this->timer_id = OS_create_timer_msg(FAN_TIMER_USEC, OS_TIMER_PERIODIC, FAN_TIMER);
 
-    if (0 > this->timer_fd)
+    if (0 > this->timer_id)
     {
         LOG_ERR("FAN : erreur création timer de boucle");
         ret = -1;
@@ -62,14 +74,32 @@ int FAN::start_module()
     else
     {
         /* Set de la diode en entrée pour lire la vitesse */
-        ret += OS_set_gpio(FAN_PIN_IN, OS_GPIO_FUNC_IN);
+        ret = OS_set_gpio(FAN_PIN_IN, OS_GPIO_FUNC_IN);
 
+        if (ret != 0)
+            LOG_ERR("FAN : error setting GPIO input, ret = %d", ret);
+    }
+
+    if (0 == ret)
+    {
         /* Set de la pin en sortie pour le controle de l'allumage */
-        ret += OS_set_gpio(FAN_PIN_OUT, OS_GPIO_FUNC_OUT);
+        ret = OS_set_gpio(FAN_PIN_OUT, OS_GPIO_FUNC_OUT);
 
+        if (ret != 0)
+            LOG_ERR("FAN : error setting GPIO output, ret = %d", ret);
+    }
+
+    if (0 == ret)
+    {
         /* Set de la diode en sortie en PWM */
         ret += OS_set_gpio(FAN_PIN_PWM, OS_GPIO_FUNC_ALT5);
 
+        if (ret != 0)
+            LOG_ERR("FAN : error setting GPIO PWM function, ret = %d", ret);
+    }
+
+    if (0 == ret)
+    {
         /* Reglage source Clock sur PLL C */
         ret += OS_pwm_set_clock_source(OS_CLOCK_SRC_PLLC);
 
@@ -134,6 +164,24 @@ int FAN::start_module()
         }
     }
 
+    if (0 == ret)
+    {
+        /* Register the module */
+        ret = COM_msg_register(COM_ID_FAN, &this->fan_semfd);
+
+        if (0 != ret)
+        {
+            LOG_ERR("FAN : error while registering the module in COM");
+            ret = -8;
+        }
+        else
+        {
+            this->p_fd[FAN_FD_COM].fd = this->fan_semfd;
+
+            ret = COM_msg_subscribe_array(COM_ID_FAN, fan_msg_array, fan_msg_array_size);
+        }
+    }
+
     LOG_INF3("FAN : fin init module (ret = %d)", ret);
     return ret;
 }
@@ -142,29 +190,17 @@ int FAN::start_module()
 int FAN::init_after_wait(void)
 {
     int ret = 0;
-    char t[] = FAN_SOCKET_NAME;
 
-    /* Connexion a la socket temp pour envoyer le message de timer */
-    ret = COM_connect_socket(AF_UNIX, SOCK_DGRAM, t, sizeof(t), &(this->timeout_fd));
+    /* Demarrage du timer */
+    ret = OS_start_timer(this->timer_id);
 
-    if (ret != 0)
+    if (ret < 0)
+        LOG_ERR("FAN : timer non démarré, ret = %d", ret);
+
+    if (0 == ret)
     {
-        LOG_ERR("FAN : error while connecting timeout socket, ret = %d", ret);
-    }
-    else
-    {
-        /* Demarrage du timer */
-        ret = OS_start_timer(this->timer_fd);
-
-        if (ret < 0)
-        {
-            LOG_ERR("FAN : timer non démarré, ret = %d", ret);
-        }
-        else
-        {
-            /* Allumage du fan */
-            this->fan_set_power(FAN_POWER_MODE_ON);
-        }
+        /* Allumage du fan */
+        this->fan_set_power(FAN_POWER_MODE_ON);
     }
 
     return ret;
@@ -179,13 +215,10 @@ int FAN::stop_module()
     ret += this->fan_set_power(FAN_POWER_MODE_OFF);
 
     /* Arret du timer */
-    ret += OS_stop_timer(this->timer_fd);
+    ret += OS_stop_timer(this->timer_id);
 
     /* Fermeture de la socket */
     ret += COM_close_socket(this->socket_fd);
-
-    /* Fermeture socket timeout */
-    ret += COM_close_socket(this->timeout_fd);
 
     /* Fermeture IRQ */
     ret += OS_irq_close(this->irq_fd);
@@ -205,7 +238,7 @@ int FAN::exec_loop()
     if (read_fd <= 0)
     {
         /* Timeout expiré */
-        LOG_WNG("FAN : timeout poll expiré");
+        LOG_WNG("FAN : timeout poll expired");
         ret = 1;
     }
     else
@@ -221,6 +254,9 @@ int FAN::exec_loop()
                         break;
                     case FAN_FD_IRQ:
                         ret = fan_treat_irq(this->p_fd[ii].fd);
+                        break;
+                    case FAN_FD_COM:
+                        ret = fan_treat_com();
                         break;
                     case FAN_FD_NB:
                     default:

@@ -108,7 +108,7 @@ int REMOTE::start_module()
         }
         else
         {
-            this->p_fd[REMOTE_FD_COM].fd = this->remote_semfd->fd;
+            this->p_fd[REMOTE_FD_COM].fd = this->remote_semfd;
 
             ret = COM_msg_subscribe_array(COM_ID_REMOTE, remote_msg_array, remote_msg_array_size);
         }

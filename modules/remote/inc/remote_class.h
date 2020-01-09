@@ -34,7 +34,7 @@ class REMOTE : public MODULE
         int timer_fd;                   /* Index du timer requested */
         int socket_fd;                  /* File descriptor pour recevoir les messages */
         int udp_fd;                     /* File descriptor pour recevoir les interruptions */
-        OS_semfd_t *remote_semfd;       /* File descriptor pour recevoir les messages de la queue */
+        int remote_semfd;               /* File descriptor pour recevoir les messages de la queue */
 
         /***********************************************/
         /*             Methodes virtuelles             */

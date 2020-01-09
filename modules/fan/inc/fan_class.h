@@ -44,6 +44,7 @@ typedef enum
 {
     FAN_FD_SOCKET = 0,
     FAN_FD_IRQ = 1,
+    FAN_FD_COM = 2,
     FAN_FD_NB
 } t_fan_fd_index;
 
@@ -56,20 +57,20 @@ class FAN : public MODULE
 
     private:
         struct pollfd p_fd[FAN_FD_NB];  /* Structure pour polling */
-        int timer_fd;                   /* Index du timer requested */
-        int timeout_fd;                 /* File descriptor donné au timer pour envoyer les messages de timeout */
+        int timer_id;                   /* Index du timer requested */
         int socket_fd;                  /* File descriptor pour recevoir les messages */
         int irq_fd;                     /* File descriptor pour recevoir les interruptions */
+        int fan_semfd;                  /* File descriptor pour la nouvelle messagerie */
 
         fan_e_mode current_mode;
         fan_e_power_mode current_power_mode;
 
-        t_uint32 consigne_speed;     /* Consigne de vitesse */
-        int consigne_temp;      /* Température consigne à atteindre */
-        int current_temp;       /* Température de l'élément à refroidir */
-        int room_temp;          /* Température de la pièce */
+        t_uint32 consigne_speed;        /* Consigne de vitesse */
+        int consigne_temp;              /* Température consigne à atteindre */
+        int current_temp;               /* Température de l'élément à refroidir */
+        int room_temp;                  /* Température de la pièce */
 
-        t_uint32 current_speed;      /* Vitesse du ventilateur */
+        t_uint32 current_speed;         /* Vitesse du ventilateur */
 
         /***********************************************/
         /*             Methodes virtuelles             */
@@ -95,17 +96,19 @@ class FAN : public MODULE
         int  fan_set_power(fan_e_power_mode i_mode);
 
         /* Algorithme de décision pour le dutycycle */
-        static void fan_timer_handler_old(int i_timer_id, void * i_data);
-        static void fan_timer_handler(int i_timer_id, void * i_data);
         int fan_compute_duty(void);
 
         /* Recuperation des données */
         int fan_treat_msg(int i_fd);
+        int fan_treat_com(void);
         int fan_update_mode(t_fan_mode *i_data);
         int fan_update_power(t_fan_power_mode *i_data);
         int fan_update_data(t_temp_data *i_data);
 
         /* Gestion IT */
         int fan_treat_irq(int i_fd);
+
+        /* Reglage des parametres PWM */
+        int fan_set_pwm(void);
 };
 

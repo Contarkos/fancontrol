@@ -27,7 +27,8 @@ typedef enum
 {
     TEMP_FD_SOCKET = 0,
     TEMP_FD_IRQ = 1,
-    TEMP_FD_NB = 2
+    TEMP_FD_COM = 2,
+    TEMP_FD_NB
 } t_temp_fd_index;
 
 class TEMP : public MODULE
@@ -39,11 +40,12 @@ class TEMP : public MODULE
 
     private:
         struct pollfd p_fd[TEMP_FD_NB];
-        int timer_fd = -1;
-        int timeout_fd = -1;
         int socket_fd = -1;
-        int fan_fd = -1;
         int irq_fd = -1;
+        int temp_semfd = -1;
+
+        int timer_id = -1;
+
         float fan_temp;
         bool fan_temp_valid;
         float room_temp;
@@ -63,7 +65,6 @@ class TEMP : public MODULE
         /***********************************************/
         /*             Methodes spécifiques            */
         /***********************************************/
-        static void temp_timer_handler(int i_timer_id, void * i_data);
 
         /* Methodes de constructeurs */
         void temp_init_pollfd();
@@ -76,6 +77,6 @@ class TEMP : public MODULE
         int temp_retrieve_data(void);
         int temp_send_data(void);
         int temp_treat_msg(void);
-        int temp_treat_irq(char *i_data);
         int temp_treat_irq(void);
+        int temp_treat_com(void);
 };
