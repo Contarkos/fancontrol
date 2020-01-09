@@ -23,7 +23,7 @@
 t_com_msg_subscribe com_list_msg[COM_TOTAL_MSG];
 
 /* Array of queues for each modules */
-t_com_msg_list com_list_queues[COM_BASE_LAST];
+t_com_msg_list com_list_queues[COM_ID_NB];
 
 /*****************************************************************************/
 /*                                Functions API                              */
@@ -65,6 +65,7 @@ int COM_msg_subscribe(t_com_id_modules i_module, t_uint32 i_msg)
             case COM_ID_REMOTE:
                 break;
             case COM_ID_NULL:
+            case COM_ID_NB:
             default:
                 LOG_ERR("COM : wrong ID for module during subscription, module = %d", i_module);
                 ret = -4;
@@ -157,6 +158,7 @@ int COM_msg_unsub(t_com_id_modules i_module, t_uint32 i_msg)
             case COM_ID_REMOTE:
                 break;
             case COM_ID_NULL:
+            case COM_ID_NB:
             default:
                 LOG_ERR("COM : wrong ID for module during subscription, module = %d", i_module);
                 ret = -4;
@@ -217,7 +219,7 @@ int COM_msg_unsub_array(t_com_id_modules i_module, t_uint32 *i_msg, t_uint32 i_s
  * it.
  * If i_size is larger than COM_MAX_SIZE_DATA, the data is silently truncated.
  */
-int COM_msg_send(t_uint32 i_msg, char* i_data, t_uint32 i_size)
+int COM_msg_send(t_uint32 i_msg, void* i_data, t_uint32 i_size)
 {
     int ret = 0;
 
@@ -228,7 +230,7 @@ int COM_msg_send(t_uint32 i_msg, char* i_data, t_uint32 i_size)
     t_com_msg_subscribe *msg_sub;
     t_com_msg_list *msg_queue;
 
-    if (COM_TOTAL_MSG < i_msg)
+    if (i_msg > COM_TOTAL_MSG)
     {
         LOG_ERR("COM : wrong id for message, id = %d", i_msg);
         ret = -1;
@@ -240,8 +242,8 @@ int COM_msg_send(t_uint32 i_msg, char* i_data, t_uint32 i_size)
 
         if (0 == msg_sub->nb_subscribers)
         {
-            LOG_ERR("COM : no subscribers for message %d", i_msg);
-            ret = -2;
+            LOG_WNG("COM : no subscribers for message %d", i_msg);
+            ret = 1;
         }
     }
 
@@ -279,9 +281,17 @@ int COM_msg_send(t_uint32 i_msg, char* i_data, t_uint32 i_size)
             {
                 /* Actual copy is here */
                 t_uint32 copy_index = (msg_queue->cur_index + msg_queue->nb_msg) % COM_MAX_NB_MSG;
+                t_com_msg_struct *msg = &msg_queue->list[copy_index];
 
-                memcpy(msg_queue->list[copy_index], i_data, copy_size);
-                msg_queue->nb_msg = (msg_queue->nb_msg + 1);
+                /* FIXME : add the size of the data in the structure */
+                OS_gettime(&msg->header.timestamp_s, &msg->header.timestamp_ns);
+                msg->header.id = i_msg;
+                msg->header.size = copy_size;
+
+                memcpy(msg->body, i_data, copy_size);
+
+                if (msg_queue->nb_msg < COM_MAX_NB_MSG)
+                    msg_queue->nb_msg = (msg_queue->nb_msg + 1);
 
                 /* Release the mutex */
                 ret = OS_mutex_unlock(&msg_queue->mutex);
@@ -302,6 +312,71 @@ int COM_msg_send(t_uint32 i_msg, char* i_data, t_uint32 i_size)
                 ret = OS_semfd_post(&msg_queue->semfd);
             else
                 ret = -8;
+
+            if (ret < 0)
+               LOG_ERR("COM : error on posting message, ii = %d, ret = %d", ii, ret);
+        }
+    }
+
+    return ret;
+}
+
+/*
+ * Copy an unread message from the queue of the <i_module> module
+ * in the buffer behind <o_msg>
+ */
+int COM_msg_read(t_com_id_modules i_module, t_com_msg_struct *o_msg)
+{
+    int ret = 0;
+    t_com_msg_list *msg_queue;
+
+    /* Check on ID module */
+    if (i_module >= COM_ID_NB)
+    {
+        LOG_ERR("COM : wrong id for module, id = %d", i_module);
+        ret = -1;
+    }
+
+    if (0 == ret)
+    {
+        msg_queue = &com_list_queues[i_module];
+
+        if (0 == msg_queue->nb_msg)
+        {
+            LOG_WNG("COM : no message to read in the queue of module n°%d", i_module);
+            ret = 1;
+        }
+    }
+
+    if (0 == ret)
+    {
+        ret = OS_semfd_wait(&msg_queue->semfd);
+
+        if (0 != ret)
+            LOG_ERR("COM : error while waiting on semaphore to read messages for ID = %d", i_module);
+    }
+
+    if (0 == ret)
+    {
+        ret = OS_mutex_lock(&msg_queue->mutex);
+
+        if (0 != ret)
+        {
+            LOG_ERR("COM : error while locking mutex for queue %d", i_module);
+        }
+        else
+        {
+            /* Copy the message in the external buffer */
+            memcpy(o_msg, &msg_queue->list[msg_queue->cur_index], sizeof(t_com_msg_struct));
+
+            /* Update the index to the next unread message */
+            msg_queue->cur_index = (msg_queue->cur_index + 1) % COM_MAX_NB_MSG;
+
+            /* Reduce the number of messages in the queue */
+            msg_queue->nb_msg = msg_queue->nb_msg - 1;
+
+            /* Release the mutex */
+            ret = OS_mutex_unlock(&msg_queue->mutex);
         }
     }
 
@@ -309,7 +384,7 @@ int COM_msg_send(t_uint32 i_msg, char* i_data, t_uint32 i_size)
 }
 
 /* Register a module with its subscribing list */
-int COM_msg_register(t_com_id_modules i_module, OS_semfd_t **o_semfd)
+int COM_msg_register(t_com_id_modules i_module, int *o_semfd)
 {
     int ret = 0;
     t_com_msg_list *msg_queue;
@@ -326,6 +401,7 @@ int COM_msg_register(t_com_id_modules i_module, OS_semfd_t **o_semfd)
         case COM_ID_REMOTE:
             break;
         case COM_ID_NULL:
+        case COM_ID_NB:
         default:
             LOG_ERR("COM : wrong ID for module during subscription, module = %d", i_module);
             ret = -1;
@@ -337,7 +413,7 @@ int COM_msg_register(t_com_id_modules i_module, OS_semfd_t **o_semfd)
         msg_queue = &com_list_queues[i_module];
 
         if (msg_queue->semfd.is_init == OS_RET_OK)
-            *o_semfd = &msg_queue->semfd;
+            *o_semfd = msg_queue->semfd.fd;
         else
             ret = -2;
     }
@@ -355,7 +431,7 @@ int com_init_msg(void)
     int ii;
 
     /* Init all the mutexes for the queues */
-    for (ii = 0; ii < COM_BASE_LAST; ii++)
+    for (ii = 0; ii < COM_ID_NB; ii++)
     {
         com_list_queues[ii].cur_index = 0;
         com_list_queues[ii].nb_msg = 0;
@@ -364,6 +440,7 @@ int com_init_msg(void)
 
         if (0 != ret)
         {
+            LOG_ERR("COM : error while initialising mutex for queue n°%d, ret = %d", ii, ret);
             com_list_queues[ii].is_init = OS_RET_KO;
             continue;
         }
@@ -371,7 +448,14 @@ int com_init_msg(void)
         ret = OS_semfd_init(&com_list_queues[ii].semfd, 0);
 
         if (0 != ret)
+        {
+            LOG_ERR("COM : error while initialising semfd for queue n°%d, ret = %d", ii, ret);
             com_list_queues[ii].is_init = OS_RET_KO;
+        }
+        else
+            com_list_queues[ii].is_init = OS_RET_OK;
+
+        LOG_INF3("COM : init de la queue n°%d = %d", ii, ret);
     }
 
     return ret;

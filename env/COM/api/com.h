@@ -22,14 +22,15 @@ extern "C" {
 /*                                  Defines                                  */
 /*****************************************************************************/
 
+/* FIXME : find a way to get your own IP address */
 #define COM_LOCAL_IP_ADDR       "192.168.0.101"
 #define COM_UNIX_PATH_MAX       108U
 #define COM_ADC_MAXVALUE        (65535)     /* Max output value for the ADC */
 #define COM_EXTERN_BACKLOG      128
 
-#define COM_MAX_SUBSCRIBER      128         /* Max subscribers for a message */
+#define COM_MAX_SUBSCRIBER      64          /* Max subscribers for a message */
 #define COM_MAX_NB_MSG          256         /* Max messages for a single instance */
-#define COM_MAX_SIZE_DATA       1024        /* Max size for messages */
+#define COM_MAX_SIZE_DATA       256         /* Max size for messages */
 
 #define COM_ADC_PIN_RDY0        (OS_GPIO_BCM_25)
 #define COM_ADC_PIN_RDY1        (OS_GPIO_BCM_5)
@@ -143,6 +144,21 @@ typedef struct
     char data[COM_MAX_SIZE_DATA];
 } __attribute__((packed)) t_com_msg;
 
+typedef struct
+{
+    t_int64 timestamp_s;
+    t_int64 timestamp_ns;
+    t_uint32 id;
+    t_uint32 size;
+} t_com_msg_header;
+
+/* Structure holding all the data about the message */
+typedef struct
+{
+    t_com_msg_header header;
+    t_uint8 body[COM_MAX_SIZE_DATA];
+} t_com_msg_struct;
+
 /*****************************************************************************/
 /*                              Fonctions API                                */
 /*****************************************************************************/
@@ -166,8 +182,9 @@ int COM_msg_subscribe_array(t_com_id_modules i_module, t_uint32* i_msg, t_uint32
 int COM_msg_unsub(t_com_id_modules i_module, t_uint32 i_msg);
 int COM_msg_unsub_array(t_com_id_modules i_module, t_uint32 *i_msg, t_uint32 i_size);
 
-int COM_msg_send(t_uint32 i_msg, char* i_data, t_uint32 i_size);
-int COM_msg_register(t_com_id_modules i_module, OS_semfd_t **o_semfd);
+int COM_msg_send(t_uint32 i_msg, void* i_data, t_uint32 i_size);
+int COM_msg_read(t_com_id_modules i_module, t_com_msg_struct *o_msg);
+int COM_msg_register(t_com_id_modules i_module, int *o_semfd);
 
 /*---------------------------------------------------------------------------*/
 /* AD7705 handling                                                           */

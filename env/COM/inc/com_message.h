@@ -35,7 +35,7 @@ typedef struct
     /* Number of messages to be read */
     t_uint32 nb_msg;
     /* Actual list of messages */
-    t_uint8 list[COM_MAX_NB_MSG][COM_MAX_SIZE_DATA];
+    t_com_msg_struct list[COM_MAX_NB_MSG];
 } t_com_msg_list;
 
 /* If the ID is 0, the location in the array is free */
@@ -50,7 +50,7 @@ typedef struct s_com_msg_subscribe
 /*****************************************************************************/
 
 extern t_com_msg_subscribe com_list_msg[COM_TOTAL_MSG];
-extern t_com_msg_list com_list_queues[COM_BASE_LAST];
+extern t_com_msg_list com_list_queues[COM_ID_NB];
 
 /*****************************************************************************/
 /*                              Prototypes                                   */

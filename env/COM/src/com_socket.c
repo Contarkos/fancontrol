@@ -319,6 +319,9 @@ int com_connect_inet(int fd, char *data)
 
     ret = connect(fd, (struct sockaddr *) &a, sizeof(a));
 
+    if (0 != ret)
+       LOG_ERR("COM : error while connecting socket, errno = %d", errno);
+
     return ret;
 }
 
