@@ -19,9 +19,7 @@ int REMOTE::remote_send_status(void)
     LOG_INF3("REMOTE : envoi statut systeme, RPM = %d, temp = %d°, ret = %d", s.fan_rpm, s.temp_temp, ret);
 
     if (ret < 0)
-    {
         LOG_ERR("REMOTE : erreur a l'envoi du statut du systeme, ret = %d", ret);
-    }
 
     return ret;
 }

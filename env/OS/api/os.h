@@ -202,11 +202,14 @@ int OS_stop (void);
 
 /* Time and timer handling */
 int OS_create_timer (t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_type, void * i_data);
+int OS_create_timer_msg(t_uint32 i_usec, t_os_timer_type i_type, t_uint32 i_id_msg);
 /*size_t OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_type, void * i_data); */
 int OS_start_timer (int i_timer_id);
 int OS_stop_timer (int i_timer_id);
 
 void OS_usleep (int i_usec);
+
+int OS_gettime(t_int64 *o_time_sec, t_int64 *o_time_ns);
 
 /* Threads handling */
 int OS_create_thread (OS_thread_t * o_p_thread,

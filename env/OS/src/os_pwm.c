@@ -8,6 +8,21 @@
 #include "os_rpi.h"
 
 /*********************************************************************/
+/*                             Typedef                               */
+/*********************************************************************/
+
+typedef struct
+{
+    t_os_state status;
+    t_uint32 freq;
+    float duty;
+    t_uint32 precision;
+    t_os_clock_source source;
+    os_mash_mode mash;
+    os_pwm_mode mode;
+} t_os_pwm_setup;
+
+/*********************************************************************/
 /*                       Variables globales                          */
 /*********************************************************************/
 
@@ -22,6 +37,20 @@ static t_uint32 os_pwm_freq = 25000;
 static float os_pwm_duty = 0.0F;
 static t_uint32 os_pwm_prec = 255;
 static t_os_clock_source os_pwm_source = OS_CLOCK_SRC_PLLC;
+
+static t_os_pwm_setup os_pwm_setup_array[] =
+{
+    /* PWM0 */
+    {
+        .status = OS_STATE_OFF,
+        .freq = 25000,
+        .duty = 0.0F,
+        .precision = 255,
+        .source = OS_CLOCK_SRC_PLLC,
+        .mash = 0,
+        .mode = 0,
+    }
+};
 
 /* Mutex pour les acces aux registres PWM */
 OS_mutex_t os_pwm_mutex = OS_INIT_MUTEX;

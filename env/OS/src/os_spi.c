@@ -344,7 +344,7 @@ int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *io_data, int i_l
         printf("[OS] Data TX : ");
         for (ii = 0; ii < i_length; ii++)
         {
-            printf("[%d] = %x, ", ii, *(io_data + ii));
+            printf("[%d] = 0x%02x, ", ii, *(io_data + ii));
         }
         printf("\n");
 #endif
@@ -392,7 +392,7 @@ int OS_spi_write_read (t_os_spi_device i_spi_id, unsigned char *io_data, int i_l
             printf("[OS] Data RX : ");
             for (ii = 0; ii < i_length; ii++)
             {
-                printf("[%d] = %x, ", ii, *(io_data + ii));
+                printf("[%d] = 0x%02x, ", ii, *(io_data + ii));
             }
             printf("\n");
 #endif

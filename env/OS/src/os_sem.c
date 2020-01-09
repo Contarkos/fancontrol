@@ -199,9 +199,7 @@ int OS_semfd_destroy(OS_semfd_t *i_sem)
         if (OS_RET_KO == i_sem->is_init)
             ret = 0;
         else
-        {
             ret = close(i_sem->fd);
-        }
 
         if (0 == ret)
         {
@@ -240,7 +238,10 @@ int OS_semfd_post(OS_semfd_t *i_sem)
             if (sizeof(buf) == ret)
                ret = 0;
             else
+            {
+               LOG_ERR("OS : error while posting to semaphore, ret = %d (expected %d)", ret, sizeof(buf));
                ret = -2;
+            }
         }
         else
         {

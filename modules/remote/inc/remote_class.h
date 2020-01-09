@@ -18,6 +18,7 @@ typedef enum
 {
     REMOTE_FD_SOCKET = 0,
     REMOTE_FD_UDP = 1,
+    REMOTE_FD_COM = 2,
     REMOTE_FD_NB
 } t_remote_fd_index;
 
@@ -34,6 +35,7 @@ class REMOTE : public MODULE
         int timeout_fd;                 /* File descriptor donné au timer pour envoyer les messages de timeout */
         int socket_fd;                  /* File descriptor pour recevoir les messages */
         int udp_fd;                     /* File descriptor pour recevoir les interruptions */
+        OS_semfd_t *remote_semfd;       /* File descriptor pour recevoir les messages de la queue */
 
         /***********************************************/
         /*             Methodes virtuelles             */
@@ -54,6 +56,7 @@ class REMOTE : public MODULE
 
         /* Recuperation des donnees */
         int remote_treat_msg(int i_fd);
+        int remote_treat_com(void);
         int remote_treat_udp(int i_fd);
 
         /* Traitement des messages */

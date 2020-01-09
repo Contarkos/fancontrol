@@ -4,8 +4,6 @@
 /*                              Global includes                              */
 /*****************************************************************************/
 
-#include <signal.h>
-
 /*****************************************************************************/
 /*                              Local includes                               */
 /*****************************************************************************/
@@ -14,11 +12,8 @@
 /*                            Defines messages' ID                           */
 /*****************************************************************************/
 
-/* All the thread will use the same signal */
-#define COM_MESSAGE_SIGNAL  SIGUSR1
-
 /* Defines of the offsets */
-#define COM_NB_MSG_BASE     255
+#define COM_NB_MSG_BASE     63
 
 #define COM_BASE_MAIN       0
 #define COM_BASE_OS         1
@@ -31,7 +26,8 @@
 #define COM_BASE_LAST       8
 
 /* Messages MAIN */
-#define MAIN_SHUTDOWN       (0 + (COM_BASE_MAIN * COM_NB_MSG_BASE))
+#define MAIN_START          (0 + (COM_BASE_MAIN * COM_NB_MSG_BASE))
+#define MAIN_SHUTDOWN       (1 + (COM_BASE_MAIN * COM_NB_MSG_BASE))
 
 /* Messages FAN */
 #define FAN_MODE            (0 + (COM_BASE_FAN * COM_NB_MSG_BASE))
@@ -63,6 +59,7 @@ typedef enum e_com_id_modules
     COM_ID_MODULE = 5,
     COM_ID_FAN = 6,
     COM_ID_TEMP = 7,
-    COM_ID_REMOTE = 8
+    COM_ID_REMOTE = 8,
+    COM_ID_NB
 } t_com_id_modules;
 

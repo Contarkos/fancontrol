@@ -15,6 +15,7 @@
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
+#include "com.h"
 #include "os_rpi.h"
 
 #define OS_USEC2NSEC        (1000)
@@ -29,6 +30,7 @@ typedef struct timer_node
 {
     int fd;
     int index;
+    unsigned int msg;
     timer_func callback;
     void * data;
     unsigned int usec;
@@ -42,7 +44,8 @@ typedef struct timer_node
 static void * _os_timer_thread(void * data);
 static t_os_timer_node * _get_timer_from_fd(int fd);
 
-static int _os_get_free_index(t_os_timer_node *i_array);
+static int  _os_get_free_index(t_os_timer_node *i_array);
+static void _os_timer_send_msg(int i_timer_id, void *i_data);
 
 static pthread_t os_timer_thread_id;
 static t_os_timer_node timer_array[MAX_TIMER_COUNT] = { {0} };
@@ -90,6 +93,20 @@ int OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_typ
     }
 
     return ii;
+}
+
+int OS_create_timer_msg(t_uint32 i_usec, t_os_timer_type i_type, t_uint32 i_id_msg)
+{
+    int id = 0;
+
+    /* Create the timer */
+    id = OS_create_timer(i_usec, &_os_timer_send_msg, i_type, NULL);
+
+    if (id >= 0)
+        /* Add the ID of the message to send */
+        timer_array[id].msg = i_id_msg;
+
+    return id;
 }
 
 /* L'ID est l'index dans le tableau des timers donc on peut récupérer l'adresse */
@@ -160,6 +177,41 @@ void OS_usleep(int i_usec)
     nanosleep(&timer_enbl, NULL);
 }
 
+/* Get the current time */
+int OS_gettime(t_int64 *o_time_s, t_int64 *o_time_ns)
+{
+    int ret = 0;
+    struct timespec time;
+
+    if ( (NULL == o_time_s) || (NULL == o_time_ns) )
+    {
+        LOG_ERR("OS : wrong pointers for getting time");
+        ret = -1;
+    }
+
+    if (0 == ret)
+    {
+        /* Get the current time of the system */
+        ret = clock_gettime(CLOCK_REALTIME, &time);
+
+        if (ret < 0)
+            LOG_ERR("OS : error while getting time, errno = %d", errno);
+    }
+
+    if (0 == ret)
+    {
+        *o_time_s = time.tv_sec;
+        *o_time_ns = time.tv_nsec;
+    }
+    else
+    {
+        *o_time_s = 0;
+        *o_time_ns = 0;
+    }
+
+    return ret;
+}
+
 /*********************************************************************/
 /*                       Fonctions internes                          */
 /*********************************************************************/
@@ -172,6 +224,7 @@ int os_init_timer()
     memset(timer_array, 0, sizeof(t_os_timer_node) * MAX_TIMER_COUNT);
 
     /* Creation du timer qui lancera les timers */
+    /* FIXME use the OS API to create the task */
     ret = pthread_create(&os_timer_thread_id, NULL, _os_timer_thread, NULL);
 
     if (0 != ret)
@@ -239,6 +292,23 @@ static int _os_get_free_index(t_os_timer_node *i_array)
     }
 
     return ret;
+}
+
+/* i_data points to nothing, it must be ignored */
+static void _os_timer_send_msg(int i_timer_id, void *i_data)
+{
+    UNUSED_PARAMS(i_data);
+
+    t_uint32 msg_id;
+    int dummy, ret;
+
+    msg_id = timer_array[i_timer_id].msg;
+    dummy = 0;
+
+    ret = COM_msg_send(msg_id, &dummy, sizeof(dummy));
+
+    if (0 != ret)
+        LOG_ERR("OS : error while sending timer message, ret = %d", ret);
 }
 
 static void * _os_timer_thread(void * data)
