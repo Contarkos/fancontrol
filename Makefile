@@ -75,11 +75,11 @@ C_CPLUS_FLAGS = -Wextra -Wall -Wundef -Wfloat-equal -Wshadow -Wpointer-arith -Wc
 C_CPLUS_FLAGS += -O2 -pedantic
 C_CPLUS_FLAGS += -Wswitch-default -Wswitch-enum
 C_CPLUS_FLAGS += -Wunreachable-code -Wconversion -Wcast-qual
-C_CPLUS_FLAGS += -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -marm -march=armv6kz+fp
+C_CPLUS_FLAGS += -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -marm -march=armv6kz+fp
 C_CPLUS_FLAGS += $(INTEG_LOG_LEVEL)
 
 C_FLAGS 	+= $(C_CPLUS_FLAGS) -Wstrict-prototypes -std=c99
-C_FLAGS 	+= -D_POSIX_C_SOURCE=199506L
+C_FLAGS 	+= -D_POSIX_C_SOURCE=199506L -D_GNU_SOURCE
 CPLUS_FLAGS += $(C_CPLUS_FLAGS) -std=c++11
 
 AR = ar
