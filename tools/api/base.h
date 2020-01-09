@@ -9,8 +9,8 @@ typedef int t_int32;
 typedef unsigned int t_uint32;
 typedef volatile int v_int32;
 typedef volatile unsigned int v_uint32;
-typedef long int t_int64;
-typedef unsigned long int t_uint64;
+typedef long long int t_int64;
+typedef unsigned long long int t_uint64;
 
 /* Fichier contenant les macros transverses */
 
