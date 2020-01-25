@@ -67,8 +67,8 @@ class FAN : public MODULE
 
         t_uint32 consigne_speed;        /* Consigne de vitesse */
         int consigne_temp;              /* Température consigne à atteindre */
-        int current_temp;               /* Température de l'élément à refroidir */
-        int room_temp;                  /* Température de la pièce */
+        float current_temp;               /* Température de l'élément à refroidir */
+        float room_temp;                  /* Température de la pièce */
 
         t_uint32 current_speed;         /* Vitesse du ventilateur */
 

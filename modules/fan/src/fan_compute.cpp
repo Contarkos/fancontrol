@@ -19,9 +19,9 @@
 /*                       Variables globales                          */
 /*********************************************************************/
 
-static float compute_duty_hysteresis    (int i_cons, int i_current);
-static float compute_duty_differential  (int i_ref, int i_current);
-static float compute_duty_linear        (int i_current);
+static float compute_duty_hysteresis    (int i_cons, float i_current);
+static float compute_duty_differential  (float i_ref, float i_current);
+static float compute_duty_linear        (float i_current);
 static inline float compute_duty_speed  (t_uint32 i_speed);
 
 /*********************************************************************/
@@ -40,7 +40,7 @@ int FAN::fan_compute_duty(void)
     {
         case FAN_MODE_AUTO:
             {
-                if (FAN_TEMP_INVALID == this->room_temp)
+                if (FAN_TEMP_INVALID == (t_int32) this->room_temp)
                     /* Calcul en mode lineaire par morceaux */
                     duty = compute_duty_linear(this->current_temp);
                 else
@@ -69,7 +69,7 @@ int FAN::fan_compute_duty(void)
             break;
         default:
             {
-                LOG_ERR("FAN : Mode de FAN invalide");
+                LOG_ERR("FAN : invalid FAN mode");
                 ret = -1;
             }
             break;
@@ -148,7 +148,7 @@ int FAN::fan_treat_irq(int i_fd)
  * Compute the duty cycle based on the current temperature and the
  * required one with an hysteresis.
  */
-static float compute_duty_hysteresis  (int i_cons, int i_current)
+static float compute_duty_hysteresis  (int i_cons, float i_current)
 {
     static bool h = true;
     int t;
@@ -160,58 +160,62 @@ static float compute_duty_hysteresis  (int i_cons, int i_current)
     {
         t = i_cons - 1;
 
-        if ( fabs((float) (t) - (float) (i_current)) < FAN_PWM_ECART )
+        if ( fabs((float)t - i_current) < FAN_PWM_ECART )
             h = false;
     }
     else
     {
         t = i_cons + 1;
 
-        if ( i_current > t )
+        if ( i_current > (float)t )
             h = true;
     }
 
-    d = ((float) ( i_current - t ) * OS_MAX_PERCENT_PWM) / FAN_ECART_MAX_TEMP;
+    if (i_current > (float)t)
+        d = ((i_current - (float)t) * OS_MAX_PERCENT_PWM) / FAN_ECART_MAX_TEMP;
+    else
+        d = 0;
+
     return d;
 }
 
-static float compute_duty_differential (int i_ref, int i_current)
+static float compute_duty_differential (float i_ref, float i_current)
 {
     float d = 0;
 
     /* Puis asservissement en température */
-    d = ((float) ( i_current - i_ref ) * OS_MAX_PERCENT_PWM) / FAN_ECART_MAX_TEMP;
+    d = (( i_current - i_ref ) * OS_MAX_PERCENT_PWM) / FAN_ECART_MAX_TEMP;
     return d;
 }
 
-static float compute_duty_linear (int i_current)
+static float compute_duty_linear (float i_current)
 {
     float d = 0;
 
     /* Fonction affine par morceau */
-    if ((float) i_current > FAN_TEMP_MAX)
+    if (i_current > FAN_TEMP_MAX)
     {
         d = FAN_DUTY_MAX;
     }
-    else if ((float) i_current > FAN_TEMP_VERY_HIGH)
+    else if (i_current > FAN_TEMP_VERY_HIGH)
     {
-        d = ((FAN_DUTY_MAX - FAN_DUTY_VERY_HIGH) / (FAN_TEMP_MAX - FAN_TEMP_VERY_HIGH)) * (float) i_current + FAN_DUTY_VERY_HIGH;
+        d = ((FAN_DUTY_MAX - FAN_DUTY_VERY_HIGH) / (FAN_TEMP_MAX - FAN_TEMP_VERY_HIGH)) * i_current + FAN_DUTY_VERY_HIGH;
     }
-    else if ((float) i_current > FAN_TEMP_HIGH)
+    else if (i_current > FAN_TEMP_HIGH)
     {
-        d = ((FAN_DUTY_VERY_HIGH - FAN_DUTY_HIGH) / (FAN_TEMP_VERY_HIGH - FAN_TEMP_HIGH)) * (float) i_current + FAN_DUTY_HIGH;
+        d = ((FAN_DUTY_VERY_HIGH - FAN_DUTY_HIGH) / (FAN_TEMP_VERY_HIGH - FAN_TEMP_HIGH)) * i_current + FAN_DUTY_HIGH;
     }
-    else if ((float) i_current > FAN_TEMP_MEDIUM)
+    else if (i_current > FAN_TEMP_MEDIUM)
     {
-        d = ((FAN_DUTY_HIGH - FAN_DUTY_MEDIUM) / (FAN_TEMP_HIGH - FAN_TEMP_MEDIUM)) * (float) i_current + FAN_DUTY_MEDIUM;
+        d = ((FAN_DUTY_HIGH - FAN_DUTY_MEDIUM) / (FAN_TEMP_HIGH - FAN_TEMP_MEDIUM)) * i_current + FAN_DUTY_MEDIUM;
     }
-    else if ((float) i_current > FAN_TEMP_LOW)
+    else if (i_current > FAN_TEMP_LOW)
     {
-        d = ((FAN_DUTY_MEDIUM - FAN_DUTY_LOW) / (FAN_TEMP_MEDIUM - FAN_TEMP_MEDIUM)) * (float) i_current + FAN_DUTY_LOW;
+        d = ((FAN_DUTY_MEDIUM - FAN_DUTY_LOW) / (FAN_TEMP_MEDIUM - FAN_TEMP_MEDIUM)) * i_current + FAN_DUTY_LOW;
     }
     else
     {
-        d = ((FAN_DUTY_LOW - FAN_DUTY_MIN) / (FAN_TEMP_LOW - FAN_TEMP_MIN)) * (float) i_current + FAN_DUTY_MIN;
+        d = ((FAN_DUTY_LOW - FAN_DUTY_MIN) / (FAN_TEMP_LOW - FAN_TEMP_MIN)) * i_current + FAN_DUTY_MIN;
     }
 
     return d;

@@ -111,25 +111,25 @@ int FAN::fan_update_data(t_temp_data *i_data)
     /* Mise à jour des données venant du module de température */
     if (TEMP_VALIDITY_VALID == i_data->fan_temp_valid)
     {
-        LOG_INF3("FAN : température ventilateur mise à jour, T = %f", i_data->fan_temp);
-        this->current_temp = (t_uint32) i_data->fan_temp;
+        LOG_INF3("FAN : fan temperature updated, T = %f", i_data->fan_temp);
+        this->current_temp = i_data->fan_temp;
     }
     else
     {
-        LOG_WNG("FAN : mauvaise température pour le ventilateur, temp = %f", i_data->fan_temp);
-        this->current_temp = (t_uint32) FAN_TEMP_INVALID;
+        LOG_WNG("FAN : wrong temperature for fan, temp = %f", i_data->fan_temp);
+        this->current_temp = FAN_TEMP_INVALID;
         ret += 1;
     }
 
     if (TEMP_VALIDITY_VALID == i_data->room_temp_valid)
     {
-        LOG_INF3("FAN : température piece mise à jour, T = %f", i_data->room_temp);
-        this->room_temp = (t_uint32) i_data->room_temp;
+        LOG_INF3("FAN : room temperature updated, T = %f", i_data->room_temp);
+        this->room_temp = i_data->room_temp;
     }
     else
     {
-        LOG_WNG("FAN : mauvaise température pour la piece, temp = %f", i_data->room_temp);
-        this->room_temp = (t_uint32) FAN_TEMP_INVALID;
+        LOG_WNG("FAN : wrong temperature for room, temp = %f", i_data->room_temp);
+        this->room_temp = FAN_TEMP_INVALID;
         ret += 2;
     }
 
@@ -173,10 +173,9 @@ int FAN::fan_update_power(t_fan_power_mode *i_data)
         LOG_ERR("FAN : pas de données pour MaJ du power mode");
         ret = -1;
     }
-    else
-    {
+
+    if (0 == ret)
         ret = this->fan_set_power(i_data->power_mode);
-    }
 
     return ret;
 }
@@ -209,6 +208,31 @@ int FAN::fan_set_power(fan_e_power_mode i_mode)
 int FAN::fan_set_pwm(void)
 {
     int ret = 0;
+    /* Init the parameters for the PWM hardware */
+
+    if (0 == ret)
+        /* Reglage source Clock sur PLL C */
+        ret = OS_pwm_set_clock_source(OS_CLOCK_SRC_PLLC);
+
+    if (0 == ret)
+        /* Mode MS pour le PWM */
+        ret = OS_pwm_set_mode(OS_PWM_MODE_MSMODE);
+
+    if (0 == ret)
+        /* Cycle par défaut : 1024 */
+        ret = OS_pwm_set_precision(FAN_DEFAULT_PREC);
+
+    if (0 == ret)
+        /* Reglage du filter MASH par défaut */
+        ret = OS_pwm_set_mash(OS_PWM_MASH_FILTER_1);
+
+    if (0 == ret)
+        /* Reglage de la fréquence PWM */
+        ret = OS_pwm_set_frequency(FAN_PWM_FREQ);
+
+    if (0 == ret)
+        /* Reglage du duty cycle par defaut : 50% */
+        ret = OS_pwm_set_dutycycle(FAN_DEFAULT_CYCLE);
 
     return ret;
 }
