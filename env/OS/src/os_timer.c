@@ -141,7 +141,7 @@ int OS_start_timer(int i_timer_id)
 
         if (0 == ret)
         {
-            timerfd_settime(n->fd, 0, &t, NULL);
+            ret = timerfd_settime(n->fd, 0, &t, NULL);
         }
     }
     else
@@ -160,6 +160,16 @@ int OS_stop_timer(int i_timer_id)
 
     if (n->fd)
     {
+        /* Stop  the timer properly */
+        struct itimerspec t;
+        t.it_value.tv_sec = 0;
+        t.it_value.tv_nsec = 0;
+
+        ret = timerfd_settime(n->fd, 0, &t, NULL);
+
+        if (ret)
+            LOG_ERR("OS : Stopping timer error for timer n°%d, errno = %d", i_timer_id, errno);
+
         /* Fermeture du fichier */
         close(n->fd);
     }
