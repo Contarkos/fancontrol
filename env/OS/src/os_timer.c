@@ -140,9 +140,7 @@ int OS_start_timer(int i_timer_id)
         }
 
         if (0 == ret)
-        {
             ret = timerfd_settime(n->fd, 0, &t, NULL);
-        }
     }
     else
     {
@@ -238,13 +236,9 @@ int os_init_timer()
     ret = pthread_create(&os_timer_thread_id, NULL, _os_timer_thread, NULL);
 
     if (0 != ret)
-    {
-        LOG_ERR("OS : pb création thread pour timer facility (code = %d)", ret);
-    }
+        LOG_ERR("OS : pb creating thread for timer facility (code = %d)", ret);
     else
-    {
-       LOG_INF1("OS : init TIMER ok");
-    }
+        LOG_INF1("OS : init TIMER ok");
 
     return ret;
 }
@@ -274,34 +268,27 @@ int os_end_timer()
 static t_os_timer_node * _get_timer_from_fd(int fd)
 {
     int ii;
-    t_os_timer_node *tmp = NULL;
 
     for (ii = 0; ii < MAX_TIMER_COUNT; ii++)
     {
         if (timer_array[ii].fd == fd)
-        {
-            tmp = &(timer_array[ii]);
-            break;
-        }
+            return &(timer_array[ii]);
     }
 
-    return tmp;
+    return NULL;
 }
 
 static int _os_get_free_index(t_os_timer_node *i_array)
 {
-    int ret = -1, ii;
+    int ii;
 
     for (ii = 0; ii < MAX_TIMER_COUNT; ii++)
     {
         if (0 == i_array[ii].fd)
-        {
-            ret = ii;
-            break;
-        }
+            return ii;
     }
 
-    return ret;
+    return -1;
 }
 
 /* i_data points to nothing, it must be ignored */
@@ -310,15 +297,16 @@ static void _os_timer_send_msg(int i_timer_id, void *i_data)
     UNUSED_PARAMS(i_data);
 
     t_uint32 msg_id;
-    int dummy, ret;
+    t_com_timer_struct msg;
+    int ret;
 
     msg_id = timer_array[i_timer_id].msg;
-    dummy = 0;
+    msg.timer_id = timer_array[i_timer_id].fd;
 
-    ret = COM_msg_send(msg_id, &dummy, sizeof(dummy));
+    ret = COM_msg_send(msg_id, &msg, sizeof(msg));
 
     if (0 != ret)
-        LOG_ERR("OS : error while sending timer message, ret = %d", ret);
+        LOG_ERR("OS : error while sending timer message ID = %d, ret = %d", msg_id, ret);
 }
 
 static void * _os_timer_thread(void * data)
@@ -373,9 +361,7 @@ static void * _os_timer_thread(void * data)
 
                 /* Pour ne pas lancer les callbacks qui n'existent plus */
                 if(tmp && tmp->callback) 
-                {
                     tmp->callback(tmp->index, tmp->data);
-                }
             }
         }
     }

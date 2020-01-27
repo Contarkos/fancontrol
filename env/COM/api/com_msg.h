@@ -63,3 +63,6 @@ typedef enum e_com_id_modules
     COM_ID_NB
 } t_com_id_modules;
 
+typedef struct {
+    t_int32 timer_id;
+} t_com_timer_struct;

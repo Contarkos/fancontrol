@@ -10,8 +10,8 @@
 /*                              Local includes                               */
 /*****************************************************************************/
 
-#include "com_msg.h"
 #include "base.h"
+#include "com_msg.h"
 #include "os.h"
 
 #ifdef __cplusplus
