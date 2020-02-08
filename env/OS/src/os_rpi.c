@@ -28,7 +28,7 @@ int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout)
 
     if (i_pin > GPIO_MAX_NB)
     {
-        LOG_ERR("OS : Erreur numéro de pin, GPIO = %d", i_pin);
+        LOG_ERR("OS : Wrong pin number, GPIO = %d", i_pin);
         ret = -1;
     }
     else if (0 != OS_mutex_lock(&os_rpi_mutex))
@@ -61,7 +61,7 @@ int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout)
                 }
                 break;
             default:
-                LOG_ERR("OS : mauvaise fonction pour GPIO, func = %d", i_inout);
+                LOG_ERR("OS : bad function for GPIO, func = %d", i_inout);
                 ret = -2;
                 break;
         }
@@ -79,7 +79,7 @@ int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active)
 
     if (i_pin > GPIO_MAX_NB)
     {
-        LOG_ERR("OS : mauvaise valeur de pin GPIO, pin = %d", i_pin);
+        LOG_ERR("OS : Wrong pin number, GPIO = %d", i_pin);
         ret = -1;
     }
     else if (0 != OS_mutex_lock(&os_rpi_mutex))
@@ -116,7 +116,7 @@ int OS_read_gpio(t_uint32 i_pin)
     }
     else
     {
-        LOG_ERR("OS : mauvaise valeur de pin GPIO, pin = %d", i_pin);
+        LOG_ERR("OS : Wrong pin number, GPIO = %d", i_pin);
         data = -1;
     }
 
@@ -133,7 +133,7 @@ int os_init_gpio(void)
 
     if (OS_RET_OK == is_init_gpio)
     {
-        LOG_WNG("OS : init GPIO déjà effectué");
+        LOG_WNG("OS : GPIO already initialized, nothing to do");
         ret = 1;
     }
     else
@@ -143,7 +143,7 @@ int os_init_gpio(void)
 
         if (0 != ret)
         {
-            LOG_ERR("OS : Erreur à l'init des GPIO, code : %d", ret);
+            LOG_ERR("OS : Error while initialising GPIO, code : %d", ret);
         }
         else
         {
