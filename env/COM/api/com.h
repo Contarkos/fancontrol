@@ -43,7 +43,7 @@ extern "C" {
 #define COM_ADC_SPEED_2M4       (2457600U)
 #define COM_ADC_SPEED_4M9       (4915200U)
 
-#define COM_ADC_MAX_WAIT        (45U)       /* Number of 10ms waiting cycles (450ms = 9 cycles @ 20Hz) */
+#define COM_ADC_MAX_WAIT        (50U)       /* Number of 10ms waiting cycles (450ms = 9 cycles @ 20Hz) + safety margin */
 
 /*****************************************************************************/
 /*                                  Typedef                                  */

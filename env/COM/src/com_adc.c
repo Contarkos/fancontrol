@@ -147,7 +147,7 @@ int COM_adc_reset_hard(t_os_spi_device i_device)
         LOG_INF1("COM : reset hard pour ADC");
 
         /* Reset de la pin */
-        ret += OS_write_gpio(s->pin_rst, 0);
+        ret = OS_write_gpio(s->pin_rst, 0);
 
         /* Attente pour etre sur que le device recoit la commande */
         OS_usleep(10);
@@ -155,7 +155,13 @@ int COM_adc_reset_hard(t_os_spi_device i_device)
         /* Remontee de la pin */
         ret += OS_write_gpio(s->pin_rst, 1);
 
-        ret += COM_adc_read_setup(i_device, NULL);
+        /* Attente pour etre sur que le device recoit la commande */
+        OS_usleep(10);
+    }
+
+    if (0 == ret)
+    {
+        ret  = COM_adc_set_filter_sync(i_device, COM_STATE_OFF);
 
         /* On attend qu'un mot soit pret */
         ret += com_adc_wait_ready(i_device);
@@ -185,6 +191,8 @@ int COM_adc_reset_soft(t_os_spi_device i_device)
 
     if (0 == ret)
     {
+        ret  = COM_adc_set_filter_sync(i_device, COM_STATE_OFF);
+
         /* On attend qu'un mot soit pret */
         ret = com_adc_wait_ready(i_device);
 
