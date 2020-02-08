@@ -186,6 +186,9 @@ int COM_msg_send(t_uint32 i_msg, void* i_data, t_uint32 i_size);
 int COM_msg_read(t_com_id_modules i_module, t_com_msg_struct *o_msg);
 int COM_msg_register(t_com_id_modules i_module, int *o_semfd);
 
+int COM_create_timer_msg(t_uint32 i_usec, t_os_timer_type i_type, t_uint32 i_id_msg);
+void COM_timer_send_msg(int i_timer_id, void *i_data);
+
 /*---------------------------------------------------------------------------*/
 /* AD7705 handling                                                           */
 

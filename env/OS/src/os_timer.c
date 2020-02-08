@@ -15,7 +15,6 @@
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
-#include "com.h"
 #include "os_rpi.h"
 
 #define OS_USEC2NSEC        (1000)
@@ -45,7 +44,7 @@ static void * _os_timer_thread(void * data);
 static t_os_timer_node * _get_timer_from_fd(int fd);
 
 static int  _os_get_free_index(t_os_timer_node *i_array);
-static void _os_timer_send_msg(int i_timer_id, void *i_data);
+//static void _os_timer_send_msg(int i_timer_id, void *i_data);
 
 static pthread_t os_timer_thread_id;
 static t_os_timer_node timer_array[MAX_TIMER_COUNT] = { {0} };
@@ -95,16 +94,20 @@ int OS_create_timer(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_typ
     return ii;
 }
 
-int OS_create_timer_msg(t_uint32 i_usec, t_os_timer_type i_type, t_uint32 i_id_msg)
+int OS_create_timer_msg(t_uint32 i_usec, timer_func i_handler, t_os_timer_type i_type, t_uint32 i_id_msg)
 {
-    int id = 0;
+    int id = -1;
 
     /* Create the timer */
-    id = OS_create_timer(i_usec, &_os_timer_send_msg, i_type, NULL);
+    id = OS_create_timer(i_usec, i_handler, i_type, NULL);
 
     if (id >= 0)
+    {
         /* Add the ID of the message to send */
         timer_array[id].msg = i_id_msg;
+        /* Make the data points the ID */
+        timer_array[id].data = &timer_array[id].msg;
+    }
 
     return id;
 }
@@ -291,6 +294,7 @@ static int _os_get_free_index(t_os_timer_node *i_array)
     return -1;
 }
 
+#if 0
 /* i_data points to nothing, it must be ignored */
 static void _os_timer_send_msg(int i_timer_id, void *i_data)
 {
@@ -308,6 +312,7 @@ static void _os_timer_send_msg(int i_timer_id, void *i_data)
     if (0 != ret)
         LOG_ERR("OS : error while sending timer message ID = %d, ret = %d", msg_id, ret);
 }
+#endif
 
 static void * _os_timer_thread(void * data)
 {

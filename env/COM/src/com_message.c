@@ -421,6 +421,34 @@ int COM_msg_register(t_com_id_modules i_module, int *o_semfd)
     return ret;
 }
 
+int COM_create_timer_msg(t_uint32 i_usec, t_os_timer_type i_type, t_uint32 i_id_msg)
+{
+    int id = -1;
+
+    /* Create the timer */
+    id = OS_create_timer_msg(i_usec, &COM_timer_send_msg, i_type, i_id_msg);
+
+    if (id < 0)
+        LOG_ERR("COM : error while creating timer with message, ret = %d", id);
+
+    return id;
+}
+
+void COM_timer_send_msg(int i_timer_id, void *i_data)
+{
+    int ret;
+    t_uint32 msg_id;
+    t_com_timer_struct msg;
+
+    msg_id = *((t_uint32 *) i_data);
+    msg.timer_id = i_timer_id;;
+
+    ret = COM_msg_send(msg_id, &msg, sizeof(msg));
+
+    if (0 != ret)
+        LOG_ERR("COM : error while sending timer message ID = %d, ret = %d", msg_id, ret);
+}
+
 /*****************************************************************************/
 /*                               Local functions                             */
 /*****************************************************************************/
