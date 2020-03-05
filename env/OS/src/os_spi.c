@@ -15,11 +15,11 @@
 #include "os.h"
 #include "os_spi.h"
 
-t_os_spi_struct spi_devices_array[OS_SPI_DEVICE_NB] = 
+t_os_spi_struct spi_devices_array[OS_SPI_DEVICE_NB] =
 {
     {
         .filename = OS_FILE_SPI0,
-        .fd = 0,
+        .fd = -1,
         .mode = SPI_MODE_0, /* CPOL = 0 et CPHA = 0 */
         .bits_per_word = 8, /* 8 bits par mots */
         .speed = 1000000,   /* 1MHz */
@@ -27,7 +27,7 @@ t_os_spi_struct spi_devices_array[OS_SPI_DEVICE_NB] =
     },
     {
         .filename = OS_FILE_SPI1,
-        .fd = 0,
+        .fd = -1,
         .mode = SPI_MODE_0, /* CPOL = 0 et CPHA = 0 */
         .bits_per_word = 8, /* 8 bits par mots */
         .speed = 1000000,   /* 1MHz */
@@ -191,9 +191,7 @@ int OS_spi_close_port (t_os_spi_device i_spi_id)
         ret = close(spi_device->fd);
 
         if(ret < 0)
-        {
             LOG_ERR("OS : Could not close SPI device %d with fd = %d, err = %d", spi_device->id, spi_device->fd, errno);
-        }
     }
 
     return(ret);

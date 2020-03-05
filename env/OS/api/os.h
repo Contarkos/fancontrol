@@ -106,6 +106,14 @@ typedef enum
     OS_CLOCK_SRC_HDMI = 7
 } t_os_clock_source;
 
+/* Typedef for I2C */
+typedef enum
+{
+    OS_I2C_DEVICE_0 = 0,
+    OS_I2C_DEVICE_1 = 1,
+    OS_I2C_DEVICE_NB
+} t_os_i2c_device;
+
 /* Typedef for SPI */
 typedef enum
 {

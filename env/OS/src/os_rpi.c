@@ -107,7 +107,7 @@ int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active)
 /* Lecture de la valeur d'une pin */
 int OS_read_gpio(t_uint32 i_pin)
 {
-    int data = 0;
+    volatile int data = 0;
 
     /* Pas de mutex sur une lecture */
     if (i_pin <= GPIO_MAX_NB)

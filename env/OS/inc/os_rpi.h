@@ -28,25 +28,25 @@ extern struct bcm2835_peripheral os_periph_spi;
 #define BLOCK_SIZE              (4*1024)
 
 /* Macros d'acces aux registres des GPIO */
-#define INP_GPIO(g)             *( os_periph_gpio.addr + ((g)/10) ) &= (unsigned int) ~( 7 << ( ((g)%10)*3 ) )
-#define OUT_GPIO(g)        {\
+#define INP_GPIO(g)        do { *( os_periph_gpio.addr + ((g)/10) ) &= (unsigned int) ~( 7 << ( ((g)%10)*3 ) ); } while (0)
+#define OUT_GPIO(g)        do {\
                                 INP_GPIO(g);\
                                 *( os_periph_gpio.addr + ((g)/10) ) |= (unsigned int)  ( 1 << ( ((g)%10)*3 ) );\
-                           } /* Toujours utiliser INP avant OUT */
+                           } while (0) /* Toujours utiliser INP avant OUT */
 
-#define SET_GPIO_ALT(g,a)  {\
+#define SET_GPIO_ALT(g,a)  do {\
                                  INP_GPIO(g);\
                                  *(os_periph_gpio.addr + ((g)/10) ) |= (((a)<=3?(a) + 4:(a)==4?3:2)<<(((g)%10)*3));\
-                           }
+                           } while (0)
 
 /* Macros de base GPIO pour modifier les valeurs */
 #define GPIO_SET_REGISTER        *( os_periph_gpio.addr + 7  )
-#define GPIO_SET(g)              GPIO_SET_REGISTER = (unsigned int) 1 << (g) /* sets   bits which are 1 ignores bits which are 0 */
+#define GPIO_SET(g)              do { GPIO_SET_REGISTER = (unsigned int) 1 << (g) } while (0) /* sets   bits which are 1 ignores bits which are 0 */
 #define GPIO_CLR_REGISTER        *( os_periph_gpio.addr + 10 )
-#define GPIO_CLR(g)              GPIO_CLR_REGISTER = (unsigned int) 1 << (g) /* clears bits which are 1 ignores bits which are 0 */
+#define GPIO_CLR(g)              do { GPIO_CLR_REGISTER = (unsigned int) 1 << (g) } while (0) /* clears bits which are 1 ignores bits which are 0 */
  
 #define GPIO_READ_REGISTER       *( os_periph_gpio.addr + 13 )
-#define GPIO_READ(g)             ( (int) (GPIO_READ_REGISTER & (t_uint32) (1 << (g))) >> (g) )
+#define GPIO_READ(g)             ( (volatile int) (GPIO_READ_REGISTER & (t_uint32) (1 << (g))) >> (g) )
 
 #define GPIO_MAX_NB              27U
 
