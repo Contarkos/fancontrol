@@ -41,9 +41,9 @@ extern struct bcm2835_peripheral os_periph_spi;
 
 /* Macros de base GPIO pour modifier les valeurs */
 #define GPIO_SET_REGISTER        *( os_periph_gpio.addr + 7  )
-#define GPIO_SET(g)              do { GPIO_SET_REGISTER = (unsigned int) 1 << (g) } while (0) /* sets   bits which are 1 ignores bits which are 0 */
+#define GPIO_SET(g)              do { GPIO_SET_REGISTER = (unsigned int) 1 << (g); } while (0) /* sets   bits which are 1 ignores bits which are 0 */
 #define GPIO_CLR_REGISTER        *( os_periph_gpio.addr + 10 )
-#define GPIO_CLR(g)              do { GPIO_CLR_REGISTER = (unsigned int) 1 << (g) } while (0) /* clears bits which are 1 ignores bits which are 0 */
+#define GPIO_CLR(g)              do { GPIO_CLR_REGISTER = (unsigned int) 1 << (g); } while (0) /* clears bits which are 1 ignores bits which are 0 */
  
 #define GPIO_READ_REGISTER       *( os_periph_gpio.addr + 13 )
 #define GPIO_READ(g)             ( (volatile int) (GPIO_READ_REGISTER & (t_uint32) (1 << (g))) >> (g) )
