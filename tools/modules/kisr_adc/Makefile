@@ -1,8 +1,14 @@
 # Makefile pour le module d'interruption
-ARCH := arm
-CROSS_COMPILE:=/opt/arm-bcm2708/arm-linux-gnueabihf/bin/arm-linux-gnueabihf-
+TOOLCHAIN_DIR=/opt/arm-bcm2708/arm-linux-gnueabihf
+TOOLCHAIN_DIR=/opt/armv6-rpi-linux-gnueabihf
 
-KERNEL_DIR ?= /home/martin/raspi-kernel/lib/modules/4.14.70/build/
+ARCH := arm
+ARCH_EXT = v6
+
+CROSS_COMPILE = $(TOOLCHAIN_DIR)/bin/$(ARCH)$(ARCH_EXT)-linux-gnueabihf-
+
+#KERNEL_DIR ?= /home/martin/raspi-kernel/lib/modules/4.14.70/build/
+KERNEL_DIR ?= /home/martin/buildroot-2019.02.5/output/build/linux-custom/
 MODULE_DIR := $(shell pwd)
 obj-m := kisr_adc.o
 
