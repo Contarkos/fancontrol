@@ -15,7 +15,7 @@ This project requires the following points in order to work :
 * A rootfs directory in /opt/armv6-rpi-linux-gnueabihf/ (lib and include)
 * A kernel source code for linux 4.14 in /opt/kernel/linux-rpi-4.14.y
 * You can build your own toolchain with the configuration file .config-cross in the tools/boot directory
-** You may need to edit some path and some settings before compiling the toolchain.
+* You may need to edit some path and some settings before compiling the toolchain.
 
 ### On your Pi
 
