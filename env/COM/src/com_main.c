@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 // Local includes
 #include "integ_log.h"
@@ -16,7 +17,10 @@ int com_extern_socket = -1;
 int COM_init(void)
 {
     int ret = 0;
-    t_com_inet_data d = { .addr = INADDR_ANY, .port = 21001 }; /* addr = every possible addresses */
+    struct sockaddr_in d;
+    d.sin_family = AF_INET;
+    d.sin_port = htons(21001);
+    d.sin_addr.s_addr = INADDR_ANY;
 
     /* Init the messages structures */
     ret = com_init_msg();
@@ -24,7 +28,7 @@ int COM_init(void)
     if (0 == ret)
     {
         /* Open the external socket */
-        com_extern_socket = COM_create_socket(AF_INET, SOCK_STREAM, 0, (char *) &d, sizeof(t_com_inet_data));
+        com_extern_socket = COM_create_socket(AF_INET, SOCK_STREAM, 0, (char *) &d, sizeof(d));
 
         if (-1 == com_extern_socket)
         {

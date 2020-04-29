@@ -21,7 +21,10 @@
 /*                               Defines                                     */
 /*****************************************************************************/
 
-#define REMOTE_UDP_KO 1
+//#define REMOTE_UDP_KO 1
+
+#define REMOTE_LOCAL_ADDR       COM_LOCAL_IP_ADDR
+#define REMOTE_LOCAL_PORT       41001
 
 /*****************************************************************************/
 /* Variables globales */
@@ -72,7 +75,7 @@ int REMOTE::start_module()
     char s[] = REMOTE_SOCKET_NAME;
 
     /* Init timer regulier */
-    this->timer_fd = OS_create_timer_msg(REMOTE_TIMER_USEC, OS_TIMER_PERIODIC, REMOTE_TIMER);
+    this->timer_fd = COM_create_timer_msg(REMOTE_TIMER_USEC, OS_TIMER_PERIODIC, REMOTE_TIMER);
 
     if (this->timer_fd < 0)
     {
@@ -123,27 +126,13 @@ int REMOTE::start_module()
         multi_addr.sin_port = htons(REMOTE_MULTICAST_PORT);
         inet_aton(REMOTE_MULTICAST_ADDR, &multi_addr.sin_addr);
 
-        this->udp_fd = COM_create_socket(AF_INET, SOCK_DGRAM, 0, (char *) &multi_addr, sizeof(struct sockaddr_in));
+        //ret = COM_connect_socket(AF_INET, SOCK_DGRAM, (char *) &multi_addr, sizeof(multi_addr), &this->udp_fd);
+        ret = COM_create_mcast_socket(&this->out_socket, REMOTE_LOCAL_ADDR, REMOTE_LOCAL_PORT, REMOTE_MULTICAST_ADDR, REMOTE_MULTICAST_PORT);
 
-        if ( (0 == ret) && (this->udp_fd > 0) )
+        if (0 == ret)
         {
-            LOG_INF3("REMOTE : creation socket UDP OK, fd = %d", this->udp_fd);
-            this->p_fd[REMOTE_FD_UDP].fd = this->udp_fd;
-
-            /* Suppression de la boucle de multicast */
-            char loop_conf = 0;
-            ret = setsockopt(this->udp_fd, IPPROTO_IP, IP_MULTICAST_LOOP, (char *)&loop_conf, sizeof(loop_conf));
-
-            if (ret < 0)
-                LOG_ERR("REMOTE : sortie de boucle multicast en erreur, ret = %d", ret);
-
-            /* Ajout de l'interface utilisee pour envoyer les messages */
-            struct in_addr local_addr;
-            inet_aton(COM_LOCAL_IP_ADDR, &local_addr);
-            ret = setsockopt(this->udp_fd, IPPROTO_IP, IP_MULTICAST_IF, (char *)&local_addr, sizeof(local_addr));
-
-            if (ret < 0)
-                LOG_ERR("REMOTE : binding de l'interface locale en erreur, ret = %d", ret);
+            LOG_INF3("REMOTE : creation socket UDP OK, fd = %d", this->out_socket.fd);
+            this->p_fd[REMOTE_FD_UDP].fd = this->out_socket.fd;
         }
         else
         {
@@ -191,7 +180,7 @@ int REMOTE::stop_module()
 
 #ifndef REMOTE_UDP_KO
     /* Fermeture socket UDP */
-    ret += COM_close_socket(this->udp_fd);
+    ret += COM_close_socket(this->out_socket.fd);
 #endif
 
     return ret;

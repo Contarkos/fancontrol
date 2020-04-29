@@ -5,6 +5,7 @@
 /*****************************************************************************/
 
 #include <stdio.h>
+#include <netinet/in.h>
 
 /*****************************************************************************/
 /*                              Local includes                               */
@@ -140,6 +141,14 @@ typedef struct
 
 typedef struct
 {
+    t_int32 fd;
+    t_uint32 is_init;
+    struct sockaddr_in local;
+    struct sockaddr_in dest;
+} t_com_socket;
+
+typedef struct
+{
     t_uint32 id;
     char data[COM_MAX_SIZE_DATA];
 } __attribute__((packed)) t_com_msg;
@@ -169,9 +178,11 @@ int COM_stop(void);
 
 /* Functions API */
 int COM_create_socket(int i_family, int i_type, int i_proto, char *i_data, size_t i_size);
+int COM_create_mcast_socket(t_com_socket *o_socket, const char *i_inaddr, t_uint16 i_inport, const char *i_outaddr, t_uint16 i_outport);
 int COM_connect_socket(int i_family, int i_type, char * i_data, size_t i_size, int *o_fd);
 int COM_socket_listen(int i_fd, int i_backlog);
 int COM_send_data(int i_fd, t_uint32 i_id, void * i_data, size_t i_size, int i_flags);
+int COM_send_mcast_data(t_com_socket *i_socket, t_uint32 i_id, void * i_data, size_t i_size, int i_flags);
 int COM_receive_data(int i_sock, t_com_msg *o_m, int *o_size);
 int COM_close_socket(int i_fd);
 

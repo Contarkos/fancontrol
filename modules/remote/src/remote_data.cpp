@@ -15,8 +15,8 @@ int REMOTE::remote_send_status(void)
     s.fan_rpm = 1000;
     s.temp_temp = 25;
 
-    ret = COM_send_data(this->udp_fd, REMOTE_STATUS, &s, sizeof(s), 0);
-    LOG_INF3("REMOTE : envoi statut systeme, RPM = %d, temp = %d°, ret = %d", s.fan_rpm, s.temp_temp, ret);
+    ret = COM_send_mcast_data(&this->out_socket, REMOTE_STATUS, &s, sizeof(s), 0);
+    LOG_INF3("REMOTE : envoi statut systeme, RPM = %d, temp = %dC, ret = %d", s.fan_rpm, s.temp_temp, ret);
 
     if (ret < 0)
         LOG_ERR("REMOTE : erreur a l'envoi du statut du systeme, ret = %d", ret);

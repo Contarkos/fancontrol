@@ -67,11 +67,13 @@ int REMOTE::remote_treat_com()
 
         switch (m.header.id)
         {
+            case MAIN_START:
+                break;
             case MAIN_SHUTDOWN:
                 ret = this->stop_and_exit();
                 break;
             case REMOTE_TIMER:
-                //ret = this->remote_send_status();
+                ret = this->remote_send_status();
                 break;
             default:
                 LOG_ERR("REMOTE : mauvaise ID pour message, id = %d", m.header.id);

@@ -33,8 +33,8 @@ class REMOTE : public MODULE
         struct pollfd p_fd[REMOTE_FD_NB];  /* Structure pour polling */
         int timer_fd;                   /* Index du timer requested */
         int socket_fd;                  /* File descriptor pour recevoir les messages */
-        int udp_fd;                     /* File descriptor pour recevoir les interruptions */
         int remote_semfd;               /* File descriptor pour recevoir les messages de la queue */
+        t_com_socket out_socket;        /* Structure contenant les donnees pour le multicast */
 
         /***********************************************/
         /*             Methodes virtuelles             */
