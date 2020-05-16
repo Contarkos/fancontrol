@@ -26,8 +26,9 @@ This project requires the following points in order to work :
 
 Alternatively, you can use the buildroot .config file present in the tools/boot directory
 * You need to edit the path to the .config-linux file in the buildroot configuration
-* No ltmux.sh script in this configuration, you need to copy the files manually
-* You can mount the partitions on your SD card for persistent file storage.
+* You need to edit the path to the overlay filesystem that include the script ran at startup
+* You can mount the partitions on your SD card for persistent file storage. The first partition is automatically mounted.
+* You need a fancontrol directory containing the software and the kernel drivers on your first partition (the one with the zImage file).
 
 ## About
 
