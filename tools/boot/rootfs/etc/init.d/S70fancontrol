@@ -1,0 +1,17 @@
+#!/bin/sh
+
+SESSION="BOOT1"
+
+/bin/echo "Launching tmux"
+
+#allow re-launch
+/usr/bin/tmux has-session -t ${SESSION} 2> /dev/null && /usr/bin/tmux kill-session -t ${SESSION}
+/usr/bin/tmux -2 new-session -d -s ${SESSION} "/usr/bin/start_app.sh; exec sh"
+
+/usr/bin/tmux rename-window "console"
+
+/usr/bin/tmux set-option -t ${SESSION}:0 remain-on-exit on
+
+/usr/bin/tmux split-window -h "/bin/htop; exec sh"
+/usr/bin/tmux split-window -v "/bin/echo Welcome aboard, captain; exec sh"
+/usr/bin/tmux select-pane -t 0
