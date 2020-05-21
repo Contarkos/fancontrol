@@ -39,7 +39,7 @@ t_com_adc_setup com_spi_device_array[OS_SPI_DEVICE_NB] =
         .mode = COM_ADC_MODE_NORMAL,
         .gain = COM_ADC_GAIN_1,
         .bipolarity = COM_STATE_OFF,
-        .buffer_mode = COM_STATE_OFF,
+        .buffer_mode = COM_STATE_ON,
         .filter_sync = COM_STATE_OFF
     },
     /* DEVICE 1 */
@@ -54,7 +54,7 @@ t_com_adc_setup com_spi_device_array[OS_SPI_DEVICE_NB] =
         .mode = COM_ADC_MODE_NORMAL,
         .gain = COM_ADC_GAIN_1,
         .bipolarity = COM_STATE_OFF,
-        .buffer_mode = COM_STATE_OFF,
+        .buffer_mode = COM_STATE_ON,
         .filter_sync = COM_STATE_OFF
     }
 };
@@ -68,11 +68,12 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
     int ret = 0;
     t_com_adc_setup *s;
 
+    LOG_INF1("COM : initialisation for device %d", i_device);
     s = com_adc_get_setup(i_device);
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -82,7 +83,7 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
         ret = OS_spi_open_port(i_device, SPI_MODE_3, COM_ADC_BITS_PER_WORD, COM_ADC_SPEED_4M9);
 
         if (ret < 0)
-            LOG_ERR("COM : erreur à l'ouverture du device SPI, ret = %d", ret);
+            LOG_ERR("COM : error opening SPI device, ret = %d", ret);
     }
 
     if (0 == ret)
@@ -94,7 +95,7 @@ int COM_adc_init(t_os_spi_device i_device, t_com_adc_clock_rate i_rate)
         ret += COM_adc_reset_hard(i_device);
 
         if (ret < 0)
-            LOG_ERR("COM : erreur reset hard durant l'init de l'ADC, ret = %d", ret);
+            LOG_ERR("COM : error hard reset during ADC init, ret = %d", ret);
     }
 
     if (0 == ret)
@@ -138,13 +139,13 @@ int COM_adc_reset_hard(t_os_spi_device i_device)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
     if (0 == ret)
     {
-        LOG_INF1("COM : reset hard pour ADC");
+        LOG_INF1("COM : hard reset for ADC");
 
         /* Reset de la pin */
         ret = OS_write_gpio(s->pin_rst, 0);
@@ -179,7 +180,7 @@ int COM_adc_reset_soft(t_os_spi_device i_device)
     /* Verification du device a resetter */
     if (NULL == com_adc_get_setup(i_device))
     {
-        LOG_ERR("COM : device à reset inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device to reset, device = %d", i_device);
         ret = -1;
     }
 
@@ -214,7 +215,7 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -243,27 +244,27 @@ t_uint16 COM_adc_read_result(t_os_spi_device i_device, t_com_adc_pair i_pair)
         /* Vide pour ne pas bloquer la lecture */
         data[1] = COM_ADC_NULL;
         data[2] = COM_ADC_NULL;
-        LOG_INF3("COM : valeur requete = 0x%x", data[0]);
+        LOG_INF3("COM : request value = 0x%x", data[0]);
 
         /* On attend qu'un mot soit pret */
         ret = com_adc_wait_ready(i_device);
 
         if (ret < 0)
-            LOG_ERR("COM : AD7705, pas de données disponibles...");
+            LOG_ERR("COM : AD7705, no data available...");
     }
 
     if (0 == ret)
     {
         /* On va récupérer les données */
         ret = OS_spi_write_read(i_device, data, COM_DATA_LENGTH + 1);
-        LOG_INF3("COM : valeur result = 0x%x & 0x%x", data[1], data[2]);
+        LOG_INF3("COM : result = 0x%x & 0x%x", data[1], data[2]);
     }
 
     if (0 == ret)
     {
         /* Concatenation of the two bytes */
         result = (t_uint16) ( (data[1] << COM_BYTE_SHIFT) | data[2]);
-        LOG_INF3("COM : resultat ADC = %d", result);
+        LOG_INF3("COM : ADC result = %d", result);
     }
 
     return result;
@@ -279,7 +280,7 @@ int COM_adc_set_filter_sync(t_os_spi_device i_device, t_com_state i_filter_sync)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -292,7 +293,7 @@ int COM_adc_set_filter_sync(t_os_spi_device i_device, t_com_state i_filter_sync)
                 s->filter_sync = i_filter_sync;
                 break;
             default:
-                LOG_ERR("COM : erreur sur la valeur de synchro filtre, i_filter_sync = %d", i_filter_sync);
+                LOG_ERR("COM : invalid filter sync value, i_filter_sync = %d", i_filter_sync);
                 ret = -2;
                 break;
         }
@@ -314,7 +315,7 @@ int COM_adc_set_buffer_mode(t_os_spi_device i_device, t_com_state i_buffer_mode)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -327,7 +328,7 @@ int COM_adc_set_buffer_mode(t_os_spi_device i_device, t_com_state i_buffer_mode)
                 s->buffer_mode = i_buffer_mode;
                 break;
             default:
-                LOG_ERR("COM : erreur pour la valeur du buffer mode, i_buffer_mode = %d", i_buffer_mode);
+                LOG_ERR("COM : invalid buffer mode value, i_buffer_mode = %d", i_buffer_mode);
                 ret = -2;
         }
     }
@@ -349,7 +350,7 @@ int COM_adc_set_bipolarity(t_os_spi_device i_device, t_com_state i_bipolarity)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -362,7 +363,7 @@ int COM_adc_set_bipolarity(t_os_spi_device i_device, t_com_state i_bipolarity)
                 s->bipolarity = i_bipolarity;
                 break;
             default:
-                LOG_ERR("COM : mauvaise valeur de bipolarité");
+                LOG_ERR("COM : invalid bipolarity value");
                 ret = -2;
                 break;
         }
@@ -384,7 +385,7 @@ int COM_adc_set_gain(t_os_spi_device i_device, t_com_adc_gain i_gain)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -425,7 +426,7 @@ int COM_adc_set_mode(t_os_spi_device i_device, t_com_adc_mode i_mode)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -440,7 +441,7 @@ int COM_adc_set_mode(t_os_spi_device i_device, t_com_adc_mode i_mode)
                 s->mode = i_mode;
                 break;
             default:
-                LOG_ERR("COM : erreur de valeur pour mode de calibration, i_mode = %d", i_mode);
+                LOG_ERR("COM : invalid calibration mode, i_mode = %d", i_mode);
                 ret = -2;
                 break;
         }
@@ -455,7 +456,12 @@ int COM_adc_set_mode(t_os_spi_device i_device, t_com_adc_mode i_mode)
         ret = com_adc_wait_ready(i_device);
 
     /* Retour à la normal (pas de calibration à chaque setup) */
-    s->mode = COM_ADC_MODE_NORMAL;
+    if (0 == ret)
+    {
+        LOG_ERR("COM : pushing correct setup to device, buffer_mode = %d", s->buffer_mode);
+        s->mode = COM_ADC_MODE_NORMAL;
+        ret = com_adc_config_setup(i_device);
+    }
 
     return ret;
 }
@@ -471,7 +477,7 @@ int COM_adc_enable_clock(t_os_spi_device i_device, t_com_adc_clock i_clock)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -484,7 +490,7 @@ int COM_adc_enable_clock(t_os_spi_device i_device, t_com_adc_clock i_clock)
                 s->clk_disable = i_clock;
                 break;
             default:
-                LOG_ERR("COM : valeur erronee pour i_clock, i_clock = %d", i_clock);
+                LOG_ERR("COM : invalid clock status command, clock = %d", i_clock);
                 ret = -2;
                 break;
         }
@@ -507,7 +513,7 @@ int COM_adc_set_clock_rate(t_os_spi_device i_device, t_com_adc_clock_rate i_rate
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -520,7 +526,7 @@ int COM_adc_set_clock_rate(t_os_spi_device i_device, t_com_adc_clock_rate i_rate
                 s->clk_rate = i_rate;
                 break;
             default:
-                LOG_ERR("COM : valeur erronee pour la frequence de fonctionnement de l'ADC, i_rate = %d", i_rate);
+                LOG_ERR("COM : invalid ADC frequency, i_rate = %d", i_rate);
                 ret = -2;
                 break;
         }
@@ -528,7 +534,10 @@ int COM_adc_set_clock_rate(t_os_spi_device i_device, t_com_adc_clock_rate i_rate
 
     /* Reconfig du setup */
     if (0 == ret)
+    {
+        LOG_INF3("COM : new clock value for device %d : clock = %d", i_device, i_rate);
         ret = com_adc_config_clock(i_device);
+    }
 
     return ret;
 }
@@ -542,7 +551,7 @@ int COM_adc_set_clock_div(t_os_spi_device i_device, t_com_state i_div)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -555,7 +564,7 @@ int COM_adc_set_clock_div(t_os_spi_device i_device, t_com_state i_div)
                 s->clk_div = i_div;
                 break;
             default:
-                LOG_ERR("COM : erreur sur la valeur du diviseur de fréquence, i_div = %d", i_div);
+                LOG_ERR("COM : invalid frequency divider value, i_div = %d", i_div);
                 ret = -2;
                 break;
         }
@@ -577,7 +586,7 @@ int COM_adc_set_clock_filter(t_os_spi_device i_device, t_com_adc_clock_filt i_fi
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -592,7 +601,7 @@ int COM_adc_set_clock_filter(t_os_spi_device i_device, t_com_adc_clock_filt i_fi
                 s->clk_filter = i_filter;
                 break;
             default:
-                LOG_ERR("COM : erreur sur la valeur du filtre pour ADC, i_filter = %d", i_filter);
+                LOG_ERR("COM : invalid ADC clock filter, i_filter = %d", i_filter);
                 ret = -2;
                 break;
         }
@@ -616,7 +625,7 @@ int COM_adc_read_setup(t_os_spi_device i_device, t_uint8 *o_setup)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -630,7 +639,7 @@ int COM_adc_read_setup(t_os_spi_device i_device, t_uint8 *o_setup)
 
         /* Lecture de la config courante */
         data[1] = COM_ADC_NULL;
-        LOG_INF3("COM : valeur de la cmd = 0x%x", data[0]);
+        LOG_INF3("COM : command value = 0x%x", data[0]);
 
         /* On va écrire les données */
         ret = OS_spi_write_read(i_device, data, COM_SETUP_LENGTH + 1);
@@ -640,7 +649,7 @@ int COM_adc_read_setup(t_os_spi_device i_device, t_uint8 *o_setup)
     if (0 == ret)
     {
         /* TODO enregistrement des données */
-        LOG_INF3("COM : valeur du setup = 0x%x", data[1]);
+        LOG_INF3("COM : setup value = 0x%x", data[1]);
 
         /* Write the fresh data */
         if (o_setup)
@@ -661,7 +670,7 @@ int COM_adc_read_clock(t_os_spi_device i_device, t_uint8 *o_clock)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -684,7 +693,7 @@ int COM_adc_read_clock(t_os_spi_device i_device, t_uint8 *o_clock)
     if (0 == ret)
     {
         /* TODO enregistrement des données */
-        LOG_INF3("COM : valeur de la clock = 0x%x", data[1]);
+        LOG_INF3("COM : clock value = 0x%x", data[1]);
 
         if (o_clock)
             *o_clock = data[1];
@@ -717,7 +726,7 @@ int com_adc_config_setup(t_os_spi_device i_device)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -737,6 +746,8 @@ int com_adc_config_setup(t_os_spi_device i_device)
                               | (s->filter_sync << COM_ADC_SET_FILT_SHIFT)
                 );
 
+        LOG_ERR("COM : setup = %d, buffer_mode = %d", data[1], s->buffer_mode);
+
         /* On va écrire les données */
         ret = OS_spi_write_read(i_device, data, COM_SETUP_LENGTH + 1);
     }
@@ -755,7 +766,7 @@ int com_adc_config_clock(t_os_spi_device i_device)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 
@@ -791,7 +802,7 @@ int com_adc_wait_ready(t_os_spi_device i_device)
 
     if (NULL == s)
     {
-        LOG_ERR("COM : device inexistant, device = %d", i_device);
+        LOG_ERR("COM : invalid device, device = %d", i_device);
         ret = -1;
     }
 

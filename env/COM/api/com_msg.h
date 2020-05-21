@@ -37,6 +37,7 @@
 /* Messages TEMP */
 #define TEMP_DATA           (0 + (COM_BASE_TEMP * COM_NB_MSG_BASE))
 #define TEMP_TIMER          (1 + (COM_BASE_TEMP * COM_NB_MSG_BASE))
+#define TEMP_TIC            (2 + (COM_BASE_TEMP * COM_NB_MSG_BASE))
 
 /* Messages REMOTE */
 #define REMOTE_TIMER        (0 + (COM_BASE_REMOTE * COM_NB_MSG_BASE))
