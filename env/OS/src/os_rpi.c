@@ -41,14 +41,10 @@ int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout)
         switch (i_inout)
         {
             case OS_GPIO_FUNC_IN:
-                {
-                    INP_GPIO(i_pin);
-                }
+                INP_GPIO(i_pin);
                 break;
             case OS_GPIO_FUNC_OUT:
-                {
-                    OUT_GPIO(i_pin);
-                }
+                OUT_GPIO(i_pin);
                 break;
             case OS_GPIO_FUNC_ALT0:
             case OS_GPIO_FUNC_ALT1:
@@ -56,9 +52,7 @@ int OS_set_gpio(t_uint32 i_pin, t_os_gpio_func i_inout)
             case OS_GPIO_FUNC_ALT3:
             case OS_GPIO_FUNC_ALT4:
             case OS_GPIO_FUNC_ALT5:
-                {
-                    SET_GPIO_ALT(i_pin, i_inout);
-                }
+                SET_GPIO_ALT(i_pin, i_inout);
                 break;
             default:
                 LOG_ERR("OS : bad function for GPIO, func = %d", i_inout);

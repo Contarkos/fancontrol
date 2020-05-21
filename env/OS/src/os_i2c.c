@@ -70,6 +70,41 @@ int OS_i2c_open_device(t_os_i2c_device i_i2c_id, int i_address)
     return ret;
 }
 
+int OS_i2c_close_device(t_os_i2c_device i_i2c_id)
+{
+    int ret = 0;
+    t_os_i2c_struct *device;
+
+    device = os_i2c_get_device(i_i2c_id);
+
+    if (NULL == device)
+    {
+        LOG_ERR("OS : wrong I2C device, id = %d", i_i2c_id);
+        ret = -1;
+    }
+
+    /* Closing open file */
+    if (0 == ret)
+    {
+        ret = close(device->fd);
+
+        if (ret < 0)
+            LOG_ERR("OS : error while closing I2C device, errno = %d", errno);
+    }
+
+    if (0 == ret)
+    {
+        int ii;
+
+        for (ii = 0; ii < OS_MAX_I2C_ADDRESSES; ii++)
+            device->addresses[device->nb_addresses] = 0;
+
+        device->nb_addresses = 0;
+    }
+
+    return ret;
+}
+
 /*********************************************************************/
 /*                       Fonctions locales                           */
 /*********************************************************************/

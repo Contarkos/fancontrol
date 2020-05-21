@@ -109,7 +109,7 @@ int OS_spi_open_port (t_os_spi_device i_spi_id, unsigned char i_mode, unsigned c
 
     if (0 == ret)
     {
-        LOG_INF1("OS : ouverture fichier SPI%d", spi_device->id);
+        LOG_INF1("OS : opening SPI%d file", spi_device->id);
 
         if (spi_device->fd < 0)
         {
@@ -182,7 +182,7 @@ int OS_spi_close_port (t_os_spi_device i_spi_id)
 
     if (NULL == spi_device)
     {
-        LOG_ERR("OS : device SPI inexistant");
+        LOG_ERR("OS : invalid SPI device");
         ret = -1;
     }
 
