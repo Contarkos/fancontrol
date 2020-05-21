@@ -1,0 +1,5 @@
+# Ignore the keys to avoid putting them online
+# You can generate them with the commands
+# dropbearkey -t ecdsa -f /path/to/your/rootfs/etd/dropbear/dropbear_ecdsa_host_key
+# dropbearkey -t rsa   -f /path/to/your/rootfs/etd/dropbear/dropbear_rsa_host_key
+dropbear_*_host_key

@@ -30,6 +30,14 @@ Alternatively, you can use the buildroot .config file present in the tools/boot 
 * You can mount the partitions on your SD card for persistent file storage. The first partition is automatically mounted.
 * You need a fancontrol directory containing the software and the kernel drivers on your first partition (the one with the zImage file).
 
+### Security
+
+* Do not forget to change the root password in the .config file for buildroot under "System configuration" or with the BR2\_TARGET\_GENERIC\_ROOT\_PASSWD variable
+* You can generate the keys for dropbear to avoid generating random ones at each startup with the following commands :
+  * dropbearkey -t ecdsa -f /path/to/your/rootfs/etc/dropbear/dropbear\_ecdsa\_host\_key
+  * dropbearkey -t rsa   -f /path/to/your/rootfs/etc/dropbear/dropbear\_rsa\_host\_key
+* Git will ignore any keys you put in the directory for the dropbear keys to avoid pushing them online
+
 ## About
 
 ### Control the fan's speed
