@@ -46,20 +46,21 @@ int main_start_factory()
 
     ret = 0;
 
-    /* Init des librairies */
+    /* Init librairies */
     ret_temp = main_init();
 
     if (0 != ret_temp)
     {
+        LOG_ERR("MAIN : error while loading environment, ret = %d", ret_temp);
         ret = 1;
     }
     else
     {
-        /* On démarre les modules. */
+        /* Starting modules. */
         for (ii = 0; ii < NB_MODULE; ii++)
         {
-            /* On bloque les mutex de tout le monde */
-            LOG_INF1("MAIN : lock pour %d", ii);
+            /* Locking mutexes for everyone */
+            LOG_INF1("MAIN : lock for %d", ii);
             OS_mutex_lock(&(t_start[ii].mutex_mod));
             OS_mutex_unlock(&(t_start[ii].mutex_main));
 
@@ -68,28 +69,35 @@ int main_start_factory()
             if (0 != ret_temp)
             {
                 ret = 1;
-                LOG_ERR("MAIN : Erreur pendant le lancement du module n°%d", ii);
+                LOG_ERR("MAIN : Error while launching module n°%d", ii);
             }
         }
 
-        /* Attente du retour des threads du module */
+        /* Waiting on modules to be initialised */
         for (ii = 0; ii < NB_MODULE; ii++)
         {
-            LOG_INF1("MAIN : lock d'attente pour %d", ii);
+            LOG_INF1("MAIN : locking on %d", ii);
             OS_mutex_lock(&(t_start[ii].mutex_main));
         }
 
-        /* Tous les threads sont lancés on peut démarrer */
+        /* All modules are ready so : GO ! */
         for (ii = 0; ii < NB_MODULE; ii++)
         {
-            LOG_INF1("MAIN : unlock pour %d", ii);
+            LOG_INF1("MAIN : unlock for %d", ii);
             OS_mutex_unlock(&(t_start[ii].mutex_mod));
         }
 
-        /* C'est parti */
+        if (0 == ret)
+        {
+            /* TODO : send MAIN_START message to start everyone */
+            int dummy = 0;
+            ret = COM_msg_send(MAIN_START, &dummy, sizeof(dummy));
+        }
+
+        /* Main is now running */
         main_is_running = 1;
 
-        /* On va chercher des commandes rentrées par l'utilisateur */
+        /* Main loop will wait for commands from the user */
         ret = main_loop();
     }
 
@@ -100,32 +108,35 @@ int main_init(void)
 {
     int ret = 0;
 
-    /* Init de l'OS */
-    ret = OS_init();
+    if (0 == ret)
+    {
+        /* Init de l'OS */
+        ret = OS_init();
 
-    /* Init de COM */
-    if (ret != 0)
-    {
-        LOG_ERR("MAIN : erreur à l'init de l'OS, code : %d", ret);
+        if (ret != 0)
+            LOG_ERR("MAIN : error on init for OS, code : %d", ret);
     }
-    else
+
+    if (0 == ret)
     {
-        /* Init de la socket UDP */
-        if (0 != (ret = COM_init()))
-        {
-            LOG_ERR("MAIN : erreur à l'init de COM, code : %d", ret);
-        }
+        /* Init de COM */
+        ret = COM_init();
+
+        if (ret)
+            LOG_ERR("MAIN : error on init for COM, code : %d", ret);
+    }
+
+    if (0 == ret)
+    {
         /* Init des regex de parsing des commandes */
-        else if (0 != (ret = CMD_init()))
-        {
-            LOG_ERR("MAIN : erreur à l'init de CMD, code : %d", ret);
-        }
-        else
-        {
-            LOG_INF1("MAIN : init du systeme OK");
-        }
+        ret = CMD_init();
 
+        if (ret)
+            LOG_ERR("MAIN : error on init for CMD, code : %d", ret);
     }
+
+    if (0 == ret)
+        LOG_INF1("MAIN : init system OK");
 
     return ret;
 }
@@ -147,12 +158,12 @@ int main_stop_factory()
     int ret = 0, ii;
     static int is_called = 0;
 
-    LOG_INF1("MAIN : extinction des modules");
+    LOG_INF1("MAIN : stopping all modules");
 
     /* Pour éviter les arrets multiples */
     if (is_called)
     {
-        LOG_WNG("MAIN : Appel d'arret déjà effectué pour factory");
+        LOG_WNG("MAIN : Stopping call already done for factory");
         ret = 1;
     }
     else
@@ -166,7 +177,7 @@ int main_stop_factory()
             t_start[ii].mod_stop();
         }
 
-        LOG_INF1("MAIN : Attente des locks à libérer pour les modules");
+        LOG_INF1("MAIN : Waiting on locks for the modules");
 
         /* On attend que tous les threads soient terminés */
         for (ii = 0; ii < NB_MODULE; ii++)
@@ -175,7 +186,7 @@ int main_stop_factory()
         }
 
         /* Arret des éléments du système */
-        LOG_INF1("MAIN : Arret des modules systemes");
+        LOG_INF1("MAIN : Stopping system modules");
         ret += main_stop();
     }
 
