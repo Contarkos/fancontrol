@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FAN_CLASS_H_
+#define FAN_CLASS_H_
 
 /* Includes globaux */
 #include <poll.h>
@@ -111,4 +112,6 @@ class FAN : public MODULE
         /* Reglage des parametres PWM */
         int fan_set_pwm(void);
 };
+
+#endif /* FAN_CLASS_H_ */
 

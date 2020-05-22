@@ -1,4 +1,5 @@
-#pragma once
+#ifndef COM_ADC_H_
+#define COM_ADC_H_
 
 /*****************************************************************************/
 /*              Definition des registres et shift pour ADC                   */
@@ -51,3 +52,6 @@ int com_adc_config_setup(t_os_spi_device i_device);
 int com_adc_config_clock(t_os_spi_device i_device);
 
 int com_adc_wait_ready(t_os_spi_device i_device);
+
+#endif /* COM_ADC_H_ */
+

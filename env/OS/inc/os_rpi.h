@@ -1,4 +1,5 @@
-#pragma once
+#ifndef OS_RPI_H_
+#define OS_RPI_H_
 
 /* IO Access */
 struct bcm2835_peripheral
@@ -178,3 +179,6 @@ int os_end_timer(void);
 /* Mapping des zones mémoires */
 int os_map_peripheral(struct bcm2835_peripheral *p);
 void os_unmap_peripheral(struct bcm2835_peripheral *p);
+
+#endif /* OS_RPI_H_ */
+

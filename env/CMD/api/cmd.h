@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CMD_H_
+#define CMD_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,4 +20,6 @@ int CMD_read(void);
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* CMD_H_ */
 

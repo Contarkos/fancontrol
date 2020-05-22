@@ -1,8 +1,9 @@
-#pragma once
+#ifndef BASE_TYP_H_
+#define BASE_TYP_H_
 
-// Includes globaux
+/* Global includes */
 
-// Includes locaux
+/* Local includes */
 #ifdef __cplusplus
 extern "C"
 {
@@ -14,7 +15,7 @@ extern "C"
 }
 #endif
 
-// Définition des types pour l'ensemble du soft
+/* Global type definition */
 typedef int (*start_func)(OS_mutex_t *p_i_main_mutex, OS_mutex_t *p_i_mod_mutex);
 typedef int (*stop_func)(void);
 
@@ -31,3 +32,5 @@ typedef struct
 #define BASE_E_INVAL        1
 #define BASE_E_IO           2
 #define BASE_E_EXIST        3
+
+#endif /* BASE_TYP_H_ */

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SHMD_H_
+#define SHMD_H_
 
 /* Includes */
 #include "os.h"
@@ -38,4 +39,6 @@ int SHMD_givePtrFanStatus(void);
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* SHMD_H_ */
 

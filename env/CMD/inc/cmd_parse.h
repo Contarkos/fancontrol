@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CMD_PARSE_H_
+#define CMD_PARSE_H_
 
 // Defines
 #define CMD_MAX_SIZE        128
@@ -10,3 +11,6 @@
 
 // Fonctions locales
 int cmd_parse_and_exec(char line[CMD_MAX_SIZE]);
+
+#endif /* CMD_PARSE_H_ */
+

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef REMOTE_H_
+#define REMOTE_H_
 
 /* Includes */
 #include "os.h"
@@ -17,8 +18,10 @@ typedef struct
     t_uint32 temp_valid;
 } __attribute__((packed)) t_remote_status;
 
-/* API pour module REMOTE */
+/* API for REMOTE module */
 int REMOTE_start(OS_mutex_t *m_main, OS_mutex_t *m_mod);
 
 int REMOTE_stop(void);
+
+#endif /* REMOTE_H_ */
 

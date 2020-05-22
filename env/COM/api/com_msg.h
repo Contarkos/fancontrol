@@ -1,4 +1,5 @@
-#pragma once
+#ifndef COM_MSG_H_
+#define COM_MSG_H_
 
 /*****************************************************************************/
 /*                              Global includes                              */
@@ -67,3 +68,5 @@ typedef enum e_com_id_modules
 typedef struct {
     t_int32 timer_id;
 } t_com_timer_struct;
+
+#endif /* COM_MSG_H_ */

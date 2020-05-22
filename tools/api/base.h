@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BASE_H_
+#define BASE_H_
 
 /* Définition de types */
 typedef char t_int8;
@@ -22,3 +23,6 @@ typedef unsigned long long int t_uint64;
 #define MAX_UINT_16         65535
 
 #define BASE_OK             0
+
+#endif /* BASE_H_ */
+

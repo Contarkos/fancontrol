@@ -1,4 +1,5 @@
-#pragma once
+#ifndef OS_I2C_H_
+#define OS_I2C_H_
 
 /* Defines */
 #define OS_FILE_I2C0            "/dev/i2c-0"
@@ -17,4 +18,6 @@ typedef struct
 
 /* Local functions */
 t_os_i2c_struct* os_i2c_get_device(t_os_i2c_device i_device);
+
+#endif /* OS_I2C_H_ */
 

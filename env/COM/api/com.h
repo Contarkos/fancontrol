@@ -1,4 +1,5 @@
-#pragma once
+#ifndef COM_H_
+#define COM_H_
 
 /*****************************************************************************/
 /*                              Global includes                              */
@@ -225,3 +226,6 @@ int COM_adc_set_clock_filter(t_os_spi_device i_device, t_com_adc_clock_filt i_fi
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* COM_H_ */
+

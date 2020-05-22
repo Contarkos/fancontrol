@@ -1,4 +1,5 @@
-#pragma once
+#ifndef OS_H_
+#define OS_H_
 
 #include <pthread.h>
 #include <semaphore.h>
@@ -293,3 +294,4 @@ int OS_clock_set_mash(os_mash_mode i_filter);
 }
 #endif
 
+#endif /* OS_H_ */

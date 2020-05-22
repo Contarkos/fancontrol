@@ -1,4 +1,6 @@
-#pragma once
+#ifndef MAIN_FACTORY_H_
+#define MAIN_FACTORY_H_
+
 /* Contient les prototypes pour les fonctions de démarrage et d'arret des modules */
 
 /* Defines */
@@ -15,3 +17,5 @@ int main_loop(void);
 
 int main_stop_factory(void);
 int main_stop(void);
+
+#endif /* MAIN_FACTORY_H_ */

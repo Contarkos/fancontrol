@@ -1,4 +1,5 @@
-#pragma once
+#ifndef REMOTE_CLASS_H_
+#define REMOTE_CLASS_H_
 
 /* Includes globaux */
 #include <poll.h>
@@ -60,3 +61,6 @@ class REMOTE : public MODULE
         /* Traitement des messages */
         int remote_send_status(void);
 };
+
+#endif /* REMOTE_CLASS_H_ */
+

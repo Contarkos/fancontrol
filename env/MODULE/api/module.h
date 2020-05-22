@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MODULE_H_
+#define MODULE_H_
 
 /* Includes globaux */
 #include <pthread.h>
@@ -52,3 +53,6 @@ class MODULE {
         /* Pour le thread */
         OS_thread_t* MOD_getThread(void) { return &(this->m_thread); }
 };
+
+#endif /* MODULE_H_ */
+

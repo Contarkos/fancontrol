@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TEMP_H_
+#define TEMP_H_
 
 /* Defines */
 #define NB_INSTANCES_TEMP       1
@@ -28,3 +29,5 @@ typedef struct
 int TEMP_start(OS_mutex_t *m_main, OS_mutex_t *m_mod);
 
 int TEMP_stop(void);
+
+#endif /* TEMP_H_ */

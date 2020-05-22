@@ -1,4 +1,5 @@
-#pragma once
+#ifndef INTEG_LOG_H_
+#define INTEG_LOG_H_
 
 /* We use for INTEGRATION_LOG_LEVEL the same values as in the "LOG" module: */
 /*   * LOG_LVL_SYSERR = 0 // System error */
@@ -86,3 +87,6 @@
 #else
     #define LOG_INF3(...)
 #endif
+
+#endif /* INTEG_LOG_H_ */
+

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MODULE_BIS_H_
+#define MODULE_BIS_H_
 
 /* Includes globaux */
 
@@ -59,3 +60,6 @@ struct s_module_class
 
 int MODULE_wait_and_loop(void);
 int MODULE_stop_and_exit(void);
+
+#endif /* MODULE_BIS_H_ */
+

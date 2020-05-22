@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FAN_H_
+#define FAN_H_
 
 /* Defines */
 #define NB_INSTANCES_FAN        1
@@ -29,9 +30,12 @@ typedef struct
     fan_e_power_mode power_mode;
 } __attribute__((packed)) t_fan_power_mode;
 
-/* Variables globales */
+/* Global variables */
 
-/* API pour module FAN */
+/* API for FAN module */
 int FAN_start(OS_mutex_t *m_main, OS_mutex_t *m_mod);
 
 int FAN_stop(void);
+
+#endif /* FAN_H_ */
+

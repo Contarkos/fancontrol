@@ -1,4 +1,5 @@
-#pragma once
+#ifndef COM_MESSAGE_H_
+#define COM_MESSAGE_H_
 
 /*****************************************************************************/
 /*                              Global includes                              */
@@ -58,3 +59,6 @@ extern t_com_msg_list com_list_queues[COM_ID_NB];
 
 int com_init_msg(void);
 int com_stop_msg(void);
+
+#endif /* COM_MESSAGE_H_ */
+

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TEMP_CLASS_H_
+#define TEMP_CLASS_H_
 
 /* Includes globaux */
 #include <poll.h>
@@ -82,3 +83,6 @@ class TEMP : public MODULE
 
         int temp_tic(unsigned long i_tic);
 };
+
+#endif /* TEMP_CLASS_H_ */
+
