@@ -25,3 +25,9 @@ typedef struct
     OS_mutex_t mutex_mod;
     OS_mutex_t mutex_main;
 } mod_type;
+
+/* Proper return code */
+#define BASE_E_OK           0
+#define BASE_E_INVAL        1
+#define BASE_E_IO           2
+#define BASE_E_EXIST        3
