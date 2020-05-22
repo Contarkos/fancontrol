@@ -5,20 +5,17 @@
 include ./tools/libs.mk
 
 # Fonctions
-_add_lib_suffix=$(foreach _dir,$(1),$(addsuffix /lib/lib$(notdir $(_dir)).a, $(_dir)))
 
+# For every dir provided, provide the complete path to the library file
+_add_lib_suffix=$(foreach _dir,$(1),$(addsuffix /lib/lib$(notdir $(_dir)).a, $(_dir)))
 # Get all objects file for one lib
 _get_object_files=$(subst $(2),.o,$(subst /src/,/obj/,$(wildcard $(subst /lib/,/src,$(dir $(1)))/*$(2))))
-
 # Get all prereq files for one directory
 _get_prereq_files=$(subst $(2),.d,$(subst /src/,/pre/,$(wildcard $(1)/src/*$(2))))
-
 # Get source from object file
 _get_src_obj_file=$(subst /obj/,/src,$(dir $(1)))/$(subst .o,$(2),$(notdir $(1)))
-
 # Get source from prerequisite file
 _get_src_pre_file=$(subst /pre/,/src,$(dir $(1)))/$(subst .d,$(2),$(notdir $(1)))
-
 # Get object file from source
 _get_obj_src_file=$(subst /src/,/obj,$(dir $(1)))/$(subst $(2),.o,$(notdir $(1)))
 
@@ -28,7 +25,7 @@ _get_obj_src_file=$(subst /src/,/obj,$(dir $(1)))/$(subst $(2),.o,$(notdir $(1))
 PARALLEL= -j6
 
 BIN = sw_local.bin
-INTEG_LOG_LEVEL = -DINTEGRATION_LOG_LEVEL=5
+INTEG_LOG_LEVEL = -DINTEGRATION_LOG_LEVEL=6
 
 PWD = $(shell pwd)
 SUBDIR_MAIN = env/MAIN
@@ -139,6 +136,22 @@ $(PATH_BINARY): $(LIST_LIBENV) $(LIST_LIBMOD) $(OBJ_FILES) $(OBJ_FILES_MAIN) | $
 	@#$(MAKE) $(PARALLEL) -C $(SUBDIR_MAIN) -f module.mk bin
 	@$(CROSS_COMPILE)$(CXX) $(OBJ_FILES_MAIN) $(LIBS_PATH) $(LIBS) -o $@
 
+# Rule to generate prerequisite files
+%.d: $$(call _get_src_pre_file,$$@,.c) | $$(dir $$@)
+	@echo "  GEN $@"
+	@$(RM) $@
+	@$(CROSS_COMPILE)$(CC) $(INCLUDES) -I$(subst /pre,/inc/,$(dir $@)) $(C_FLAGS) -MM $< > $@.$$$$; \
+	sed 's#$(notdir $(call _get_obj_src_file, $<,.c))[ :]*#$(call _get_obj_src_file, $<,.c) $@: #g' < $@.$$$$ > $@; \
+	$(RM) $@.$$$$
+
+%.d: $$(call _get_src_pre_file,$$@,.cpp) | $$(dir $$@)
+	@echo "  GEN $@"
+	@$(RM) $@
+	@$(CROSS_COMPILE)$(CXX) $(INCLUDES) -I$(subst /pre,/inc/,$(dir $@)) $(CPLUS_FLAGS) -MM $< > $@.$$$$; \
+	sed 's#$(notdir $(call _get_obj_src_file, $<,.cpp))[ :]*#$(call _get_obj_src_file, $<,.cpp) $@: #g' < $@.$$$$ > $@; \
+	$(RM) $@.$$$$
+
+# Rule to generate object files
 %.o: $$(call _get_src_obj_file,$$@,.c) | $$(dir $$@)
 	@echo "   CC $@"
 	@#$(MAKE) $(PARALLEL) -C $(subst /obj/,/,$(dir $@)) -f module.mk obj/$(notdir $@)
@@ -155,20 +168,9 @@ $(PATH_BINARY): $(LIST_LIBENV) $(LIST_LIBMOD) $(OBJ_FILES) $(OBJ_FILES_MAIN) | $
 	@#$(MAKE) $(PARALLEL) -C $(subst /lib,,$(dir $@)) -f module.mk lib/$(notdir $@)
 	@$(CROSS_COMPILE)$(AR) rcs $@ $^
 
-# Rule to generate prerequisite files
-%.d: $$(call _get_src_pre_file,$$@,.c) | $$(dir $$@)
-	@echo "  GEN $@"
-	@$(RM) $@
-	@$(CROSS_COMPILE)$(CC) $(INCLUDES) -I$(subst /pre,/inc/,$(dir $@)) $(C_FLAGS) -MM $< > $@.$$$$; \
-	sed 's#$(notdir $(call _get_obj_src_file, $<,.c))[ :]*#$(call _get_obj_src_file, $<,.c) $@: #g' < $@.$$$$ > $@; \
-	$(RM) $@.$$$$
-
-%.d: $$(call _get_src_pre_file,$$@,.cpp) | $$(dir $$@)
-	@echo "  GEN $@"
-	@$(RM) $@
-	@$(CROSS_COMPILE)$(CXX) $(INCLUDES) -I$(subst /pre,/inc/,$(dir $@)) $(CPLUS_FLAGS) -MM $< > $@.$$$$; \
-	sed 's#$(notdir $(call _get_obj_src_file, $<,.cpp))[ :]*#$(call _get_obj_src_file, $<,.cpp) $@: #g' < $@.$$$$ > $@; \
-	$(RM) $@.$$$$
+%/pre/ %/pre::
+	@echo "MKDIR $@"
+	@mkdir $@
 
 %/obj/ %/obj::
 	@echo "MKDIR $@"
@@ -182,27 +184,33 @@ $(PATH_BINARY): $(LIST_LIBENV) $(LIST_LIBMOD) $(OBJ_FILES) $(OBJ_FILES_MAIN) | $
 	@echo "MKDIR $@"
 	@mkdir $@
 
-%/pre/ %/pre::
-	@echo "MKDIR $@"
-	@mkdir $@
-
 clean_%: modules/%
-	@$(MAKE) $(PARALLEL) -C $< -f module.mk clean
+	@echo "   RM $</obj"
+	@$(RM) $</obj
 
 clean_%: env/%
-	@$(MAKE) $(PARALLEL) -C $< -f module.mk clean
+	@echo "   RM $</obj"
+	@$(RM) $</obj
 
-distclean_%: modules/%
-	@$(MAKE) $(PARALLEL) -C $< -f module.mk libclean
+distclean_%: modules/% clean_%
+	@echo "   RM $</pre"
+	@$(RM) $</pre
+	@echo "   RM $</lib"
+	@$(RM) $</lib
 
-distclean_%: env/%
-	@$(MAKE) $(PARALLEL) -C $< -f module.mk libclean
+distclean_%: env/% clean_%
+	@echo "   RM $</pre"
+	@$(RM) $</pre
+	@echo "   RM $</lib"
+	@$(RM) $</lib
 
 clean: $(LIST_CLEAN_MOD) $(LIST_CLEAN_ENV)
-	@$(MAKE) $(PARALLEL) -C $(SUBDIR_MAIN) -f module.mk clean
+	@echo "   RM $(SUBDIR_MAIN)/obj"
+	@$(RM) $(SUBDIR_MAIN)/obj
 
 distclean: $(DIST_CLEAN_MOD) $(DIST_CLEAN_ENV)
-	@$(MAKE) $(PARALLEL) -C $(SUBDIR_MAIN) -f module.mk distclean
+	@echo "   RM $(SUBDIR_MAIN)/bin"
+	@$(RM) $(SUBDIR_MAIN)/bin
 	@$(MAKE) $(PARALLEL) -C $(SUBDIR_KERN) clean
 
 ##################################################
