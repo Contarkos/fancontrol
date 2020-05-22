@@ -2,16 +2,49 @@
 
 SESSION="BOOT1"
 
-/bin/echo "Launching tmux"
+start() {
+  /bin/echo "Launching tmux"
 
-#allow re-launch
-/usr/bin/tmux has-session -t ${SESSION} 2> /dev/null && /usr/bin/tmux kill-session -t ${SESSION}
-/usr/bin/tmux -2 new-session -d -s ${SESSION} "/usr/bin/start_app.sh; exec sh"
+  /usr/bin/tmux -2 new-session -d -s ${SESSION} "/usr/bin/start_app.sh; exec sh"
 
-/usr/bin/tmux rename-window "console"
+  /usr/bin/tmux rename-window "console"
 
-/usr/bin/tmux set-option -t ${SESSION}:0 remain-on-exit on
+  /usr/bin/tmux set-option -t ${SESSION}:0 remain-on-exit on
 
-/usr/bin/tmux split-window -h "/bin/htop; exec sh"
-/usr/bin/tmux split-window -v "/bin/echo Welcome aboard, captain; exec sh"
-/usr/bin/tmux select-pane -t 0
+  /usr/bin/tmux split-window -h "/bin/htop; exec sh"
+  /usr/bin/tmux split-window -v "/bin/echo Welcome aboard, captain; exec sh"
+  /usr/bin/tmux select-pane -t 0
+}
+
+stop() {
+  for _pid in $(/bin/pidof sw_local.bin); do
+    /bin/kill -2 ${_pid}
+  done
+
+  # Wait for process to be killed
+  /bin/sleep 2
+
+  # Allow re-launch
+  /usr/bin/tmux has-session -t ${SESSION} 2> /dev/null && /usr/bin/tmux kill-session -t ${SESSION}
+}
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		start
+		;;
+	reload)
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|reload}"
+		exit 1
+esac
+
+exit 0
