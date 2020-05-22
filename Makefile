@@ -6,8 +6,21 @@ include ./tools/libs.mk
 
 # Fonctions
 _add_lib_suffix=$(foreach _dir,$(1),$(addsuffix /lib/lib$(notdir $(_dir)).a, $(_dir)))
-_get_object_file=$(subst $(2),.o,$(subst /src/,/obj/,$(wildcard $(subst /lib/,/src,$(dir $(1)))/*$(2))))
-_get_source_file=$(subst /obj/,/src,$(dir $(1)))/$(subst .o,$(2),$(notdir $(1)))
+
+# Get all objects file for one lib
+_get_object_files=$(subst $(2),.o,$(subst /src/,/obj/,$(wildcard $(subst /lib/,/src,$(dir $(1)))/*$(2))))
+
+# Get all prereq files for one directory
+_get_prereq_files=$(subst $(2),.d,$(subst /src/,/pre/,$(wildcard $(1)/src/*$(2))))
+
+# Get source from object file
+_get_src_obj_file=$(subst /obj/,/src,$(dir $(1)))/$(subst .o,$(2),$(notdir $(1)))
+
+# Get source from prerequisite file
+_get_src_pre_file=$(subst /pre/,/src,$(dir $(1)))/$(subst .d,$(2),$(notdir $(1)))
+
+# Get object file from source
+_get_obj_src_file=$(subst /src/,/obj,$(dir $(1)))/$(subst $(2),.o,$(notdir $(1)))
 
 ##################################################
 # Environment variables
@@ -15,7 +28,7 @@ _get_source_file=$(subst /obj/,/src,$(dir $(1)))/$(subst .o,$(2),$(notdir $(1)))
 PARALLEL= -j6
 
 BIN = sw_local.bin
-INTEG_LOG_LEVEL = -DINTEGRATION_LOG_LEVEL=6
+INTEG_LOG_LEVEL = -DINTEGRATION_LOG_LEVEL=5
 
 PWD = $(shell pwd)
 SUBDIR_MAIN = env/MAIN
@@ -36,8 +49,11 @@ DIST_CLEAN_ENV = $(addprefix distclean_, $(notdir $(SUBDIRS_ENV)))
 DIST_CLEAN_MOD = $(addprefix distclean_, $(notdir $(SUBDIRS_MOD)))
 
 # Get the list of all the objects file needed to compile the file
-OBJ_FILES := $(foreach lib,$(LIST_LIBENV) $(LIST_LIBMOD),$(call _get_object_file,$(lib),.c))
-OBJ_FILES += $(foreach lib,$(LIST_LIBENV) $(LIST_LIBMOD),$(call _get_object_file,$(lib),.cpp))
+OBJ_FILES := $(foreach lib,$(LIST_LIBENV) $(LIST_LIBMOD),$(call _get_object_files,$(lib),.c))
+OBJ_FILES += $(foreach lib,$(LIST_LIBENV) $(LIST_LIBMOD),$(call _get_object_files,$(lib),.cpp))
+
+PREREQ_FILES := $(foreach _dir, env/MAIN $(SUBDIRS_ENV) $(SUBDIRS_MOD), $(call _get_prereq_files,$(_dir),.c))
+PREREQ_FILES += $(foreach _dir, env/MAIN $(SUBDIRS_ENV) $(SUBDIRS_MOD), $(call _get_prereq_files,$(_dir),.cpp))
 
 OBJ_FILES_MAIN = $(patsubst $(SUBDIR_MAIN)/src/%.cpp, $(SUBDIR_MAIN)/obj/%.o, $(wildcard $(SUBDIR_MAIN)/src/*.cpp))
 
@@ -106,33 +122,53 @@ all: $(PATH_BINARY) $(SUBDIR_DATA) | /tftpboot/
 	@echo "-----------------------------------"
 	@echo " Done"
 
+# Include all the file defining the prerequisites for each source file
+-include $(PREREQ_FILES)
+
 .SECONDARY: $(addsuffix /lib/, $(SUBDIRS_ENV) $(SUBDIRS_MOD)) \
     $(addsuffix /obj/, $(SUBDIRS_ENV) $(SUBDIRS_MOD) $(SUBDIR_MAIN)) \
-    $(SUBDIR_MAIN)/bin
+    $(SUBDIR_MAIN)/bin \
+    $(addsuffix /pre/, $(SUBDIRS_ENV) $(SUBDIRS_MOD) $(SUBDIR_MAIN))
 
 # Get the source file associated with the object file being compiled.
 # One rule for C and another for C++
 .SECONDEXPANSION:
+
 $(PATH_BINARY): $(LIST_LIBENV) $(LIST_LIBMOD) $(OBJ_FILES) $(OBJ_FILES_MAIN) | $(SUBDIR_MAIN)/bin
 	@echo "   LD $@"
 	@#$(MAKE) $(PARALLEL) -C $(SUBDIR_MAIN) -f module.mk bin
 	@$(CROSS_COMPILE)$(CXX) $(OBJ_FILES_MAIN) $(LIBS_PATH) $(LIBS) -o $@
 
-%.o: $$(call _get_source_file,$$@,.c) | $$(dir $$@)
+%.o: $$(call _get_src_obj_file,$$@,.c) | $$(dir $$@)
 	@echo "   CC $@"
 	@#$(MAKE) $(PARALLEL) -C $(subst /obj/,/,$(dir $@)) -f module.mk obj/$(notdir $@)
-	@$(CROSS_COMPILE)$(CC) $(INCLUDES) -I$(subst /obj,/inc/,$(dir $@)) $(C_FLAGS) $(DEBUG) -c $^ -o $@
+	@$(CROSS_COMPILE)$(CC) $(INCLUDES) -I$(subst /obj,/inc/,$(dir $@)) $(C_FLAGS) $(DEBUG) -c $< -o $@
 
-%.o: $$(call _get_source_file,$$@,.cpp) | $$(dir $$@)
+%.o: $$(call _get_src_obj_file,$$@,.cpp) | $$(dir $$@)
 	@echo "  CXX $@"
 	@#$(MAKE) $(PARALLEL) -C $(subst /obj/,/,$(dir $@)) -f module.mk obj/$(notdir $@)
-	@$(CROSS_COMPILE)$(CXX) $(INCLUDES) -I$(subst /obj,/inc/,$(dir $@)) $(CPLUS_FLAGS) $(DEBUG) -c $^ -o $@
+	@$(CROSS_COMPILE)$(CXX) $(INCLUDES) -I$(subst /obj,/inc/,$(dir $@)) $(CPLUS_FLAGS) $(DEBUG) -c $< -o $@
 
 # Get all the object files associated with the library being compiled
-%.a: $$(call _get_object_file,$$@,.c) $$(call _get_object_file,$$@,.cpp) | $$(dir $$@)
+%.a: $$(call _get_object_files,$$@,.c) $$(call _get_object_files,$$@,.cpp) | $$(dir $$@)
 	@echo "   AR $@"
 	@#$(MAKE) $(PARALLEL) -C $(subst /lib,,$(dir $@)) -f module.mk lib/$(notdir $@)
 	@$(CROSS_COMPILE)$(AR) rcs $@ $^
+
+# Rule to generate prerequisite files
+%.d: $$(call _get_src_pre_file,$$@,.c) | $$(dir $$@)
+	@echo "  GEN $@"
+	@$(RM) $@
+	@$(CROSS_COMPILE)$(CC) $(INCLUDES) -I$(subst /pre,/inc/,$(dir $@)) $(C_FLAGS) -MM $< > $@.$$$$; \
+	sed 's#$(notdir $(call _get_obj_src_file, $<,.c))[ :]*#$(call _get_obj_src_file, $<,.c) $@: #g' < $@.$$$$ > $@; \
+	$(RM) $@.$$$$
+
+%.d: $$(call _get_src_pre_file,$$@,.cpp) | $$(dir $$@)
+	@echo "  GEN $@"
+	@$(RM) $@
+	@$(CROSS_COMPILE)$(CXX) $(INCLUDES) -I$(subst /pre,/inc/,$(dir $@)) $(CPLUS_FLAGS) -MM $< > $@.$$$$; \
+	sed 's#$(notdir $(call _get_obj_src_file, $<,.cpp))[ :]*#$(call _get_obj_src_file, $<,.cpp) $@: #g' < $@.$$$$ > $@; \
+	$(RM) $@.$$$$
 
 %/obj/ %/obj::
 	@echo "MKDIR $@"
@@ -143,6 +179,10 @@ $(PATH_BINARY): $(LIST_LIBENV) $(LIST_LIBMOD) $(OBJ_FILES) $(OBJ_FILES_MAIN) | $
 	@mkdir $@
 
 %/bin/ %/bin::
+	@echo "MKDIR $@"
+	@mkdir $@
+
+%/pre/ %/pre::
 	@echo "MKDIR $@"
 	@mkdir $@
 

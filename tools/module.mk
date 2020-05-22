@@ -51,6 +51,8 @@ RM = rm -rf
 LIB = lib$(notdir $(shell pwd)).a
 OBJ_C = $(patsubst src/%.c, obj/%.o, $(wildcard src/*.c))
 OBJ_CXX = $(patsubst src/%.cpp, obj/%.o, $(wildcard src/*.cpp))
+PRE_C = $(patsubst src/%.c, pre/%.d, $(wildcard src/*.c))
+PRE_CXX = $(patsubst src/%.cpp, pre/%.d, $(wildcard src/*.cpp))
 
 BIN = sw_local.bin
 
@@ -58,9 +60,13 @@ LIB_DIR = lib
 OBJ_DIR = obj
 SRC_DIR = src
 BIN_DIR = bin
+PRE_DIR = pre
 
 # On compile une librairie statique
 all: lib
+
+# Include all prerequisites
+include $(PRE_C) $(PRE_CXX)
 	
 bin: $(BIN)
 
@@ -74,6 +80,9 @@ lib_dir:
 
 bin_dir:
 	@mkdir -p $(BIN_DIR)
+
+pre_dir:
+	@mkdir -p $(PRE_DIR)
 
 $(OBJ_C): | obj_dir
 
@@ -91,6 +100,14 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@echo "cxx -c $^ -o $@"
 	@$(CROSS_COMPILE)$(CXX) $(INCLUDES) $(CPLUS_FLAGS) $(DEBUG) -c $^ -o $@
 
+$(PRE_DIR)/%.d: $(SRC_DIR)/%.c
+	@echo "cc -MM $< > $@"
+	@$(CROSS_COMPILE)$(CC) $(INCLUDES) $(C_FLAGS) -MM $< > $@
+
+$(PRE_DIR)/%.d: $(SRC_DIR)/%.cpp
+	@echo "cxx -MM $< > $@"
+	@$(CROSS_COMPILE)$(CXX) $(INCLUDES) $(CPLUS_FLAGS) -MM $< > $@
+
 $(LIB): $(OBJ_C) $(OBJ_CXX) | lib_dir
 	@echo "Creating $(LIB)..."
 	@$(CROSS_COMPILE)$(AR) rcs $(LIB_DIR)/$(LIB) $(OBJ_C) $(OBJ_CXX)
@@ -99,12 +116,16 @@ clean:
 	$(RM) $(OBJ_C) $(OBJ_CXX)
 	@$(RM) $(OBJ_DIR)
 
-libclean: clean
+prereq_clean:
+	$(RM) $(PRE_C) $(PRE_CXX)
+	@$(RM) $(PRE_DIR)
+
+libclean: clean prereq_clean
 	$(RM) $(LIB_DIR)/$(LIB)
 	@$(RM) $(LIB_DIR)
 
-distclean: clean
+distclean: clean prereq_clean
 	$(RM) $(BIN_DIR)/$(BIN)
 	@$(RM) $(BIN_DIR)
 
-.PHONY: all lib bin obj_dir lib_dir bin_dir clean libclean distclean
+.PHONY: all lib bin obj_dir lib_dir bin_dir clean prereq_clean libclean distclean
