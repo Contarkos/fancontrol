@@ -69,6 +69,8 @@ int TEMP::temp_treat_com(void)
             case TEMP_TIMER:
                 ret = this->temp_retrieve_data();
                 break;
+            case TEMP_TIC:
+                break;
             default:
                 LOG_ERR("TEMP : mauvaise ID pour message, id = %d", m.header.id);
                 ret = 1;

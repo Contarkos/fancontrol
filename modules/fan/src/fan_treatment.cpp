@@ -72,7 +72,7 @@ int FAN::fan_treat_com(void)
 
     if (0 == ret)
     {
-        LOG_INF1("FAN : received a message, ID = %d", m.header.id);
+        LOG_INF3("FAN : received a message, ID = %d", m.header.id);
 
         switch (m.header.id)
         {

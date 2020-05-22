@@ -42,7 +42,7 @@ int TEMP_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
     }
     else
     {
-        LOG_ERR("TEMP : plus d'instances disponibles, %d > %d", ii, NB_INSTANCES_TEMP);
+        LOG_ERR("TEMP : no available instance, %d > %d", ii, NB_INSTANCES_TEMP);
         ret = -1;
     }
 
@@ -54,7 +54,7 @@ int TEMP_stop(void)
     int ret = 0;
     static int ii = 0;
 
-    LOG_INF1("TEMP : arrêt du module");
+    LOG_INF1("TEMP : stopping module");
 
     if (ii < NB_INSTANCES_TEMP)
     {

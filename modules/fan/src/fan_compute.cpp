@@ -11,6 +11,8 @@
 #include "os.h"
 #include "com_msg.h"
 #include "module.h"
+#include "shmd.h"
+
 #include "fan.h"
 #include "fan_class.h"
 
@@ -75,7 +77,6 @@ int FAN::fan_compute_duty(void)
             break;
     }
 
-    /* En cas d'erreur */
     if (ret >= 0)
     {
         /* Borne du dutycycle */
@@ -94,7 +95,21 @@ int FAN::fan_compute_duty(void)
         duty = d;
         LOG_INF3("FAN : dutycycle courant = %f", duty);
 
-        OS_pwm_set_dutycycle(duty);
+        ret = OS_pwm_set_dutycycle(duty);
+    }
+
+    /* Save the shared data */
+    if (0 == ret)
+    {
+        shmd_fanstatus_t *p_fan;
+        ret = SHMD_getPtrFanStatus(&p_fan);
+
+        if (0 == ret)
+        {
+            p_fan->fan_target = (t_uint32) duty;
+
+            ret = SHMD_givePtrFanStatus();
+        }
     }
 
     return ret;
@@ -112,7 +127,8 @@ int FAN::fan_treat_irq(int i_fd)
         LOG_ERR("FAN : pas de file descriptor valide pour l'IRQ");
         ret = 2;
     }
-    else
+
+    if (0 == ret)
     {
         /* Lecture des données */
         ss = read(i_fd, &(d), sizeof(d));
@@ -122,18 +138,33 @@ int FAN::fan_treat_irq(int i_fd)
             LOG_WNG("FAN : mauvaise taille de message pour fd %d, ss = %d", i_fd, ss);
             ret = 4;
         }
-        else
-        {
-            /* Conversion en vitesse de rotation (RPM) */
-            v = (t_uint32) ( (60 * FAN_SEC_TO_MSEC) / (float) (FAN_HITS_PER_CYCLE * d) );
-            cpt++;
+    }
 
-            if (cpt > 10U)
-            {
-                LOG_INF3("FAN : vitesse du fan = %d, d = %ld", v, d);
-                cpt = 0;
-            }
-            this->fan_setCurSpeed(v);
+    if (0 == ret)
+    {
+        /* Conversion en vitesse de rotation (RPM) */
+        v = (t_uint32) ( (60 * FAN_SEC_TO_MSEC) / (float) (FAN_HITS_PER_CYCLE * d) );
+        cpt++;
+
+        if (cpt > 10U)
+        {
+            LOG_INF3("FAN : vitesse du fan = %d, d = %ld", v, d);
+            cpt = 0;
+        }
+        this->fan_setCurSpeed(v);
+    }
+
+    /* Save the shared data */
+    if (0 == ret)
+    {
+        shmd_fanstatus_t *p_fan;
+        ret = SHMD_getPtrFanStatus(&p_fan);
+
+        if (0 == ret)
+        {
+            p_fan->fan_speed = v;
+
+            ret = SHMD_givePtrFanStatus();
         }
     }
 

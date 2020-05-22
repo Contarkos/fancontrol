@@ -19,6 +19,11 @@ typedef struct
     t_temp_validity room_temp_valid;
 } __attribute__((packed)) t_temp_data;
 
+typedef struct
+{
+    t_uint32 tic;
+} __attribute__((packed)) t_temp_tic;
+
 /* API pour module TEMP */
 int TEMP_start(OS_mutex_t *m_main, OS_mutex_t *m_mod);
 

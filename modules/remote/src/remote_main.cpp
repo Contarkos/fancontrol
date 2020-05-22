@@ -42,7 +42,7 @@ int REMOTE_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
     }
     else
     {
-        LOG_ERR("REMOTE : plus d'instances disponibles, %d > %d", ii, NB_INSTANCES_REMOTE);
+        LOG_ERR("REMOTE : no instance available, %d > %d", ii, NB_INSTANCES_REMOTE);
         ret = -1;
     }
 
@@ -54,7 +54,7 @@ int REMOTE_stop(void)
     int ret = 0;
     static int ii = 0;
 
-    LOG_INF1("REMOTE : arrêt du module");
+    LOG_INF1("REMOTE : stopping module");
 
     if (ii < NB_INSTANCES_REMOTE)
     {

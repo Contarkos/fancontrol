@@ -20,7 +20,7 @@ int REMOTE::remote_treat_msg(int i_fd)
 
     if (0 > i_fd)
     {
-        LOG_ERR("REMOTE : pas de file descriptor pour lecture message, fd = %d", i_fd);
+        LOG_ERR("REMOTE : no file descriptor to read message, fd = %d", i_fd);
         ret = -1;
     }
     else
@@ -30,7 +30,7 @@ int REMOTE::remote_treat_msg(int i_fd)
 
         if (0 == ss)
         {
-            LOG_WNG("REMOTE : mauvaise taille de message ");
+            LOG_WNG("REMOTE : wrong size for message");
             ret = -2;
         }
         else
@@ -44,7 +44,7 @@ int REMOTE::remote_treat_msg(int i_fd)
                     ret = this->remote_send_status();
                     break;
                 default:
-                    LOG_ERR("REMOTE : mauvaise ID pour message, id = %d", m.id);
+                    LOG_ERR("REMOTE : unknown message ID, id = %d", m.id);
                     ret = 1;
             }
         }
@@ -63,7 +63,7 @@ int REMOTE::remote_treat_com()
 
     if (0 == ret)
     {
-        LOG_INF1("REMOTE : received a message, ID = %d", m.header.id);
+        LOG_INF3("REMOTE : received a message, ID = %d", m.header.id);
 
         switch (m.header.id)
         {
@@ -76,7 +76,7 @@ int REMOTE::remote_treat_com()
                 ret = this->remote_send_status();
                 break;
             default:
-                LOG_ERR("REMOTE : mauvaise ID pour message, id = %d", m.header.id);
+                LOG_ERR("REMOTE : unknown message ID, id = %d", m.header.id);
                 ret = 1;
         }
     }

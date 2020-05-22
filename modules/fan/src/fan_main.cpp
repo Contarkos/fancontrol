@@ -42,7 +42,7 @@ int FAN_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
     }
     else
     {
-        LOG_ERR("FAN : plus d'instances disponibles, %d > %d", ii, NB_INSTANCES_FAN);
+        LOG_ERR("FAN : no available instance, %d > %d", ii, NB_INSTANCES_FAN);
         ret = -1;
     }
 
@@ -54,7 +54,7 @@ int FAN_stop(void)
     int ret = 0;
     static int ii = 0;
 
-    LOG_INF1("FAN : arrêt du module");
+    LOG_INF1("FAN : stopping module");
 
     if (ii < NB_INSTANCES_FAN)
     {

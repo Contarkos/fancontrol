@@ -66,7 +66,7 @@ int FAN::start_module()
     /* Démarrage du timer pour la boucle */
     if (0 == ret)
     {
-        this->timer_id = OS_create_timer_msg(FAN_TIMER_USEC, OS_TIMER_PERIODIC, FAN_TIMER);
+        this->timer_id = COM_create_timer_msg(FAN_TIMER_USEC, OS_TIMER_PERIODIC, FAN_TIMER);
 
         if (0 > this->timer_id)
         {
@@ -200,6 +200,9 @@ int FAN::init_after_wait(void)
     {
         /* Allumage du fan */
         ret = fan_set_power(FAN_POWER_MODE_ON);
+
+        if (ret)
+            LOG_ERR("FAN : error while activating fan, ret = %d", ret);
     }
 
     return ret;

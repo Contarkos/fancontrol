@@ -150,18 +150,14 @@ int REMOTE::start_module()
 int REMOTE::init_after_wait(void)
 {
     int ret = 0;
-    char t[] = REMOTE_SOCKET_NAME;
 
-    printf("Taille pour t = %d", sizeof(t));
-
-    if (ret != 0)
+    /* Demarrage du timer REMOTE */
+    if (0 == ret)
     {
-        LOG_ERR("REMOTE : timer not started, ret = %d", ret);
-    }
-    else
-    {
-        /* Demarrage du timer REMOTE */
         ret = OS_start_timer(this->timer_fd);
+
+        if (ret != 0)
+            LOG_ERR("REMOTE : timer not started, ret = %d", ret);
     }
 
     return ret;

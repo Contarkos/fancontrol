@@ -22,7 +22,8 @@ static t_uint32 temp_msg_array[] =
 {
     MAIN_START,
     MAIN_SHUTDOWN,
-    TEMP_TIMER
+    TEMP_TIMER,
+    TEMP_TIC
 };
 
 static t_uint32 temp_msg_array_size = sizeof(temp_msg_array) / sizeof(temp_msg_array[0]);
@@ -60,14 +61,14 @@ int TEMP::start_module()
     int ret = 0;
     char s[] = TEMP_SOCKET_NAME;
 
-    LOG_INF1("TEMP : Démarrage de la classe du module");
+    LOG_INF1("TEMP : Starting module");
 
     /* Démarrage du timer pour la boucle */
-    this->timer_id = OS_create_timer_msg(TEMP_TIMER_USEC, OS_TIMER_PERIODIC, TEMP_TIMER);
+    this->timer_id = COM_create_timer_msg(TEMP_TIMER_USEC, OS_TIMER_PERIODIC, TEMP_TIMER);
 
     if (0 > this->timer_id)
     {
-        LOG_ERR("TEMP : erreur création timer de boucle");
+        LOG_ERR("TEMP : error creating loop timer");
         ret = -1;
     }
     else
@@ -97,7 +98,7 @@ int TEMP::start_module()
 
     if (0 == this->socket_fd)
     {
-        LOG_ERR("TEMP : erreur création socket");
+        LOG_ERR("TEMP : error creating UNIX socket");
         ret = -2;
     }
     else
@@ -113,7 +114,7 @@ int TEMP::start_module()
 
         if (0 == this->irq_fd)
         {
-            LOG_ERR("TEMP : erreur requete interruption pour synchro SPI");
+            LOG_ERR("TEMP : error requesting interruption for SPI synchro");
             ret = -4;
         }
         else
@@ -151,7 +152,7 @@ int TEMP::init_after_wait(void)
     ret = OS_start_timer(this->timer_id);
 
     if (ret < 0)
-        LOG_ERR("TEMP : erreur démarrage timer, ret = %d", ret);
+        LOG_ERR("TEMP : error starting timer, ret = %d", ret);
 
     return ret;
 }
@@ -170,7 +171,7 @@ int TEMP::stop_module()
     /* Fermeture du device SPI */
     ret += OS_spi_close_port(OS_SPI_DEVICE_0);
 
-    LOG_INF1("TEMP : fin du stop_module, ret = %d", ret);
+    LOG_INF1("TEMP : end of stop_module, ret = %d", ret);
 
     return ret;
 }
@@ -209,7 +210,7 @@ int TEMP::exec_loop()
                         break;
                     case TEMP_FD_NB:
                     default:
-                        LOG_WNG("TEMP : erreur valeur de fd, ii = %d", ii);
+                        LOG_WNG("TEMP : error fd value, ii = %d", ii);
                         break;
                 }
             }

@@ -79,4 +79,6 @@ class TEMP : public MODULE
         int temp_treat_msg(void);
         int temp_treat_irq(void);
         int temp_treat_com(void);
+
+        int temp_tic(unsigned long i_tic);
 };
