@@ -1,6 +1,10 @@
 #ifndef FAN_H_
 #define FAN_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Defines */
 #define NB_INSTANCES_FAN        1
 #define FAN_MAX_SPEED           1350
@@ -36,6 +40,10 @@ typedef struct
 int FAN_start(OS_mutex_t *m_main, OS_mutex_t *m_mod);
 
 int FAN_stop(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* FAN_H_ */
 
