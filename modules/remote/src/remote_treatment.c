@@ -7,6 +7,7 @@
 #include "integ_log.h"
 #include "com.h"
 #include "com_msg.h"
+#include "module_bis.h"
 
 #include "remote_module.h"
 

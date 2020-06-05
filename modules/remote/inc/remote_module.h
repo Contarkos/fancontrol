@@ -6,8 +6,6 @@
 
 /* Local includes */
 #include "com.h"
-#include "module_bis.h"
-
 #include "remote.h"
 
 /*********************************************************************/

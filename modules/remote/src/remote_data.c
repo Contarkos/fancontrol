@@ -5,6 +5,7 @@
 #include "integ_log.h"
 #include "com_msg.h"
 #include "shmd.h"
+#include "module_bis.h"
 
 #include "remote.h"
 #include "remote_module.h"

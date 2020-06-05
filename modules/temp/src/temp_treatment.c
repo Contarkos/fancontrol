@@ -1,6 +1,4 @@
 /* Global includes */
-#include <stdio.h>
-#include <unistd.h>
 
 /* Local includes */
 #include "base.h"

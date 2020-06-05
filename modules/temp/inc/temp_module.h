@@ -5,8 +5,6 @@
 #include <poll.h>
 
 /* Local includes */
-#include "base.h"
-#include "com.h"
 
 /*********************************************************************/
 /*                           Defines                                 */

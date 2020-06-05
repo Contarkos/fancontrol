@@ -1,6 +1,5 @@
 /* Global includes */
 #include <stdio.h>
-#include <pthread.h>
 
 /* Local includes */
 #include "base.h"
