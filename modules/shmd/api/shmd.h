@@ -12,15 +12,15 @@ extern "C" {
 typedef struct
 {
     int temp_room;
-    int temp_room_valid;
+    t_uint32 temp_room_valid;
     int temp_sys;
-    int temp_sys_valid;
+    t_uint32 temp_sys_valid;
 } shmd_tempdata_t;
 
 typedef struct
 {
-    int fan_speed;
-    int fan_target;
+    t_uint32 fan_speed;
+    t_uint32 fan_target;
 } shmd_fanstatus_t;
 
 /* API pour module SHMD */
