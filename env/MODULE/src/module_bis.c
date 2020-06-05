@@ -92,9 +92,36 @@ int MODULE_config (t_mod_context *p_context,
         }
     }
 
+    /* Test complete configuration */
+    if (0 == ret)
+    {
+        if (
+                /* Entry point and exit call */
+                (NULL == p_context->init_module)
+                || (NULL == p_context->exit_module)
+                /* Main loop and exit function */
+                || (NULL == p_context->wait_and_loop)
+                || (NULL == p_context->stop_and_exit)
+                /* Module specific functions */
+                || (NULL == p_context->start_module)
+                || (NULL == p_context->stop_module)
+                || (NULL == p_context->init_after_wait)
+                || (NULL == p_context->exec_loop)
+            )
+        {
+            LOG_ERR("MODULE : incomplete context, cannot start");
+            ret = -1;
+        }
+    }
+
     /* Add the entry point for the thread */
     if (0 == ret)
-        p_context->thread.loop = &MODULE_init;
+    {
+        if (NULL != p_context->init_module)
+            p_context->thread.loop = p_context->init_module;
+        else
+            ret = -1;
+    }
 
     if (0 == ret)
     {
