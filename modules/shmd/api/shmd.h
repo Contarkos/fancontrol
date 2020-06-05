@@ -11,9 +11,9 @@ extern "C" {
 /* Types et structures */
 typedef struct
 {
-    int temp_room;
+    t_float32 temp_room;
     t_uint32 temp_room_valid;
-    int temp_sys;
+    t_float32 temp_sys;
     t_uint32 temp_sys_valid;
 } shmd_tempdata_t;
 

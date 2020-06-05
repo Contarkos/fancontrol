@@ -27,7 +27,7 @@ int fan_timer_id = -1;
 int fan_irq_fd = -1;
 int fan_sem_fd = -1;
 
-struct pollfd fan_poll_fd[FAN_FD_NB] = 
+struct pollfd fan_poll_fd[FAN_FD_NB] =
 {
     /* IRQ file descriptor */
     { .fd = -1, .events = POLLIN, },

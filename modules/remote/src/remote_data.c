@@ -46,7 +46,7 @@ int remote_send_status(void)
     if (0 == ret)
     {
         ret = COM_send_mcast_data(&remote_out_socket, REMOTE_STATUS, &s, sizeof(s), 0);
-        LOG_INF3("REMOTE : sending system status, RPM = %d, temp = %dC, ret = %d", s.fan_rpm, s.temp_temp, ret);
+        LOG_INF3("REMOTE : sending system status, RPM = %d, temp = %fC, ret = %d", s.fan_rpm, s.temp_temp, ret);
 
         if (ret < 0)
             LOG_ERR("REMOTE : error system status, ret = %d", ret);

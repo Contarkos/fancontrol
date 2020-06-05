@@ -1,34 +1,39 @@
-// Includes globaux
+/* Global includes */
 #include <stdio.h>
 #include <math.h>
 
-/* Includes locaux */
+/* Local includes */
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
 #include "com.h"
 #include "com_msg.h"
-#include "module.h"
+#include "module_bis.h"
 #include "shmd.h"
 
 #include "temp.h"
-#include "temp_class.h"
+#include "temp_module.h"
+
+t_temp_value temp_fan = { 0 };
+t_temp_value temp_room = { 0 };
+
+t_uint32 temp_adc_gain = 1;
 
 /*******************************************************************/
 /*                                                                 */
-/*  description : Récupération des données sur la carte ADC        */
+/*  description : Retrieve data from ADC board                     */
 /*                                                                 */
-/*  @out        : ret = 0  si tout va bien                         */
-/*                ret > 0  si erreur                               */
+/*  @out        : ret = 0  if OK                                   */
+/*                ret > 0  on error                                */
 /*                                                                 */
 /*******************************************************************/
-int TEMP::temp_retrieve_data(void)
+int temp_retrieve_data(void)
 {
     int ret = 0;
     t_uint32 d;
     float r = 1, c;
 
-    /* Activation de la pin connectée au thermistor */
+    /* Activate GPIO connected to thermistor */
     ret = OS_write_gpio(TEMP_PIN_OUT, 1);
 
     if (ret < 0)
@@ -37,7 +42,7 @@ int TEMP::temp_retrieve_data(void)
     }
     else
     {
-        /* Lecture de la donnée dans le AD7705 */
+        /* Read data on AD7705 */
         d = COM_adc_read_result(OS_SPI_DEVICE_0, COM_ADC_PAIR_1);
 
         /* Désactivation de la pin connectée au thermistor */
@@ -49,23 +54,23 @@ int TEMP::temp_retrieve_data(void)
             LOG_WNG("TEMP : invalid temperature data, value = %d", d);
             ret = 1;
 
-            /* Validité fausse pour la température */
-            this->fan_temp_valid = false;
+            /* Temperature is considered invalid */
+            temp_fan.temp_valid = BASE_FALSE;
         }
         else
         {
-            /* Calcul de la résistance équivalente */
-            c = (TEMP_VREF_ADC / (float) ((float) this->adc_gain * TEMP_VDD_ADC)) * (float) ( d - (COM_ADC_MAXVALUE >> 1) );
+            /* Computing equivalent resistor value */
+            c = (TEMP_VREF_ADC / (float) ((float) temp_adc_gain * TEMP_VDD_ADC)) * (float) ( d - (COM_ADC_MAXVALUE >> 1) );
             r = (float) TEMP_THERM_COMP * (c + (COM_ADC_MAXVALUE >> 2)) / ((COM_ADC_MAXVALUE >> 2) - c);
             LOG_INF3("TEMP : resistor value, R = %f, c = %f", r, c);
 
             /* Calcul de la température (formule de Steinhart-Hart) */
-            this->fan_temp = (TEMP_THERM_COEFF / ( (TEMP_THERM_COEFF/TEMP_THERM_DEF_TEMP) + (float) (log(r) - log(TEMP_THERM_COMP)) ))
+            temp_fan.temp = (TEMP_THERM_COEFF / ( (TEMP_THERM_COEFF/TEMP_THERM_DEF_TEMP) + (float) (log(r) - log(TEMP_THERM_COMP)) ))
                 - TEMP_THERM_K_TEMP;
-            /*this->fan_temp = 1 / ( (1/TEMP_THERM_DEF_TEMP) + (float) (log( r / TEMP_THERM_COMP ) / TEMP_THERM_COEFF) ); */
+            /*temp_fan_temp = 1 / ( (1/TEMP_THERM_DEF_TEMP) + (float) (log( r / TEMP_THERM_COMP ) / TEMP_THERM_COEFF) ); */
 
-            /* Validité de la température */
-            this->fan_temp_valid = true;
+            /* Temperature validity */
+            temp_fan.temp_valid = BASE_TRUE;
         }
 
         /* Envoi de la donnée à FAN */
@@ -79,8 +84,8 @@ int TEMP::temp_retrieve_data(void)
 
         if (0 == ret)
         {
-            p_temp->temp_sys        = (t_uint32) this->fan_temp;
-            p_temp->temp_sys_valid  = this->fan_temp_valid;
+            p_temp->temp_sys        = temp_fan.temp;
+            p_temp->temp_sys_valid  = temp_fan.temp_valid;
 
             ret = SHMD_givePtrTempData();
         }
@@ -92,22 +97,22 @@ int TEMP::temp_retrieve_data(void)
 
 /*******************************************************************/
 /*                                                                 */
-/*  description : Envoi des données au thread de FAN               */
+/*  description : Send temperature data to everyone                */
 /*                                                                 */
-/*  @out        : ret = 0  si tout va bien                         */
-/*                ret > 0  si erreur                               */
+/*  @out        : ret = 0  if everything is ok                     */
+/*                ret > 0  on error                                */
 /*                                                                 */
 /*******************************************************************/
-int TEMP::temp_send_data(void)
+int temp_send_data(void)
 {
     int ret = 0;
     t_temp_data d;
 
     /* On remplit la structure */
-    d.fan_temp = this->fan_temp;
-    d.fan_temp_valid = this->fan_temp_valid ? TEMP_VALIDITY_VALID : TEMP_VALIDITY_INVALID;
-    d.room_temp = this->room_temp;
-    d.room_temp_valid = this->room_temp_valid ? TEMP_VALIDITY_VALID : TEMP_VALIDITY_INVALID;
+    d.fan_temp = temp_fan.temp;
+    d.fan_temp_valid = temp_fan.temp_valid ? TEMP_VALIDITY_VALID : TEMP_VALIDITY_INVALID;
+    d.room_temp = temp_room.temp;
+    d.room_temp_valid = temp_room.temp_valid ? TEMP_VALIDITY_VALID : TEMP_VALIDITY_INVALID;
 
     /* On envoie le tout */
     LOG_INF3("TEMP : sending temperature data");
@@ -127,13 +132,13 @@ int TEMP::temp_send_data(void)
 /*                ret > 0  on error                                */
 /*                                                                 */
 /*******************************************************************/
-int TEMP::temp_treat_irq()
+int temp_treat_irq()
 {
     int ret= 0, ss;
     unsigned long d;
 
     /* Acknowledge the IRQ */
-    ss = read(this->p_fd[TEMP_FD_IRQ].fd, &d, sizeof(unsigned long));
+    ss = read(temp_poll_fd[TEMP_FD_IRQ].fd, &d, sizeof(unsigned long));
 
     if (ss < 0)
     {
@@ -157,7 +162,7 @@ int TEMP::temp_treat_irq()
 /*                ret > 0  on error                                */
 /*                                                                 */
 /*******************************************************************/
-int TEMP::temp_tic(unsigned long i_tic)
+int temp_tic(unsigned long i_tic)
 {
     int ret = 0;
     t_temp_tic t;
@@ -170,3 +175,4 @@ int TEMP::temp_tic(unsigned long i_tic)
 
     return ret;
 }
+

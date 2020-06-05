@@ -32,7 +32,6 @@ typedef enum
 extern t_mod_context remote_modules[NB_INSTANCES_REMOTE];
 
 extern int remote_timer_id;
-extern int remote_irq_fd;
 extern int remote_sem_fd;
 
 extern struct pollfd remote_poll_fd[REMOTE_FD_NB];
@@ -51,7 +50,6 @@ int remote_init_after_wait (void);
 int remote_exec_loop       (void);
 
 /* Data handling entry points */
-int remote_treat_msg(int i_fd);
 int remote_treat_com(void);
 int remote_treat_udp(int i_fd);
 

@@ -18,7 +18,7 @@ extern "C" {
 typedef struct
 {
     t_uint32 fan_rpm;
-    t_int32 temp_temp;
+    t_float32 temp_temp;
     t_uint32 temp_valid;
 } __attribute__((packed)) t_remote_status;
 
