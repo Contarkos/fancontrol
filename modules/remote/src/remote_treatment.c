@@ -1,59 +1,20 @@
-/* Includes globaux */
+/* Global includes */
 #include <stdio.h>
 #include <unistd.h>
 
-/* Includes locaux */
+/* Local includes */
 #include "base.h"
 #include "integ_log.h"
 #include "com.h"
 #include "com_msg.h"
-#include "remote_class.h"
+
+#include "remote_module.h"
 
 /*********************************************************************/
-/*                      Fonctions de classe                          */
+/*                       Module functions                            */
 /*********************************************************************/
 
-int REMOTE::remote_treat_msg(int i_fd)
-{
-    int ret = 0, ss;
-    t_com_msg m;
-
-    if (0 > i_fd)
-    {
-        LOG_ERR("REMOTE : no file descriptor to read message, fd = %d", i_fd);
-        ret = -1;
-    }
-    else
-    {
-        /* Recuperation des données du message */
-        ret = COM_receive_data(i_fd, &m, &ss);
-
-        if (0 == ss)
-        {
-            LOG_WNG("REMOTE : wrong size for message");
-            ret = -2;
-        }
-        else
-        {
-            switch (m.id)
-            {
-                case MAIN_SHUTDOWN:
-                    ret = this->stop_and_exit();
-                    break;
-                case REMOTE_TIMER:
-                    ret = this->remote_send_status();
-                    break;
-                default:
-                    LOG_ERR("REMOTE : unknown message ID, id = %d", m.id);
-                    ret = 1;
-            }
-        }
-    }
-
-    return ret;
-}
-
-int REMOTE::remote_treat_com()
+int remote_treat_com()
 {
     int ret = 0;
     t_com_msg_struct m;
@@ -70,10 +31,10 @@ int REMOTE::remote_treat_com()
             case MAIN_START:
                 break;
             case MAIN_SHUTDOWN:
-                ret = this->stop_and_exit();
+                ret = remote_modules[0].stop_and_exit(&remote_modules[0]);
                 break;
             case REMOTE_TIMER:
-                ret = this->remote_send_status();
+                ret = remote_send_status();
                 break;
             default:
                 LOG_ERR("REMOTE : unknown message ID, id = %d", m.header.id);
@@ -84,8 +45,8 @@ int REMOTE::remote_treat_com()
     return ret;
 }
 
-/* Traitement des messages UDP venant de l'exterieur */
-int REMOTE::remote_treat_udp(int i_fd)
+/* Handling message coming from outside */
+int remote_treat_udp(int i_fd)
 {
     int ret = 0, ss;
     t_com_msg m;
@@ -97,7 +58,7 @@ int REMOTE::remote_treat_udp(int i_fd)
     }
     else
     {
-        /* Recuperation des données du message */
+        /* Get message data */
         ret = COM_receive_data(i_fd, &m, &ss);
 
         if (0 == ss)

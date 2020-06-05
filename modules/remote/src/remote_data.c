@@ -1,14 +1,15 @@
-/* Includes globaux */
+/* Global includes */
 
-/* Includes locaux */
+/* Local includes */
 #include "base.h"
-#include "com_msg.h"
 #include "integ_log.h"
+#include "com_msg.h"
 #include "shmd.h"
-#include "remote.h"
-#include "remote_class.h"
 
-int REMOTE::remote_send_status(void)
+#include "remote.h"
+#include "remote_module.h"
+
+int remote_send_status(void)
 {
     int ret = 0;
     t_remote_status s;
@@ -44,7 +45,7 @@ int REMOTE::remote_send_status(void)
 
     if (0 == ret)
     {
-        ret = COM_send_mcast_data(&this->out_socket, REMOTE_STATUS, &s, sizeof(s), 0);
+        ret = COM_send_mcast_data(&remote_out_socket, REMOTE_STATUS, &s, sizeof(s), 0);
         LOG_INF3("REMOTE : sending system status, RPM = %d, temp = %dC, ret = %d", s.fan_rpm, s.temp_temp, ret);
 
         if (ret < 0)
@@ -54,3 +55,4 @@ int REMOTE::remote_send_status(void)
 
     return ret;
 }
+
