@@ -22,21 +22,21 @@ extern "C" {
 /*                           Typedef                                 */
 /*********************************************************************/
 
-/* Forward declaration pour t_module_class */
+/* Forward declaration for t_module_class */
 typedef struct s_mod_context t_mod_context;
 
-/* Fonction de base sans argument et retournant un entier de statut */
+/* Basic function without argument returning an integer status */
 typedef int     (*base_func)    (void);
 
 /* Function used by the module when the context is required */
 typedef int     (*mod_func)     (t_mod_context *p_context);
 
-/* Fonction utilisant la structure d'attributs pour fonctionner */
+/* Entry point functions that can be used to start a thread */
 typedef void*   (*entry_func)   (void *p_context);
 
 struct s_mod_context
 {
-    /* Attributs simples pour la classe */
+    /* Common attributes for the class */
     OS_thread_t     thread;
     OS_mutex_t      *mutex_mod;
     OS_mutex_t      *mutex_main;
@@ -46,15 +46,15 @@ struct s_mod_context
     t_uint32        is_running;
     t_uint32        is_init;
 
-    /* Fonctions de demarrage et d'arret du module */
+    /* Functions to start the thread of the module and stop it */
     entry_func      init_module;
     entry_func      exit_module;
 
-    /* Fonctions generiques pour le module */
+    /* Generic functions for the module (MODULE's one can be used) */
     mod_func        wait_and_loop;
     mod_func        stop_and_exit;
 
-    /* Fonctions specifiques a chaque module */
+    /* Modules' specific functions that need to be provided by the module */
     base_func       start_module;
     base_func       stop_module;
     base_func       init_after_wait;
