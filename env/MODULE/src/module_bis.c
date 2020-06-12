@@ -7,62 +7,6 @@
 
 #include "module_bis.h"
 
-void* MODULE_init (void *p_context)
-{
-    int ret = 0;
-    t_mod_context *p = NULL;
-
-    if (NULL == p_context)
-    {
-        LOG_ERR("MODULE : no context provided, cannot init");
-        ret = -1;
-    }
-
-    if (0 == ret)
-    {
-        p = (t_mod_context *) p_context;
-
-        if (BASE_FALSE == p->is_init)
-        {
-            LOG_ERR("MODULE : context not initialized, cannot start");
-            ret = -1;
-        }
-    }
-
-    if (0 == ret)
-        ret = p->wait_and_loop(p);
-
-    return (void *) NULL;
-}
-
-void* MODULE_exit (void *p_context)
-{
-    int ret = 0;
-    t_mod_context *p = NULL;
-
-    if (NULL == p_context)
-    {
-        LOG_ERR("MODULE : no context provided, cannot exit");
-        ret = -1;
-    }
-
-    if (0 == ret)
-    {
-        p = (t_mod_context *) p_context;
-
-        if (BASE_FALSE == p->is_init)
-        {
-            LOG_ERR("MODULE : context not initialized, cannot stop");
-            ret = -1;
-        }
-    }
-
-    if (0 == ret)
-        ret = p->stop_and_exit(p);
-
-    return (void *) NULL;
-}
-
 int MODULE_config (t_mod_context *p_context,
                    const char name[MOD_MAX_LENGTH_NAME],
                    OS_mutex_t *p_mutex_main, OS_mutex_t *p_mutex_mod)
