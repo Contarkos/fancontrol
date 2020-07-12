@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 
     ret = main_start_factory();
 
-    if (BASE_OK != ret)
+    if (BASE_E_OK != ret)
     {
         LOG_ERR("MAIN : erreur de démarrage. EXIT (code %d)\n", ret);
     }
