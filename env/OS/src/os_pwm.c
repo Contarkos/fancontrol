@@ -85,7 +85,6 @@ int OS_pwn_enable(t_os_state i_enable)
 
     if (0 == ret)
     {
-
         ret = OS_mutex_lock(&os_pwm_mutex);
 
         if (0 != ret)
