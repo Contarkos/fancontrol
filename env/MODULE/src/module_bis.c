@@ -80,10 +80,16 @@ int MODULE_config (t_mod_context *p_context,
 
     if (0 == ret)
     {
-        /* Lock of MAIN until the end of the init */
-        OS_mutex_lock(p_context->mutex_main);
-        p_context->is_init = BASE_TRUE;
+        /* Lock of MAIN's mutex until the end of the init */
+        ret = OS_mutex_lock(p_context->mutex_main);
+
+        if (ret != 0)
+           LOG_ERR("MODULE : cannot lock MAIN mutex to wait for init");
     }
+
+    /* Everything went smoothly up to here, YEAY. */
+    if (0 == ret)
+        p_context->is_init = BASE_TRUE;
 
     return ret;
 }
@@ -116,14 +122,27 @@ int MODULE_wait_and_loop (t_mod_context *p_context)
             LOG_ERR("MODULE : wrong start for %s, aborting", p_context->name);
     }
 
+    /* Unlocking MAIN thread */
     if (0 == ret)
     {
-        /* Unlocking MAIN thread */
-        OS_mutex_unlock(p_context->mutex_main);
+        ret = OS_mutex_unlock(p_context->mutex_main);
 
-        /* Locking current thread waiting for GO from MAIN */
-        OS_mutex_lock(p_context->mutex_mod);
+        if (0 != ret)
+           /* TODO : abort completely since MAIN is fucked up now ? */
+           LOG_ERR("MODULE : mutex from MAIN not initialised for %s", p_context->name);
+    }
 
+    /* Locking current thread waiting for GO from MAIN */
+    if (0 == ret)
+    {
+        ret = OS_mutex_lock(p_context->mutex_mod);
+
+        if (0 != ret)
+           LOG_ERR("MODULE : mutex for module %s not initialised", p_context->name);
+    }
+
+    if (0 == ret)
+    {
         /* Run the few init actions left */
         ret = p_context->init_after_wait();
 

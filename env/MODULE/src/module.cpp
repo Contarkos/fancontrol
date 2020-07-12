@@ -76,8 +76,23 @@ int MODULE::wait_and_loop(void)
 {
     int ret = 0;
 
+    if (0 == ret)
+    {
+        if (false == is_init)
+        {
+            LOG_ERR("MODULE : context not initialized, aborting");
+            ret = -2;
+        }
+    }
+
     /* Initialisation of the variables */
-    ret = this->start_module();
+    if (0 == ret)
+    {
+        ret = this->start_module();
+
+        if (0 != ret)
+            LOG_ERR("MODULE : wrong start for %s, aborting", this->name);
+    }
 
     if (0 == ret)
     {
@@ -90,26 +105,37 @@ int MODULE::wait_and_loop(void)
         /* Initialisation of specific objects after INIT (ex : sockets' connection) */
         ret = this->init_after_wait();
 
+        if (ret != 0)
+            LOG_ERR("MODULE : Error while starting module %s, ret = %d", this->name, ret);
+    }
+
+    if (0 == ret)
+    {
         /* Starting loop */
         this->isRunning = true;
 
         while (isRunning)
         {
-            if (0 > this->exec_loop())
+            if (this->exec_loop() < 0)
             {
                 LOG_ERR("%s : Loop error. Stopping thread", this->name);
                 this->isRunning = false;
             }
         }
-    }
-    else
-    {
-        LOG_ERR("MODULE : Error while starting module %s, ret = %d", this->name, ret);
-        ret = this->stop_and_exit();
+
+        ret = this->stop_module();
+
+        if (0 != ret)
+            LOG_ERR("%s : error while stopping module", this->name);
     }
 
-    /* Unlocking mutex for MAIN to stop correctly */
-    OS_mutex_unlock(this->m_mod_init);
+    if (true == this->is_init)
+    {
+        ret = this->stop_and_exit();
+
+        /* Unlocking mutex for MAIN to stop correctly */
+        OS_mutex_unlock(this->m_mod_init);
+    }
 
     return ret;
 }
@@ -127,9 +153,7 @@ void* MODULE::exit_module(void* p_this)
         ret = p_module->stop_and_exit();
 
         if (ret != 0)
-        {
             LOG_ERR("MODULE : error in stop_and_exit, ret = %d", ret);
-        }
 
     }
     else
@@ -145,11 +169,18 @@ int MODULE::stop_and_exit(void)
 {
     int ret = 0;
 
-    /* Specific stop for the module */
-    ret = this->stop_module();
-
     /* Generic stop */
-    this->set_running(false);
+    if (0 == ret)
+    {
+        if (false == is_init)
+        {
+            LOG_ERR("MODULE : module not initialised, aborting");
+            ret = -1;
+        }
+    }
+
+    if (0 == ret)
+        this->set_running(false);
 
     return ret;
 }
@@ -158,13 +189,9 @@ int MODULE::stop_and_exit(void)
 void MODULE::set_running(bool i_isRunning)
 {
     if (is_init)
-    {
         this->isRunning = i_isRunning;
-    }
     else
-    {
         this->isRunning = false;
-    }
 }
 
 bool MODULE::is_running(void)
