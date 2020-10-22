@@ -4,6 +4,7 @@
 # Definition for the location of the modules
 include ./tools/libs.mk
 
+##################################################
 # Fonctions
 
 # For every dir provided, provide the complete path to the library file
@@ -22,7 +23,8 @@ _get_obj_src_file=$(subst /src/,/obj,$(dir $(1)))/$(subst $(2),.o,$(notdir $(1))
 ##################################################
 # Environment variables
 
-PARALLEL= -j6
+PARALLEL = -j6
+MAKEFLAGS = --no-print-directory
 
 BIN = sw_local.bin
 INTEG_LOG_LEVEL = -DINTEGRATION_LOG_LEVEL=6
@@ -55,6 +57,10 @@ PREREQ_FILES += $(foreach _dir, env/MAIN $(SUBDIRS_ENV) $(SUBDIRS_MOD), $(call _
 OBJ_FILES_MAIN = $(patsubst $(SUBDIR_MAIN)/src/%.cpp, $(SUBDIR_MAIN)/obj/%.o, $(wildcard $(SUBDIR_MAIN)/src/*.cpp))
 
 PATH_BINARY = $(SUBDIR_MAIN)/bin/$(BIN)
+PATH_STRIP  = $(PATH_BINARY).stripped
+PATH_MAP    = $(PATH_BINARY:.bin=.map)
+
+OUTPUT_FILES = $(PATH_BINARY) $(PATH_STRIP) $(PATH_MAP)
 
 ##################################################
 # Compilation variables
@@ -110,7 +116,7 @@ export SUBDIR_DATA
 ##################################################
 # Compilation rules
 
-all: $(PATH_BINARY) $(SUBDIR_DATA) | /tftpboot/
+all: $(OUTPUT_FILES) $(SUBDIR_DATA) | /tftpboot/
 	@echo "   CP $<"
 	@echo "   CP $(SUBDIR_DATA)"
 	@cp    $(SUBDIR_MAIN)/bin/$(BIN) /tftpboot/
@@ -134,18 +140,25 @@ all: $(PATH_BINARY) $(SUBDIR_DATA) | /tftpboot/
 $(PATH_BINARY): $(LIST_LIBENV) $(LIST_LIBMOD) $(OBJ_FILES) $(OBJ_FILES_MAIN) | $(SUBDIR_MAIN)/bin
 	@echo "   LD $@"
 	@#$(MAKE) $(PARALLEL) -C $(SUBDIR_MAIN) -f module.mk bin
-	@$(CROSS_COMPILE)$(CXX) $(OBJ_FILES_MAIN) $(LIBS_PATH) $(LIBS) -o $@
+	@$(CROSS_COMPILE)$(CXX) $(OBJ_FILES_MAIN) $(LIBS_PATH) $(LIBS) -Xlinker -Map=$(PATH_MAP) -o $@
+
+$(PATH_STRIP): $(PATH_BINARY)
+	@echo "STRIP $@"
+	@$(CROSS_COMPILE)$(STRIP) -s -o $@ $<
+
+$(PATH_MAP): $(PATH_BINARY)
+	@echo "  MAP $@"
 
 # Rule to generate prerequisite files
 %.d: $$(call _get_src_pre_file,$$@,.c) | $$(dir $$@)
-	@echo "  GEN $@"
+	@echo "  PRE $@"
 	@$(RM) $@
 	@$(CROSS_COMPILE)$(CC) $(INCLUDES) -I$(subst /pre,/inc/,$(dir $@)) $(C_FLAGS) -MM $< > $@.$$$$; \
 	sed 's#$(notdir $(call _get_obj_src_file, $<,.c))[ :]*#$(call _get_obj_src_file, $<,.c) $@: #g' < $@.$$$$ > $@; \
 	$(RM) $@.$$$$
 
 %.d: $$(call _get_src_pre_file,$$@,.cpp) | $$(dir $$@)
-	@echo "  GEN $@"
+	@echo "  PRE $@"
 	@$(RM) $@
 	@$(CROSS_COMPILE)$(CXX) $(INCLUDES) -I$(subst /pre,/inc/,$(dir $@)) $(CPLUS_FLAGS) -MM $< > $@.$$$$; \
 	sed 's#$(notdir $(call _get_obj_src_file, $<,.cpp))[ :]*#$(call _get_obj_src_file, $<,.cpp) $@: #g' < $@.$$$$ > $@; \
@@ -216,10 +229,7 @@ distclean: $(DIST_CLEAN_MOD) $(DIST_CLEAN_ENV)
 ##################################################
 # Compilation du module kernel
 kmodules:
-	@echo "###################################"
-	@echo "Compiling kernel modules..."
-	@echo "-----------------------------------\n"
-	$(MAKE) $(PARALLEL) -C $(SUBDIR_KERN)
+	@$(MAKE) $(PARALLEL) -C $(SUBDIR_KERN)
 	
 print-%:
 	@echo $* = $($(*))

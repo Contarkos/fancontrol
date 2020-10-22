@@ -10,6 +10,8 @@
 *.so
 *.a
 *.bin
+*.map
+*.stripped
 
 # Modules #
 ###########
