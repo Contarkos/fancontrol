@@ -9,7 +9,6 @@ DATA_DIR=DATA
 LOCAL_DIR=/mnt/flash
 NFS_DIR=/mnt/nfs
 NFS_CONF=nfs_conf
-SOCKET_FILE=/tmp/fan_sock
 
 MOD_DIR=/lib/modules/$(uname -r)/kernel/fancontrol
 MOD_ADC_DIR=${MOD_DIR}/adc
@@ -29,57 +28,57 @@ NFS_IP=192.168.0.14
 
 start_flash ()
 {
-  echo "        ____________________.__          ";
-  echo "        \______   \______   \__|         ";
-  echo "  ______ |       _/|     ___/  |  ______ ";
-  echo " /_____/ |    |   \|    |   |  | /_____/ ";
-  echo "         |____|_  /|____|   |__|         ";
-  echo "                \/                       ";
-  echo "      _____.__                .__        ";
-  echo "    _/ ____\  | _____    _____|  |__     ";
-  echo "    \   __\|  | \__  \  /  ___/  |  \    ";
-  echo "     |  |  |  |__/ __ \_\___ \|   Y  \   ";
-  echo "     |__|  |____(____  /____  >___|  /   ";
-  echo "                     \/     \/     \/    ";
-  echo
-  echo "========================================================"
-  echo
+  /bin/echo "        ____________________.__          ";
+  /bin/echo "        \______   \______   \__|         ";
+  /bin/echo "  ______ |       _/|     ___/  |  ______ ";
+  /bin/echo " /_____/ |    |   \|    |   |  | /_____/ ";
+  /bin/echo "         |____|_  /|____|   |__|         ";
+  /bin/echo "                \/                       ";
+  /bin/echo "      _____.__                .__        ";
+  /bin/echo "    _/ ____\  | _____    _____|  |__     ";
+  /bin/echo "    \   __\|  | \__  \  /  ___/  |  \    ";
+  /bin/echo "     |  |  |  |__/ __ \_\___ \|   Y  \   ";
+  /bin/echo "     |__|  |____(____  /____  >___|  /   ";
+  /bin/echo "                     \/     \/     \/    ";
+  /bin/echo
+  /bin/echo "========================================================"
+  /bin/echo
 
-  echo "Setting directory to ${LOCAL_DIR}"
+  /bin/echo "Setting directory to ${LOCAL_DIR}"
   COPY_DIR=${LOCAL_DIR}
 }
 
 start_nfs ()
 {
-  echo "     ____  ____  ____                ";
-  echo " ___(  _ \\(  _ \\(_  _)___            ";
-  echo "(___))   / )___/ _)(_(___)           ";
-  echo "    (_)\\_)(__)  (____)               ";
-  echo "                     _  _  ____  ___ ";
-  echo "                    ( \\( )( ___)/ __)";
-  echo "                     )  (  )__) \\__ \\";
-  echo "                    (_)\\_)(__)  (___/";
-  echo
-  echo "========================================================"
-  echo
+  /bin/echo "     ____  ____  ____                ";
+  /bin/echo " ___(  _ \\(  _ \\(_  _)___            ";
+  /bin/echo "(___))   / )___/ _)(_(___)           ";
+  /bin/echo "    (_)\\_)(__)  (____)               ";
+  /bin/echo "                     _  _  ____  ___ ";
+  /bin/echo "                    ( \\( )( ___)/ __)";
+  /bin/echo "                     )  (  )__) \\__ \\";
+  /bin/echo "                    (_)\\_)(__)  (___/";
+  /bin/echo
+  /bin/echo "========================================================"
+  /bin/echo
 
   # Ping de l'adresse du serveur tftp (5 secondes de timeout)
-  ping ${NFS_IP} -c 1 -W 2
+  /bin/ping ${NFS_IP} -c 1 -W 2
   ALIVE=$?
-  echo
+  /bin/echo
 
   if [[ ${ALIVE} -eq 0 ]];
   then
-    echo "Mounting NFS from ${NFS_IP}"
+    /bin/echo "Mounting NFS from ${NFS_IP}"
 
     # Montage du dossier NFS
-    sudo umount ${NFS_DIR}
-    sudo mount -t nfs -o rw ${NFS_IP}:/tftpboot ${NFS_DIR}
+    /usr/bin/sudo /bin/umount ${NFS_DIR}
+    /usr/bin/sudo /bin/mount -t nfs -o rw ${NFS_IP}:/tftpboot ${NFS_DIR}
 
     # Selection du dossier de copie
     COPY_DIR=${NFS_DIR}
   else
-    echo "No echo from TFTP Server, using FLASH instead"
+    /bin/echo "No echo from TFTP Server, using FLASH instead"
     COPY_DIR=${LOCAL_DIR}
   fi
 
@@ -88,17 +87,17 @@ start_nfs ()
 launch_app ()
 {
   # Suppression des modules
-  sudo rmmod ${MOD_TIME} ${MOD_ADC}
+  /usr/bin/sudo /sbin/rmmod ${MOD_TIME} ${MOD_ADC}
 
   # Insertion des modules
-  sudo insmod ${MOD_TIME_DIR}/${MOD_TIME}
-  sudo insmod ${MOD_ADC_DIR}/${MOD_ADC}
+  /usr/bin/sudo /sbin/insmod ${MOD_TIME_DIR}/${MOD_TIME}
+  /usr/bin/sudo /sbin/insmod ${MOD_ADC_DIR}/${MOD_ADC}
 
   # Demarrage de l'applicatif avec options
-  echo "Starting...."
-  echo
+  /bin/echo "Starting...."
+  /bin/echo
 
-  sudo /tmp/${LOCAL_BIN}
+  /usr/bin/sudo /tmp/${LOCAL_BIN}
 }
 
 copy_data ()
@@ -107,39 +106,39 @@ copy_data ()
   if ! [[ -f ${COPY_DIR}/${LOCAL_BIN} ]];
   then
     # Fallback si erreur
-    echo "No file to launch... Fallback on flash"
+    /bin/echo "No file to launch... Fallback on flash"
     COPY_DIR=${LOCAL_DIR}
   fi
 
   # Copie des modules kernel pour interruption
   if [[ -f ${COPY_DIR}/${DATA_DIR}/${MOD_TIME} ]];
   then
-    sudo cp ${COPY_DIR}/${DATA_DIR}/${MOD_TIME} ${MOD_TIME_DIR}/${MOD_TIME}
+    /usr/bin/sudo /bin/cp ${COPY_DIR}/${DATA_DIR}/${MOD_TIME} ${MOD_TIME_DIR}/${MOD_TIME}
   else
-    echo "No kernel modules to load. Exiting..."
+    /bin/echo "No kernel modules to load. Exiting..."
     exit 1
   fi
 
   if [[ -f ${COPY_DIR}/${DATA_DIR}/${MOD_ADC} ]];
   then
-    sudo cp ${COPY_DIR}/${DATA_DIR}/${MOD_ADC} ${MOD_ADC_DIR}/${MOD_ADC}
+    /usr/bin/sudo /bin/cp ${COPY_DIR}/${DATA_DIR}/${MOD_ADC} ${MOD_ADC_DIR}/${MOD_ADC}
   else
-    echo "No kernel modules to load. Exiting..."
+    /bin/echo "No kernel modules to load. Exiting..."
     exit 1
   fi
 
   # Copie des binaires en RAM
-  echo "Copying the binaries from ${COPY_DIR}..."
+  /bin/echo "Copying the binaries from ${COPY_DIR}..."
 
   # Copie en RAM et bit d'execution
-  cp ${COPY_DIR}/${LOCAL_BIN} /tmp/${LOCAL_BIN}
+  /bin/cp ${COPY_DIR}/${LOCAL_BIN} /tmp/${LOCAL_BIN}
 
   if [[ $? -eq 0 ]];
   then
-    echo "Done !"
-    chmod +x /tmp/${LOCAL_BIN}
+    /bin/echo "Done !"
+    /bin/chmod +x /tmp/${LOCAL_BIN}
   else
-    echo "Error while copying files... Exiting"
+    /bin/echo "Error while copying files... Exiting"
     exit 1
   fi
 }
@@ -149,13 +148,13 @@ copy_data ()
 ###########################
 
 # Pour avoir le temps de démarrage
-echo "Boot time : $(cat /proc/uptime | cut -d ' ' -f1) seconds"
+/bin/echo "Boot time : $(/bin/cat /proc/uptime | /usr/bin/cut -d ' ' -f1) seconds"
 
-echo "========================================================"
-echo
-echo "  -- Starting APP --"
-echo
-echo "========================================================"
+/bin/echo "========================================================"
+/bin/echo
+/bin/echo "  -- Starting APP --"
+/bin/echo
+/bin/echo "========================================================"
 
 # Choix de la conf de demarrage
 if [[ -f ${LOCAL_DIR}/${NFS_CONF} ]]; then
@@ -165,12 +164,12 @@ else
 fi
 
 # Preparation des donnees
-echo "========================================================"
-echo
+/bin/echo "========================================================"
+/bin/echo
 copy_data
 
 # On lance l'appli préparée
-echo "========================================================"
-echo
+/bin/echo "========================================================"
+/bin/echo
 launch_app
 
