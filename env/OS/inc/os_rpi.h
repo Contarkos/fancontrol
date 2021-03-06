@@ -10,25 +10,27 @@ struct bcm2835_peripheral
     volatile unsigned int *addr;
 };
 
-/* Structure mémoire pour GPIO */
+/* Memory struct for GPIO */
 extern struct bcm2835_peripheral os_periph_gpio;
-/* Structure mémoire pour PWM */
+/* Memory struct for PWM */
 extern struct bcm2835_peripheral os_periph_pwm;
-/* Structure mémoire pour CLOCK */
+/* Memory struct for CLOCK */
 extern struct bcm2835_peripheral os_periph_clock;
-/* Structure mémoire pour SPI */
+/* Memory struct for SPI */
 extern struct bcm2835_peripheral os_periph_spi;
 
-/* Adresse des zones de la mémoire pour BCM2835. A verifier pour 2708 */
+/* Memory regions for BCM2835 */
 #define BCM2708_PERI_BASE       0x20000000
 #define GPIO_BASE               (BCM2708_PERI_BASE + 0x200000) /* GPIO controller */
 #define PWM_BASE                (BCM2708_PERI_BASE + 0x20C000) /* PWM controller */
+#define I2C0_BASE               (BCM2708_PERI_BASE + 0x205000) /* I2C0 controller */
+#define I2C1_BASE               (BCM2708_PERI_BASE + 0x804000) /* I2C0 controller */
 #define SPI_BASE                (BCM2708_PERI_BASE + 0x214000) /* SPI controller */
 #define CLOCK_BASE              (BCM2708_PERI_BASE + 0x101000) /* CLOCK controller */
 
 #define BLOCK_SIZE              (4*1024)
 
-/* Macros d'acces aux registres des GPIO */
+/* In/Out/Alt control registers for GPIO */
 #define INP_GPIO(g)        do { *( os_periph_gpio.addr + ((g)/10) ) &= (unsigned int) ~( 7 << ( ((g)%10)*3 ) ); } while (0)
 #define OUT_GPIO(g)        do {\
                                 INP_GPIO(g);\
@@ -40,7 +42,7 @@ extern struct bcm2835_peripheral os_periph_spi;
                                  *(os_periph_gpio.addr + ((g)/10) ) |= (((a)<=3?(a) + 4:(a)==4?3:2)<<(((g)%10)*3));\
                            } while (0)
 
-/* Macros de base GPIO pour modifier les valeurs */
+/* GPIO basic control macros */
 #define GPIO_SET_REGISTER        *( os_periph_gpio.addr + 7  )
 #define GPIO_SET(g)              do { GPIO_SET_REGISTER = (unsigned int) 1 << (g); } while (0) /* sets   bits which are 1 ignores bits which are 0 */
 #define GPIO_CLR_REGISTER        *( os_periph_gpio.addr + 10 )
@@ -51,7 +53,110 @@ extern struct bcm2835_peripheral os_periph_spi;
 
 #define GPIO_MAX_NB              27U
 
-/* Macros de base PWM pour modifier les paramètres */
+/* I2C registers, masks and shifts */
+typedef volatile struct
+{
+    t_uint32 ctrl;
+    t_uint32 status;
+    t_uint32 dlen;
+    t_uint32 addr;
+    t_uint32 fifo;
+    t_uint32 cdiv;
+    t_uint32 delay;
+    t_uint32 clkt;
+} __attribute__((packed)) t_os_i2c_register;
+
+#define I2C0_CTL_OFFSET           0U
+#define I2C0_CTL_REGISTER         *( os_periph_i2c0.addr + I2C_CTL_OFFSET )
+#define I2C0_STA_OFFSET           1U
+#define I2C0_STA_REGISTER         *( os_periph_i2c0.addr + I2C_STA_OFFSET )
+#define I2C0_DLEN_OFFSET          2U
+#define I2C0_DLEN_REGISTER        *( os_periph_i2c0.addr + I2C_DLEN_OFFSET )
+#define I2C0_ADDR_OFFSET          3U
+#define I2C0_ADDR_REGISTER        *( os_periph_i2c0.addr + I2C_ADDR_OFFSET )
+#define I2C0_FIFO_OFFSET          4U
+#define I2C0_FIFO_REGISTER        *( os_periph_i2c0.addr + I2C_FIFO_OFFSET )
+#define I2C0_DIV_OFFSET           5U
+#define I2C0_DIV_REGISTER         *( os_periph_i2c0.addr + I2C_DIV_OFFSET )
+#define I2C0_DEL_OFFSET           6U
+#define I2C0_DEL_REGISTER         *( os_periph_i2c0.addr + I2C_DEL_OFFSET )
+#define I2C0_CLKT_OFFSET          7U
+#define I2C0_CLKT_REGISTER        *( os_periph_i2c0.addr + I2C_CLKT_OFFSET )
+
+#define I2C1_CTL_OFFSET           0U
+#define I2C1_CTL_REGISTER         *( os_periph_i2c1.addr + I2C_CTL_OFFSET )
+#define I2C1_STA_OFFSET           1U
+#define I2C1_STA_REGISTER         *( os_periph_i2c1.addr + I2C_STA_OFFSET )
+#define I2C1_DLEN_OFFSET          2U
+#define I2C1_DLEN_REGISTER        *( os_periph_i2c1.addr + I2C_DLEN_OFFSET )
+#define I2C1_ADDR_OFFSET          3U
+#define I2C1_ADDR_REGISTER        *( os_periph_i2c1.addr + I2C_ADDR_OFFSET )
+#define I2C1_FIFO_OFFSET          4U
+#define I2C1_FIFO_REGISTER        *( os_periph_i2c1.addr + I2C_FIFO_OFFSET )
+#define I2C1_DIV_OFFSET           5U
+#define I2C1_DIV_REGISTER         *( os_periph_i2c1.addr + I2C_DIV_OFFSET )
+#define I2C1_DEL_OFFSET           6U
+#define I2C1_DEL_REGISTER         *( os_periph_i2c1.addr + I2C_DEL_OFFSET )
+#define I2C1_CLKT_OFFSET          7U
+#define I2C1_CLKT_REGISTER        *( os_periph_i2c1.addr + I2C_CLKT_OFFSET )
+
+#define I2C_CTL_RDWR_MASK        ((t_uint32) 0x00000001)
+#define I2C_CTL_RDWR_SHIFT       0U
+#define I2C_CTL_CLR_FIFO_MASK    ((t_uint32) 0x00000030)
+#define I2C_CTL_CLR_FIFO_SHIFT   4U
+#define I2C_CTL_START_MASK       ((t_uint32) 0x00000080)
+#define I2C_CTL_START_SHIFT      7U
+#define I2C_CTL_INTD_MASK        ((t_uint32) 0x00000100)
+#define I2C_CTL_INTD_SHIFT       8U
+#define I2C_CTL_INTT_MASK        ((t_uint32) 0x00000200)
+#define I2C_CTL_INTT_SHIFT       9U
+#define I2C_CTL_INTR_MASK        ((t_uint32) 0x00000400)
+#define I2C_CTL_INTR_SHIFT       10U
+#define I2C_CTL_ENABLE_MASK      ((t_uint32) 0x00008000)
+#define I2C_CTL_ENABLE_SHIFT     15U
+
+#define I2C_STA_TA_MASK          ((t_uint32) 0x00000001)
+#define I2C_STA_TA_SHIFT         0U
+#define I2C_STA_DONE_MASK        ((t_uint32) 0x00000002)
+#define I2C_STA_DONE_SHIFT       1U
+#define I2C_STA_TXW_MASK         ((t_uint32) 0x00000004)
+#define I2C_STA_TXW_SHIFT        2U
+#define I2C_STA_RXR_MASK         ((t_uint32) 0x00000008)
+#define I2C_STA_RXR_SHIFT        3U
+#define I2C_STA_TXD_MASK         ((t_uint32) 0x00000010)
+#define I2C_STA_TXD_SHIFT        4U
+#define I2C_STA_RXD_MASK         ((t_uint32) 0x00000020)
+#define I2C_STA_RXD_SHIFT        5U
+#define I2C_STA_TXE_MASK         ((t_uint32) 0x00000040)
+#define I2C_STA_TXE_SHIFT        6U
+#define I2C_STA_RXF_MASK         ((t_uint32) 0x00000080)
+#define I2C_STA_RXF_SHIFT        7U
+#define I2C_STA_ERR_MASK         ((t_uint32) 0x00000100)
+#define I2C_STA_ERR_SHIFT        8U
+#define I2C_STA_CLKT_MASK        ((t_uint32) 0x00000200)
+#define I2C_STA_CLKT_SHIFT       9U
+
+#define I2C_DLEN_VALUE_MASK      ((t_uint32) 0x0000FFFF)
+#define I2C_DLEN_VALUE_SHIFT     0U
+
+#define I2C_ADDR_VALUE_MASK      ((t_uint32) 0x0000007F)
+#define I2C_ADDR_VALUE_SHIFT     0U
+
+#define I2C_FIFO_VALUE_MASK      ((t_uint32) 0x000000FF)
+#define I2C_FIFO_VALUE_SHIFT     0U
+
+#define I2C_DIV_VALUE_MASK       ((t_uint32) 0x0000FFFF)
+#define I2C_DIV_VALUE_SHIFT      0U
+
+#define I2C_DEL_RISING_MASK      ((t_uint32) 0x0000FFFF)
+#define I2C_DEL_RISING_SHIFT     0U
+#define I2C_DEL_FALLING_MASK     ((t_uint32) 0xFFFF0000)
+#define I2C_DEL_FALLING_SHIFT    16U
+
+#define I2C_CLKT_TOUT_MASK       ((t_uint32) 0x0000FFFF)
+#define I2C_CLKT_TOUT_SHIFT      0U
+
+/* PWM registers, masks and shifts */
 #define PWM_CTL_OFFSET           0U
 #define PWM_CTL_REGISTER         *( os_periph_pwm.addr + PWM_CTL_OFFSET )
 #define PWM_STA_OFFSET           1U
@@ -119,7 +224,7 @@ extern struct bcm2835_peripheral os_periph_spi;
 #define PWM_STA_STAO4_MASK       ((t_uint32) 0x00001000)
 #define PWM_STA_STAO4_SHIFT      12U
 
-/* Macros pour les registres de CLOCK */
+/* Macros for CLOCK registers */
 #define CLOCK_GP0_CTL_OFFSET    28
 #define CLOCK_GP0_CTL_REGISTER  *( os_periph_clock.addr + CLOCK_GP0_CTL_OFFSET )
 #define CLOCK_GP0_DIV_OFFSET    29
@@ -162,6 +267,10 @@ extern t_uint32 os_clock_max_freq[];
 /* Init des GPIO */
 int os_init_gpio(void);
 int os_stop_gpio(void);
+
+/* Init and stop for I2C */
+int os_init_i2c(void);
+int os_stop_i2c(void);
 
 /* Init du PWM */
 int os_init_pwm(void);

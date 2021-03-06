@@ -536,25 +536,25 @@ int os_init_pwm(void)
 
     if (OS_RET_OK == is_init_pwm)
     {
-        LOG_WNG("OS : init PWM déjà effectué");
-        ret = 1;
+        LOG_INF1("OS : PWM init already done");
+        goto endofinit;
     }
-    else
+
+    if (0 == ret)
     {
-        /* Mapping du fichier mémoire */
-        ret += os_map_peripheral(&os_periph_pwm);
+        /* Mapping of memory region */
+        ret = os_map_peripheral(&os_periph_pwm);
 
         if (0 != ret)
-        {
-            LOG_ERR("OS : Erreur à l'init des PWM, code : %d", ret);
-        }
+            LOG_ERR("OS : Error during PWM init, code : %d", ret);
         else
-        {
             LOG_INF1("OS : Init PWM ok");
-            is_init_pwm = OS_RET_OK;
-        }
     }
 
+    if (0 == ret)
+       is_init_pwm = OS_RET_OK;
+
+endofinit:
     return ret;
 }
 
@@ -564,12 +564,12 @@ int os_stop_pwm(void)
 
     if (OS_RET_KO == is_init_pwm)
     {
-        LOG_WNG("OS : init PWM non effectué");
+        LOG_WNG("OS : PWM not initialized");
         ret = 1;
     }
     else
     {
-        /* Demapping du PWM */
+        /* Proper unmapping for PWM */
         os_unmap_peripheral(&os_periph_pwm);
     }
 

@@ -84,13 +84,9 @@ int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active)
     else
     {
         if (bool_active)
-        {
             GPIO_SET(i_pin);
-        }
         else
-        {
             GPIO_CLR(i_pin);
-        }
 
         ret = OS_mutex_unlock(&os_rpi_mutex);
     }
@@ -101,7 +97,7 @@ int OS_write_gpio(t_uint32 i_pin, t_uint32 bool_active)
 /* Lecture de la valeur d'une pin */
 int OS_read_gpio(t_uint32 i_pin)
 {
-    volatile int data = 0;
+    v_int32 data = 0;
 
     /* Pas de mutex sur une lecture */
     if (i_pin <= GPIO_MAX_NB)

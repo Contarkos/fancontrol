@@ -7,9 +7,30 @@
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
+#include "os_rpi.h"
+
 #include "os_i2c.h"
 
-t_os_i2c_struct i2c_devices_array[OS_SPI_DEVICE_NB] =
+/*********************************************************************/
+/*                        Global variables                           */
+/*********************************************************************/
+
+/* I2C mapping structure initialisation */
+struct bcm2835_peripheral os_periph_i2c0 = {I2C0_BASE, 0, NULL, NULL};
+struct bcm2835_peripheral os_periph_i2c1 = {I2C1_BASE, 0, NULL, NULL};
+
+/* Environment variables initialisation */
+t_os_ret_okko is_init_i2c = OS_RET_KO;
+
+/* Mutex for I2C registers */
+OS_mutex_t os_i2c0_mutex = OS_INIT_MUTEX;
+OS_mutex_t os_i2c1_mutex = OS_INIT_MUTEX;
+
+/*********************************************************************/
+/*                        Static variables                           */
+/*********************************************************************/
+
+static t_os_i2c_struct i2c_devices_array[OS_SPI_DEVICE_NB] =
 {
     {
         .filename = OS_FILE_I2C0,
@@ -24,6 +45,57 @@ t_os_i2c_struct i2c_devices_array[OS_SPI_DEVICE_NB] =
         .nb_addresses = 0,
     }
 };
+
+static t_os_i2c_struct_dev i2c_devices_direct[] =
+{
+    /* I2C0 device */
+    {
+        .device = {I2C0_BASE, 0, NULL, NULL},
+        .map = NULL,
+        .clk_speed = OS_I2C_DEFAULT_CLOCK,
+        .sda_pin = OS_GPIO_I2C0_SDA,
+        .sda_func = OS_GPIO_FUNC_ALT0,
+        .scl_pin = OS_GPIO_I2C0_SCL,
+        .scl_func = OS_GPIO_FUNC_ALT0,
+        .addresses = { 0 },
+        .nb_addresses = 0,
+        .mutex = OS_INIT_MUTEX,
+    },
+    /* I2C1 device */
+    {
+        .device = {I2C1_BASE, 0, NULL, NULL},
+        .map = NULL,
+        .clk_speed = OS_I2C_DEFAULT_CLOCK,
+        .sda_pin = OS_GPIO_I2C1_SDA,
+        .sda_func = OS_GPIO_FUNC_ALT0,
+        .scl_pin = OS_GPIO_I2C1_SCL,
+        .scl_func = OS_GPIO_FUNC_ALT0,
+        .addresses = { 0 },
+        .nb_addresses = 0,
+        .mutex = OS_INIT_MUTEX,
+    }
+};
+
+static const t_uint32 i2c_devices_nb = sizeof(i2c_devices_direct) / sizeof(i2c_devices_direct[0]);
+
+/*********************************************************************/
+/*                       Static declarations                         */
+/*********************************************************************/
+
+static t_os_i2c_struct_dev* _os_i2c_get_dev(t_os_i2c_device i_device);
+static int _os_i2c_wait_done(t_os_i2c_struct_dev *i_dev);
+
+static inline void _os_i2c_start_write(t_os_i2c_struct_dev *i_dev);
+static inline void _os_i2c_start_read(t_os_i2c_struct_dev *i_dev);
+static inline void _os_i2c_clear_status(t_os_i2c_struct_dev *i_dev);
+static inline void _os_i2c_set_addr(t_os_i2c_struct_dev *i_dev, t_uint32 i_address);
+static inline void _os_i2c_set_dlen(t_os_i2c_struct_dev *i_dev, t_uint32 i_dlen);
+static inline void _os_i2c_write_fifo(t_os_i2c_struct_dev *i_dev, t_uint8 i_data);
+static inline t_uint8 _os_i2c_read_fifo(t_os_i2c_struct_dev *i_dev);
+
+/*********************************************************************/
+/*                         API Functions                             */
+/*********************************************************************/
 
 int OS_i2c_open_device(t_os_i2c_device i_i2c_id, int i_address)
 {
@@ -105,6 +177,151 @@ int OS_i2c_close_device(t_os_i2c_device i_i2c_id)
     return ret;
 }
 
+int OS_i2c_init_device (t_os_i2c_device i_i2c_id)
+{
+    int ret = 0;
+    t_os_i2c_struct_dev *dev = NULL;
+
+    if (OS_RET_KO == is_init_i2c)
+    {
+        LOG_ERR("OS : I2C device not ready");
+        ret = -1;
+    }
+
+    if (0 == ret)
+    {
+        dev = _os_i2c_get_dev(i_i2c_id);
+
+        if (NULL == dev)
+            ret = -1;
+    }
+
+    if (0 == ret)
+    {
+        if (dev->is_init == BASE_FALSE)
+        {
+            ret = OS_set_gpio(dev->sda_pin, dev->sda_func);
+
+            if (0 != ret)
+                LOG_ERR("OS : could not set SDA pin correctly for I2C%d", i_i2c_id);
+        }
+    }
+
+    if (0 == ret)
+    {
+        if (dev->is_init == BASE_FALSE)
+        {
+            ret = OS_set_gpio(dev->scl_pin, dev->scl_func);
+
+            if (0 != ret)
+                LOG_ERR("OS : could not set SCL pin correctly for I2C%d", i_i2c_id);
+        }
+    }
+
+    if (0 == ret)
+        dev->is_init = BASE_TRUE;
+
+    return ret;
+}
+
+int OS_i2c_write_data (t_os_i2c_device i_id, t_uint32 i_address, t_uint8 *i_data, t_uint32 i_length)
+{
+    int ret = 0;
+    t_uint32 ii = 0;
+    t_os_i2c_struct_dev *dev = NULL;
+
+    if (OS_RET_KO == is_init_i2c)
+    {
+        LOG_ERR("OS : I2C device not ready");
+        ret = -1;
+    }
+
+    if (0 == ret)
+    {
+        dev = _os_i2c_get_dev(i_id);
+
+        if (NULL == dev)
+            ret = -1;
+    }
+
+    /* Length cannot be more than 16 bytes */
+
+    /* Take mutex */
+
+    if (0 == ret)
+    {
+        /* Write address we want to send data to */
+        _os_i2c_set_addr(dev, i_address);
+
+        /* Write number of bytes we want to send */
+        _os_i2c_set_dlen(dev, i_length);
+
+        /* Fill the FIFO with the data */
+        for (ii = 0; ii < i_length; ii++)
+            _os_i2c_write_fifo(dev, i_data[ii]);
+
+        /* Clear status registr */
+        _os_i2c_clear_status(dev);
+
+        /* Start transfer */
+        _os_i2c_start_write(dev);
+
+        /* Wait for transfer to be done */
+        ret = _os_i2c_wait_done(dev);
+    }
+
+    return ret;
+}
+
+int OS_i2c_read_data (t_os_i2c_device i_id, t_uint32 i_address, t_uint8 *i_data, t_uint32 i_length)
+{
+    int ret = 0;
+    t_uint32 ii = 0;
+    t_os_i2c_struct_dev *dev = NULL;
+
+    if (OS_RET_KO == is_init_i2c)
+    {
+        LOG_ERR("OS : I2C device not ready");
+        ret = -1;
+    }
+
+    if (0 == ret)
+    {
+        dev = _os_i2c_get_dev(i_id);
+
+        if (NULL == dev)
+            ret = -1;
+    }
+
+    /* Length cannot be more than 16 bytes */
+
+    /* Take mutex */
+
+    if (0 == ret)
+    {
+        /* Write address we want to send data to */
+        _os_i2c_set_addr(dev, i_address);
+
+        /* Write number of bytes we want to send */
+        _os_i2c_set_dlen(dev, i_length);
+
+        /* Clear status registr */
+        _os_i2c_clear_status(dev);
+
+        /* Start to read */
+        _os_i2c_start_read(dev);
+
+        /* Wait for transfer to be done */
+        ret = _os_i2c_wait_done(dev);
+
+        /* Read the data in the FIFO */
+        for (ii = 0; ii < i_length; ii++)
+            i_data[ii] = _os_i2c_read_fifo(dev);
+    }
+
+    return ret;
+}
+
 /*********************************************************************/
 /*                       Fonctions locales                           */
 /*********************************************************************/
@@ -116,3 +333,126 @@ t_os_i2c_struct* os_i2c_get_device(t_os_i2c_device i_device)
     else
         return NULL;
 }
+
+static t_os_i2c_struct_dev* _os_i2c_get_dev(t_os_i2c_device i_device)
+{
+    if (i_device < i2c_devices_nb)
+        return &i2c_devices_direct[i_device];
+    else
+        return NULL;
+}
+
+static inline void _os_i2c_start_write(t_os_i2c_struct_dev *i_dev)
+{
+    i_dev->map->ctrl = (I2C_CTL_ENABLE_MASK | I2C_CTL_START_MASK);
+}
+
+static inline void _os_i2c_start_read(t_os_i2c_struct_dev *i_dev)
+{
+    i_dev->map->ctrl = (I2C_CTL_ENABLE_MASK | I2C_CTL_START_MASK | I2C_CTL_CLR_FIFO_MASK | I2C_CTL_RDWR_MASK);
+}
+
+static inline void _os_i2c_clear_status(t_os_i2c_struct_dev *i_dev)
+{
+    i_dev->map->status = (I2C_STA_DONE_MASK | I2C_STA_ERR_MASK | I2C_STA_CLKT_MASK);
+}
+
+static inline void _os_i2c_set_addr(t_os_i2c_struct_dev *i_dev, t_uint32 i_address)
+{
+    i_dev->map->addr = (i_address & I2C_ADDR_VALUE_MASK);
+}
+
+static inline void _os_i2c_set_dlen(t_os_i2c_struct_dev *i_dev, t_uint32 i_dlen)
+{
+    i_dev->map->dlen = (i_dlen & I2C_DLEN_VALUE_MASK);
+}
+
+static inline void _os_i2c_write_fifo(t_os_i2c_struct_dev *i_dev, t_uint8 i_data)
+{
+    i_dev->map->fifo = (i_data & I2C_FIFO_VALUE_MASK);
+}
+
+static inline t_uint8 _os_i2c_read_fifo(t_os_i2c_struct_dev *i_dev)
+{
+    return (i_dev->map->fifo & I2C_FIFO_VALUE_MASK);
+}
+
+static int _os_i2c_wait_done(t_os_i2c_struct_dev *i_dev)
+{
+    int ret = 0;
+    int timeout = 100; /* FIXME find a real timeout value */
+
+    while ( ((i_dev->map->status & I2C_STA_DONE_MASK) == 0) && (timeout > 0))
+    {
+        OS_usleep(100);
+        timeout--;
+    }
+
+    return ret;
+}
+
+int os_init_i2c (void)
+{
+    int ret = 0;
+    t_uint32 ii = 0;
+
+    if (OS_RET_OK == is_init_i2c)
+    {
+        LOG_INF1("OS : I2C init already done");
+        goto endofinit;
+    }
+
+    for (ii = 0; (ii < i2c_devices_nb) && (0 == ret); ii++)
+    {
+        /* Mapping of memory region */
+        ret = os_map_peripheral(&i2c_devices_direct[ii].device);
+
+        if (0 != ret)
+            LOG_ERR("OS : Error during I2C%d init, code : %d", ii, ret);
+        else
+        {
+            LOG_INF1("OS : Init I2C%d ok", ii);
+            i2c_devices_direct[ii].map = (t_os_i2c_register *) i2c_devices_direct[ii].device.addr;
+        }
+    }
+
+    if (0 == ret)
+       is_init_i2c = OS_RET_OK;
+
+endofinit:
+    return ret;
+}
+
+int os_stop_i2c(void)
+{
+    int ret = 0;
+    t_uint32 ii = 0;
+    t_os_i2c_struct_dev *dev = NULL;
+
+    if (OS_RET_KO == is_init_i2c)
+    {
+        LOG_WNG("OS : I2C not initialized");
+        ret = 1;
+    }
+
+    if (0 == ret)
+    {
+        for (ii = 0; ii < i2c_devices_nb; ii++)
+        {
+            dev = &i2c_devices_direct[ii];
+
+            /* Unmap data */
+            dev->map = NULL;
+            dev->is_init = BASE_FALSE;
+
+            /* Proper unmapping for I2C0 */
+            os_unmap_peripheral(&dev->device);
+        }
+
+        /* Change global status to KO */
+        is_init_i2c = OS_RET_KO;
+    }
+
+    return ret;
+}
+

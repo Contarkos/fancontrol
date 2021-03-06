@@ -14,15 +14,15 @@
 #include "os_rpi.h"
 
 /*********************************************************************/
-/*                       Variables globales                          */
+/*                        Global variables                           */
 /*********************************************************************/
 
 
 /*********************************************************************/
-/*                         Fonctions API                             */
+/*                         API Functions                             */
 /*********************************************************************/
 
-/* Init de toutes les fonctions nécessaires au Rpi */
+/* Init for all RPi peripherals */
 int OS_init(void)
 {
     int ret = 0;
@@ -36,20 +36,23 @@ int OS_init(void)
     /* Init de la CLOCK */
     ret += os_init_clock();
 
+    /* Init for I2C peripheral */
+    ret += os_init_i2c();
+
     /* Init COM */
 
-    /* Init des timers */
+    /* Init for timers */
     ret += os_init_timer();
 
     return ret;
 }
 
-/* Arret de toutes les fonctions du Rpi */
+/* Properly close all peripherals for the RPi */
 int OS_stop(void)
 {
     int ret = 0;
 
-    /* Stop des GPIO */
+    /* Stop for GPIO */
     ret += os_stop_gpio();
 
     /* Stop PWM */
@@ -58,6 +61,9 @@ int OS_stop(void)
     /* Stop CLOCK */
     ret += os_stop_clock();
 
+    /* Stop I2C */
+    ret += os_stop_i2c();
+
     /* Stop timer */
     ret += os_end_timer();
 
@@ -65,7 +71,7 @@ int OS_stop(void)
 }
 
 /*********************************************************************/
-/*                       Fonctions locales                           */
+/*                        Local functions                            */
 /*********************************************************************/
 
 /* Exposes the physical address defined in the passed structure using mmap on /dev/mem */
@@ -81,7 +87,7 @@ int os_map_peripheral(struct bcm2835_peripheral *p)
     }
     else
     {
-        /* On va mapper le composant mémoire */
+        /* Let's map the region we need in memory */
         p->map = mmap(
                 NULL,
                 BLOCK_SIZE,
@@ -93,11 +99,12 @@ int os_map_peripheral(struct bcm2835_peripheral *p)
 
         if (p->map == MAP_FAILED)
         {
-            perror("mmap");
+            LOG_ERR("OS : mmap failed, errno = %d", errno);
             ret = -2;
         }
         else
         {
+            LOG_INF2("OS : peripheral @%#lx successfully mapped @%p", p->addr_p, p->map);
             p->addr = (volatile unsigned int *)p->map;
         }
 

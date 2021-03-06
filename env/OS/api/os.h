@@ -207,6 +207,10 @@ typedef enum
 #define OS_GPIO_SPI0_SCLK       OS_GPIO_BCM_11
 #define OS_GPIO_SPI0_CE0        OS_GPIO_BCM_8
 #define OS_GPIO_SPI0_CE1        OS_GPIO_BCM_7
+#define OS_GPIO_I2C0_SDA        OS_GPIO_BCM_0
+#define OS_GPIO_I2C0_SCL        OS_GPIO_BCM_1
+#define OS_GPIO_I2C1_SDA        OS_GPIO_BCM_2
+#define OS_GPIO_I2C1_SCL        OS_GPIO_BCM_3
 
 /*********************************************************************/
 /*                         Functions API                             */
@@ -271,6 +275,10 @@ int OS_spi_set_bits_per_word (t_os_spi_device i_spi_id, t_os_spi_bpw i_bpw);
 /* About I2C */
 int OS_i2c_open_device(t_os_i2c_device i_i2c_id, int i_address);
 int OS_i2c_close_device(t_os_i2c_device i_i2c_id);
+
+int OS_i2c_init_device (t_os_i2c_device i_i2c_id);
+int OS_i2c_write_data (t_os_i2c_device i_id, t_uint32 i_address, t_uint8 *i_data, t_uint32 i_length);
+int OS_i2c_read_data (t_os_i2c_device i_id, t_uint32 i_address, t_uint8 *i_data, t_uint32 i_length);
 
 /* About IRQ */
 int OS_irq_request (const char *i_irq, int i_flags);
