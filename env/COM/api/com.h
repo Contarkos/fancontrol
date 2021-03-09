@@ -223,6 +223,11 @@ int COM_adc_set_clock_rate(t_os_spi_device i_device, t_com_adc_clock_rate i_rate
 int COM_adc_set_clock_div(t_os_spi_device i_device, t_com_state i_div);
 int COM_adc_set_clock_filter(t_os_spi_device i_device, t_com_adc_clock_filt i_filter);
 
+/*---------------------------------------------------------------------------*/
+/* ADS1115 handling                                                          */
+
+int COM_ads_init(t_os_i2c_device i_device, t_os_i2c_clock i_speed);
+
 #ifdef __cplusplus
 }
 #endif

@@ -122,6 +122,12 @@ typedef enum
     OS_I2C_DEVICE_NB
 } t_os_i2c_device;
 
+typedef enum
+{
+    OS_I2C_CLOCK_100KHZ = 0,
+    OS_I2C_CLOCK_400KHZ = 1,
+} t_os_i2c_clock;
+
 /* Typedef for SPI */
 typedef enum
 {

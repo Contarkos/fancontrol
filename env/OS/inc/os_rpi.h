@@ -64,41 +64,7 @@ typedef volatile struct
     t_uint32 cdiv;
     t_uint32 delay;
     t_uint32 clkt;
-} __attribute__((packed)) t_os_i2c_register;
-
-#define I2C0_CTL_OFFSET           0U
-#define I2C0_CTL_REGISTER         *( os_periph_i2c0.addr + I2C_CTL_OFFSET )
-#define I2C0_STA_OFFSET           1U
-#define I2C0_STA_REGISTER         *( os_periph_i2c0.addr + I2C_STA_OFFSET )
-#define I2C0_DLEN_OFFSET          2U
-#define I2C0_DLEN_REGISTER        *( os_periph_i2c0.addr + I2C_DLEN_OFFSET )
-#define I2C0_ADDR_OFFSET          3U
-#define I2C0_ADDR_REGISTER        *( os_periph_i2c0.addr + I2C_ADDR_OFFSET )
-#define I2C0_FIFO_OFFSET          4U
-#define I2C0_FIFO_REGISTER        *( os_periph_i2c0.addr + I2C_FIFO_OFFSET )
-#define I2C0_DIV_OFFSET           5U
-#define I2C0_DIV_REGISTER         *( os_periph_i2c0.addr + I2C_DIV_OFFSET )
-#define I2C0_DEL_OFFSET           6U
-#define I2C0_DEL_REGISTER         *( os_periph_i2c0.addr + I2C_DEL_OFFSET )
-#define I2C0_CLKT_OFFSET          7U
-#define I2C0_CLKT_REGISTER        *( os_periph_i2c0.addr + I2C_CLKT_OFFSET )
-
-#define I2C1_CTL_OFFSET           0U
-#define I2C1_CTL_REGISTER         *( os_periph_i2c1.addr + I2C_CTL_OFFSET )
-#define I2C1_STA_OFFSET           1U
-#define I2C1_STA_REGISTER         *( os_periph_i2c1.addr + I2C_STA_OFFSET )
-#define I2C1_DLEN_OFFSET          2U
-#define I2C1_DLEN_REGISTER        *( os_periph_i2c1.addr + I2C_DLEN_OFFSET )
-#define I2C1_ADDR_OFFSET          3U
-#define I2C1_ADDR_REGISTER        *( os_periph_i2c1.addr + I2C_ADDR_OFFSET )
-#define I2C1_FIFO_OFFSET          4U
-#define I2C1_FIFO_REGISTER        *( os_periph_i2c1.addr + I2C_FIFO_OFFSET )
-#define I2C1_DIV_OFFSET           5U
-#define I2C1_DIV_REGISTER         *( os_periph_i2c1.addr + I2C_DIV_OFFSET )
-#define I2C1_DEL_OFFSET           6U
-#define I2C1_DEL_REGISTER         *( os_periph_i2c1.addr + I2C_DEL_OFFSET )
-#define I2C1_CLKT_OFFSET          7U
-#define I2C1_CLKT_REGISTER        *( os_periph_i2c1.addr + I2C_CLKT_OFFSET )
+} t_os_i2c_register;
 
 #define I2C_CTL_RDWR_MASK        ((t_uint32) 0x00000001)
 #define I2C_CTL_RDWR_SHIFT       0U

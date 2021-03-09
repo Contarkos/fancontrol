@@ -104,7 +104,7 @@ int os_map_peripheral(struct bcm2835_peripheral *p)
         }
         else
         {
-            LOG_INF2("OS : peripheral @%#lx successfully mapped @%p", p->addr_p, p->map);
+            LOG_INF1("OS : peripheral @%#lx successfully mapped @%p", p->addr_p, p->map);
             p->addr = (volatile unsigned int *)p->map;
         }
 

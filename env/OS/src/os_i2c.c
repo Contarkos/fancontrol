@@ -93,6 +93,8 @@ static inline void _os_i2c_set_dlen(t_os_i2c_struct_dev *i_dev, t_uint32 i_dlen)
 static inline void _os_i2c_write_fifo(t_os_i2c_struct_dev *i_dev, t_uint8 i_data);
 static inline t_uint8 _os_i2c_read_fifo(t_os_i2c_struct_dev *i_dev);
 
+static void _os_print_registers(t_os_i2c_struct_dev *i_dev, const char *i_msg);
+
 /*********************************************************************/
 /*                         API Functions                             */
 /*********************************************************************/
@@ -247,6 +249,8 @@ int OS_i2c_write_data (t_os_i2c_device i_id, t_uint32 i_address, t_uint8 *i_data
     /* Length cannot be more than 16 bytes */
 
     /* Take mutex */
+    if (0 == ret)
+        ret = OS_mutex_lock(&dev->mutex);
 
     if (0 == ret)
     {
@@ -268,6 +272,8 @@ int OS_i2c_write_data (t_os_i2c_device i_id, t_uint32 i_address, t_uint8 *i_data
 
         /* Wait for transfer to be done */
         ret = _os_i2c_wait_done(dev);
+
+        ret = OS_mutex_unlock(&dev->mutex);
     }
 
     return ret;
@@ -296,6 +302,8 @@ int OS_i2c_read_data (t_os_i2c_device i_id, t_uint32 i_address, t_uint8 *i_data,
     /* Length cannot be more than 16 bytes */
 
     /* Take mutex */
+    if (0 == ret)
+        ret = OS_mutex_lock(&dev->mutex);
 
     if (0 == ret)
     {
@@ -317,6 +325,8 @@ int OS_i2c_read_data (t_os_i2c_device i_id, t_uint32 i_address, t_uint8 *i_data,
         /* Read the data in the FIFO */
         for (ii = 0; ii < i_length; ii++)
             i_data[ii] = _os_i2c_read_fifo(dev);
+
+        ret = OS_mutex_unlock(&dev->mutex);
     }
 
     return ret;
@@ -382,13 +392,27 @@ static int _os_i2c_wait_done(t_os_i2c_struct_dev *i_dev)
     int ret = 0;
     int timeout = 100; /* FIXME find a real timeout value */
 
-    while ( ((i_dev->map->status & I2C_STA_DONE_MASK) == 0) && (timeout > 0))
+    t_uint32 sta = i_dev->map->status;
+    while ( ((sta & I2C_STA_DONE_MASK) == 0) && (timeout > 0))
     {
         OS_usleep(100);
+        sta = i_dev->map->status;
         timeout--;
     }
 
+    LOG_INF3("OS : I2C transfer done, cpt = %d, status = %#x", (100 - timeout), i_dev->map->status);
     return ret;
+}
+
+static void _os_print_registers(t_os_i2c_struct_dev *i_dev, const char *i_msg)
+{
+    t_uint32 conf[8] = { 0 };
+
+    for (int ii = 0; ii < 8; ii++)
+        conf[ii] = *(i_dev->device.addr + ii);
+
+    LOG_ERR("OS : %s, REG = %#02x %#02x %#02x %#02x %#02x %#02x %#02x %#02x",
+            i_msg, conf[0], conf[1], conf[2], conf[3], conf[4], conf[5], conf[6], conf[7]);
 }
 
 int os_init_i2c (void)
@@ -412,7 +436,7 @@ int os_init_i2c (void)
         else
         {
             LOG_INF1("OS : Init I2C%d ok", ii);
-            i2c_devices_direct[ii].map = (t_os_i2c_register *) i2c_devices_direct[ii].device.addr;
+            i2c_devices_direct[ii].map = (t_os_i2c_register *) i2c_devices_direct[ii].device.map;
         }
     }
 
