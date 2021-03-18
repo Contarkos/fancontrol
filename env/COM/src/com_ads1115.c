@@ -251,7 +251,7 @@ static int _com_ads_set_config(t_os_i2c_device i_dev)
 static int _com_ads_print_config(t_os_i2c_device i_dev)
 {
     int ret = 0;
-    t_uint16 config = 0;
+    t_com_ads_data data;
     t_uint8 wdata[COM_ADS_POINTER_SIZE];
     t_uint8 rdata[COM_ADS_CONFIG_SIZE] = { 0 };
 
@@ -264,8 +264,9 @@ static int _com_ads_print_config(t_os_i2c_device i_dev)
 
     if (0 == ret)
     {
-        config = (t_uint16) ( (rdata[0] << 8) + rdata[1] );
-        LOG_INF1("COM : current config read on the ADS = %#04hx", config);
+        data.u8.msb = rdata[0];
+        data.u8.lsb = rdata[1];
+        LOG_INF1("COM : current config read on the ADS = %#04hx", data.u16);
     }
 
     return ret;
@@ -274,6 +275,7 @@ static int _com_ads_print_config(t_os_i2c_device i_dev)
 static t_int16 _com_ads_read_result(t_os_i2c_device i_dev)
 {
     t_int16 res = 0;
+    t_com_ads_data data;
 
     int ret = 0;
     t_uint8 wdata[COM_ADS_POINTER_SIZE];
@@ -287,7 +289,11 @@ static t_int16 _com_ads_read_result(t_os_i2c_device i_dev)
         ret = OS_i2c_read_data(i_dev, COM_ADS1115_ADDRESS, rdata, COM_ADS_CONVERSION_SIZE);
 
     if (0 == ret)
-        res = (t_int16) ( (rdata[0] << 8) + rdata[1] );
+    {
+        data.u8.msb = rdata[0];
+        data.u8.lsb = rdata[1];
+        res = data.i16;
+    }
 
     return res;
 }

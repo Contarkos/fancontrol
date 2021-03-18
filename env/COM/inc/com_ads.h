@@ -61,6 +61,16 @@ typedef union
     } bits;
 } t_com_ads_config;
 
+typedef union
+{
+    t_uint16 u16;
+    t_int16 i16;
+    struct {
+        t_uint8 lsb;
+        t_uint8 msb;
+    } u8;
+} t_com_ads_data;
+
 /* Masks and shift for Lo_Thresh and Hi_Thresh registers */
 
 #endif /* COM_ADS_H_ */
