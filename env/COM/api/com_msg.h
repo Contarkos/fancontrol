@@ -22,27 +22,34 @@
 #define COM_BASE_CMD        3
 #define COM_BASE_MODULE     4
 #define COM_BASE_FAN        5
-#define COM_BASE_TEMP       6
-#define COM_BASE_REMOTE     7
-#define COM_BASE_LAST       8
+#define COM_BASE_SHMD       6
+#define COM_BASE_TEMP       7
+#define COM_BASE_REMOTE     8
+#define COM_BASE_LAST       9
 
 /* Messages MAIN */
 #define MAIN_START          (0 + (COM_BASE_MAIN * COM_NB_MSG_BASE))
 #define MAIN_SHUTDOWN       (1 + (COM_BASE_MAIN * COM_NB_MSG_BASE))
 
 /* Messages FAN */
-#define FAN_MODE            (0 + (COM_BASE_FAN * COM_NB_MSG_BASE))
-#define FAN_POWER           (1 + (COM_BASE_FAN * COM_NB_MSG_BASE))
-#define FAN_TIMER           (2 + (COM_BASE_FAN * COM_NB_MSG_BASE))
+#define FAN_INIT            (0 + (COM_BASE_FAN * COM_NB_MSG_BASE))
+#define FAN_MODE            (1 + (COM_BASE_FAN * COM_NB_MSG_BASE))
+#define FAN_POWER           (2 + (COM_BASE_FAN * COM_NB_MSG_BASE))
+#define FAN_TIMER           (3 + (COM_BASE_FAN * COM_NB_MSG_BASE))
 
 /* Messages TEMP */
-#define TEMP_DATA           (0 + (COM_BASE_TEMP * COM_NB_MSG_BASE))
-#define TEMP_TIMER          (1 + (COM_BASE_TEMP * COM_NB_MSG_BASE))
-#define TEMP_TIC            (2 + (COM_BASE_TEMP * COM_NB_MSG_BASE))
+#define TEMP_INIT           (0 + (COM_BASE_TEMP * COM_NB_MSG_BASE))
+#define TEMP_DATA           (1 + (COM_BASE_TEMP * COM_NB_MSG_BASE))
+#define TEMP_TIMER          (2 + (COM_BASE_TEMP * COM_NB_MSG_BASE))
+#define TEMP_TIC            (3 + (COM_BASE_TEMP * COM_NB_MSG_BASE))
+
+/* Messages SHMD */
+#define SHMD_INIT           (0 + (COM_BASE_SHMD * COM_NB_MSG_BASE))
 
 /* Messages REMOTE */
-#define REMOTE_TIMER        (0 + (COM_BASE_REMOTE * COM_NB_MSG_BASE))
-#define REMOTE_STATUS       (1 + (COM_BASE_REMOTE * COM_NB_MSG_BASE))
+#define REMOTE_INIT         (0 + (COM_BASE_REMOTE * COM_NB_MSG_BASE))
+#define REMOTE_TIMER        (1 + (COM_BASE_REMOTE * COM_NB_MSG_BASE))
+#define REMOTE_STATUS       (2 + (COM_BASE_REMOTE * COM_NB_MSG_BASE))
 
 /* Dernier message */
 #define COM_TOTAL_MSG       (0 + (COM_BASE_LAST * COM_NB_MSG_BASE))
@@ -60,13 +67,19 @@ typedef enum e_com_id_modules
     COM_ID_CMD = 4,
     COM_ID_MODULE = 5,
     COM_ID_FAN = 6,
-    COM_ID_TEMP = 7,
-    COM_ID_REMOTE = 8,
+    COM_ID_SHMD = 7,
+    COM_ID_TEMP = 8,
+    COM_ID_REMOTE = 9,
     COM_ID_NB
 } t_com_id_modules;
 
 typedef struct {
     t_int32 timer_id;
 } t_com_timer_struct;
+
+typedef struct
+{
+    int status;
+} __attribute__((packed)) t_com_msg_init;
 
 #endif /* COM_MSG_H_ */

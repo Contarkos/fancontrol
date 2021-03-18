@@ -283,6 +283,8 @@ int OS_i2c_open_device(t_os_i2c_device i_i2c_id, int i_address);
 int OS_i2c_close_device(t_os_i2c_device i_i2c_id);
 
 int OS_i2c_init_device (t_os_i2c_device i_i2c_id);
+int OS_i2c_set_clock   (t_os_i2c_device i_id, t_os_i2c_clock i_clock);
+
 int OS_i2c_write_data (t_os_i2c_device i_id, t_uint32 i_address, t_uint8 *i_data, t_uint32 i_length);
 int OS_i2c_read_data (t_os_i2c_device i_id, t_uint32 i_address, t_uint8 *i_data, t_uint32 i_length);
 

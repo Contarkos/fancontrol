@@ -51,6 +51,8 @@ extern "C" {
 /*                                  Typedef                                  */
 /*****************************************************************************/
 
+/*************************************/
+/* AD7705 types and structs */
 typedef enum
 {
     COM_STATE_OFF = 0,
@@ -133,6 +135,84 @@ typedef struct
     t_com_state buffer_mode;
     t_com_state filter_sync;
 } t_com_adc_setup;
+
+/*************************************/
+/* ADS1115 types and structs */
+
+typedef enum
+{
+    COM_ADS_OS_NULL = 0,
+    COM_ADS_OS_ONESHOT = 1,
+} t_com_ads_os;
+
+typedef enum
+{
+    COM_ADS_PAIR_AIN0_AIN1 = 0,
+    COM_ADS_PAIR_AIN0_AIN3 = 1,
+    COM_ADS_PAIR_AIN1_AIN3 = 2,
+    COM_ADS_PAIR_AIN2_AIN3 = 3,
+    COM_ADS_PAIR_AIN0_GND = 4,
+    COM_ADS_PAIR_AIN1_GND = 5,
+    COM_ADS_PAIR_AIN2_GND = 6,
+    COM_ADS_PAIR_AIN3_GND = 7,
+} t_com_ads_pair;
+
+typedef enum
+{
+    COM_ADS_GAIN_6144 = 0,
+    COM_ADS_GAIN_4096 = 1,
+    COM_ADS_GAIN_2048 = 2,
+    COM_ADS_GAIN_1024 = 3,
+    COM_ADS_GAIN_0512 = 4,
+    COM_ADS_GAIN_0256 = 5,
+} t_com_ads_gain;
+
+typedef enum
+{
+    COM_ADS_MODE_CONTINUOUS = 0,
+    COM_ADS_MODE_POWERDOWN = 1,
+} t_com_ads_mode;
+
+typedef enum
+{
+    COM_ADS_RATE_8SPS = 0,
+    COM_ADS_RATE_16SPS = 1,
+    COM_ADS_RATE_32SPS = 2,
+    COM_ADS_RATE_64SPS = 3,
+    COM_ADS_RATE_128SPS = 4,
+    COM_ADS_RATE_250SPS = 5,
+    COM_ADS_RATE_475SPS = 6,
+    COM_ADS_RATE_860SPS = 7,
+} t_com_ads_rate;
+
+typedef enum
+{
+    COM_ADS_COMP_MODE_TRAD = 0,
+    COM_ADS_COMP_MODE_WINDOW = 1,
+} t_com_ads_comp_mode;
+
+typedef enum
+{
+    COM_ADS_COMP_POL_LOW = 0,
+    COM_ADS_COMP_POL_HIGH = 1,
+} t_com_ads_comp_pol;
+
+typedef enum
+{
+    COM_ADS_COMP_LATCH_OFF = 0,
+    COM_ADS_COMP_LATCH_ON = 1,
+} t_com_ads_comp_latch;
+
+typedef enum
+{
+    COM_ADS_COMP_ASSERT_ONE = 0,
+    COM_ADS_COMP_ASSERT_TWO = 1,
+    COM_ADS_COMP_ASSERT_THREE = 2,
+    COM_ADS_COMP_ASSERT_DISABLE = 3,
+} t_com_ads_comp;
+
+/*************************************/
+/* Socket types and structs */
 
 typedef struct
 {
@@ -227,6 +307,11 @@ int COM_adc_set_clock_filter(t_os_spi_device i_device, t_com_adc_clock_filt i_fi
 /* ADS1115 handling                                                          */
 
 int COM_ads_init(t_os_i2c_device i_device, t_os_i2c_clock i_speed);
+int COM_ads_set_mode(t_os_i2c_device i_device, t_com_ads_mode i_mode);
+int COM_ads_set_pair (t_os_i2c_device i_dev, t_com_ads_pair i_pair);
+
+t_int16 COM_ads_read_result(t_os_i2c_device i_dev);
+t_uint16 COM_ads_read_value(t_os_i2c_device i_device, t_com_ads_pair i_pair);
 
 #ifdef __cplusplus
 }

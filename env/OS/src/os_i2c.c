@@ -52,7 +52,7 @@ static t_os_i2c_struct_dev i2c_devices_direct[] =
     {
         .device = {I2C0_BASE, 0, NULL, NULL},
         .map = NULL,
-        .clk_speed = OS_I2C_DEFAULT_CLOCK,
+        .clk_speed = OS_I2C_CLOCK_100KHZ,
         .sda_pin = OS_GPIO_I2C0_SDA,
         .sda_func = OS_GPIO_FUNC_ALT0,
         .scl_pin = OS_GPIO_I2C0_SCL,
@@ -65,7 +65,7 @@ static t_os_i2c_struct_dev i2c_devices_direct[] =
     {
         .device = {I2C1_BASE, 0, NULL, NULL},
         .map = NULL,
-        .clk_speed = OS_I2C_DEFAULT_CLOCK,
+        .clk_speed = OS_I2C_CLOCK_100KHZ,
         .sda_pin = OS_GPIO_I2C1_SDA,
         .sda_func = OS_GPIO_FUNC_ALT0,
         .scl_pin = OS_GPIO_I2C1_SCL,
@@ -85,13 +85,14 @@ static const t_uint32 i2c_devices_nb = sizeof(i2c_devices_direct) / sizeof(i2c_d
 static t_os_i2c_struct_dev* _os_i2c_get_dev(t_os_i2c_device i_device);
 static int _os_i2c_wait_done(t_os_i2c_struct_dev *i_dev);
 
-static inline void _os_i2c_start_write(t_os_i2c_struct_dev *i_dev);
-static inline void _os_i2c_start_read(t_os_i2c_struct_dev *i_dev);
-static inline void _os_i2c_clear_status(t_os_i2c_struct_dev *i_dev);
-static inline void _os_i2c_set_addr(t_os_i2c_struct_dev *i_dev, t_uint32 i_address);
-static inline void _os_i2c_set_dlen(t_os_i2c_struct_dev *i_dev, t_uint32 i_dlen);
-static inline void _os_i2c_write_fifo(t_os_i2c_struct_dev *i_dev, t_uint8 i_data);
-static inline t_uint8 _os_i2c_read_fifo(t_os_i2c_struct_dev *i_dev);
+static inline void      _os_i2c_start_write (t_os_i2c_struct_dev *i_dev);
+static inline void      _os_i2c_start_read  (t_os_i2c_struct_dev *i_dev);
+static inline void      _os_i2c_clear_status(t_os_i2c_struct_dev *i_dev);
+static inline void      _os_i2c_set_addr    (t_os_i2c_struct_dev *i_dev, t_uint32 i_address);
+static inline void      _os_i2c_set_dlen    (t_os_i2c_struct_dev *i_dev, t_uint32 i_dlen);
+static inline void      _os_i2c_write_fifo  (t_os_i2c_struct_dev *i_dev, t_uint8 i_data);
+static inline t_uint8   _os_i2c_read_fifo   (t_os_i2c_struct_dev *i_dev);
+static inline void      _os_i2c_set_cdiv    (t_os_i2c_struct_dev *i_dev, t_uint16 i_cdiv);
 
 static void _os_print_registers(t_os_i2c_struct_dev *i_dev, const char *i_msg);
 
@@ -171,7 +172,7 @@ int OS_i2c_close_device(t_os_i2c_device i_i2c_id)
         int ii;
 
         for (ii = 0; ii < OS_MAX_I2C_ADDRESSES; ii++)
-            device->addresses[device->nb_addresses] = 0;
+            device->addresses[ii] = 0;
 
         device->nb_addresses = 0;
     }
@@ -222,6 +223,52 @@ int OS_i2c_init_device (t_os_i2c_device i_i2c_id)
 
     if (0 == ret)
         dev->is_init = BASE_TRUE;
+
+    return ret;
+}
+
+int OS_i2c_set_clock (t_os_i2c_device i_id, t_os_i2c_clock i_clock)
+{
+    int ret = 0;
+    t_os_i2c_struct_dev *dev = NULL;
+    t_uint16 cdiv;
+
+    if (OS_RET_KO == is_init_i2c)
+    {
+        LOG_ERR("OS : I2C device not ready");
+        ret = -1;
+    }
+
+    if (0 == ret)
+    {
+        dev = _os_i2c_get_dev(i_id);
+
+        if (NULL == dev)
+            ret = -1;
+    }
+
+    if (0 == ret)
+    {
+        switch (i_clock)
+        {
+            case OS_I2C_CLOCK_100KHZ:
+                cdiv = OS_I2C_CDIV_100KHZ;
+                break;
+            case OS_I2C_CLOCK_400KHZ:
+                cdiv = OS_I2C_CDIV_400KHZ;
+                break;
+            default:
+                LOG_ERR("OS : wrong value for I2C clock");
+                ret = -1;
+                break;
+        }
+    }
+
+    if (0 == ret)
+    {
+        dev->clk_speed = i_clock;
+        _os_i2c_set_cdiv(dev, cdiv);
+    }
 
     return ret;
 }
@@ -385,6 +432,11 @@ static inline void _os_i2c_write_fifo(t_os_i2c_struct_dev *i_dev, t_uint8 i_data
 static inline t_uint8 _os_i2c_read_fifo(t_os_i2c_struct_dev *i_dev)
 {
     return (i_dev->map->fifo & I2C_FIFO_VALUE_MASK);
+}
+
+static inline void _os_i2c_set_cdiv (t_os_i2c_struct_dev *i_dev, t_uint16 i_cdiv)
+{
+    i_dev->map->cdiv = (i_cdiv & I2C_DIV_VALUE_MASK);
 }
 
 static int _os_i2c_wait_done(t_os_i2c_struct_dev *i_dev)

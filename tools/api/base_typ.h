@@ -25,6 +25,7 @@ typedef struct
     stop_func mod_stop;
     OS_mutex_t mutex_mod;
     OS_mutex_t mutex_main;
+    t_uint32 msg_id;
 } mod_type;
 
 /* Proper return code */
