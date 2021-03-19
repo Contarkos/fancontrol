@@ -39,7 +39,6 @@ typedef struct
 } t_os_i2c_struct_dev;
 
 /* Local functions */
-t_os_i2c_struct* os_i2c_get_device(t_os_i2c_device i_device);
 
 #endif /* OS_I2C_H_ */
 

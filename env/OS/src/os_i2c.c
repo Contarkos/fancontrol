@@ -15,36 +15,12 @@
 /*                        Global variables                           */
 /*********************************************************************/
 
-/* I2C mapping structure initialisation */
-struct bcm2835_peripheral os_periph_i2c0 = {I2C0_BASE, 0, NULL, NULL};
-struct bcm2835_peripheral os_periph_i2c1 = {I2C1_BASE, 0, NULL, NULL};
-
 /* Environment variables initialisation */
 t_os_ret_okko is_init_i2c = OS_RET_KO;
-
-/* Mutex for I2C registers */
-OS_mutex_t os_i2c0_mutex = OS_INIT_MUTEX;
-OS_mutex_t os_i2c1_mutex = OS_INIT_MUTEX;
 
 /*********************************************************************/
 /*                        Static variables                           */
 /*********************************************************************/
-
-static t_os_i2c_struct i2c_devices_array[OS_SPI_DEVICE_NB] =
-{
-    {
-        .filename = OS_FILE_I2C0,
-        .fd = -1,
-        .addresses = { 0 },
-        .nb_addresses = 0,
-    },
-    {
-        .filename = OS_FILE_I2C1,
-        .fd = -1,
-        .addresses = { 0 },
-        .nb_addresses = 0,
-    }
-};
 
 static t_os_i2c_struct_dev i2c_devices_direct[] =
 {
@@ -99,86 +75,6 @@ static void _os_print_registers(t_os_i2c_struct_dev *i_dev, const char *i_msg);
 /*********************************************************************/
 /*                         API Functions                             */
 /*********************************************************************/
-
-int OS_i2c_open_device(t_os_i2c_device i_i2c_id, int i_address)
-{
-    int ret = 0;
-    t_os_i2c_struct *device;
-
-    device = os_i2c_get_device(i_i2c_id);
-
-    if (NULL == device)
-    {
-        LOG_ERR("OS : wrong I2C device, id = %d", i_i2c_id);
-        ret = -1;
-    }
-
-    /* Open the file */
-    if (0 == ret)
-    {
-        /* Check if file is already initialised */
-        if (device->fd < 0)
-            device->fd = open(device->filename, O_RDWR);
-
-        if (device->fd < 0)
-        {
-            LOG_ERR("OS : error while opening I2C file, errno = %d", errno);
-            ret = -1;
-        }
-    }
-
-    /* Add the address */
-    if (0 == ret)
-    {
-        if (device->nb_addresses < OS_MAX_I2C_ADDRESSES)
-        {
-            device->addresses[device->nb_addresses] = i_address;
-            device->nb_addresses++;
-        }
-        else
-        {
-            LOG_ERR("OS : number max of addresses reached for that device");
-            ret = -1;
-        }
-    }
-
-    return ret;
-}
-
-int OS_i2c_close_device(t_os_i2c_device i_i2c_id)
-{
-    int ret = 0;
-    t_os_i2c_struct *device;
-
-    device = os_i2c_get_device(i_i2c_id);
-
-    if (NULL == device)
-    {
-        LOG_ERR("OS : wrong I2C device, id = %d", i_i2c_id);
-        ret = -1;
-    }
-
-    /* Closing open file */
-    if (0 == ret)
-    {
-        ret = close(device->fd);
-
-        if (ret < 0)
-            LOG_ERR("OS : error while closing I2C device, errno = %d", errno);
-    }
-
-    if (0 == ret)
-    {
-        int ii;
-
-        for (ii = 0; ii < OS_MAX_I2C_ADDRESSES; ii++)
-            device->addresses[ii] = 0;
-
-        device->nb_addresses = 0;
-    }
-
-    return ret;
-}
 
 int OS_i2c_init_device (t_os_i2c_device i_i2c_id)
 {
@@ -382,14 +278,6 @@ int OS_i2c_read_data (t_os_i2c_device i_id, t_uint32 i_address, t_uint8 *i_data,
 /*********************************************************************/
 /*                       Fonctions locales                           */
 /*********************************************************************/
-
-t_os_i2c_struct* os_i2c_get_device(t_os_i2c_device i_device)
-{
-    if (i_device < OS_I2C_DEVICE_NB)
-        return &i2c_devices_array[i_device];
-    else
-        return NULL;
-}
 
 static t_os_i2c_struct_dev* _os_i2c_get_dev(t_os_i2c_device i_device)
 {
