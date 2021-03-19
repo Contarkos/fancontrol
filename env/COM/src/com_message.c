@@ -61,6 +61,7 @@ int COM_msg_subscribe(t_com_id_modules i_module, t_uint32 i_msg)
             case COM_ID_CMD:
             case COM_ID_MODULE:
             case COM_ID_FAN:
+            case COM_ID_SHMD:
             case COM_ID_TEMP:
             case COM_ID_REMOTE:
                 break;
@@ -154,6 +155,7 @@ int COM_msg_unsub(t_com_id_modules i_module, t_uint32 i_msg)
             case COM_ID_CMD:
             case COM_ID_MODULE:
             case COM_ID_FAN:
+            case COM_ID_SHMD:
             case COM_ID_TEMP:
             case COM_ID_REMOTE:
                 break;
@@ -397,6 +399,7 @@ int COM_msg_register(t_com_id_modules i_module, int *o_semfd)
         case COM_ID_CMD:
         case COM_ID_MODULE:
         case COM_ID_FAN:
+        case COM_ID_SHMD:
         case COM_ID_TEMP:
         case COM_ID_REMOTE:
             break;
