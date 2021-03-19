@@ -33,8 +33,6 @@ static t_os_i2c_struct_dev i2c_devices_direct[] =
         .sda_func = OS_GPIO_FUNC_ALT0,
         .scl_pin = OS_GPIO_I2C0_SCL,
         .scl_func = OS_GPIO_FUNC_ALT0,
-        .addresses = { 0 },
-        .nb_addresses = 0,
         .mutex = OS_INIT_MUTEX,
     },
     /* I2C1 device */
@@ -46,8 +44,6 @@ static t_os_i2c_struct_dev i2c_devices_direct[] =
         .sda_func = OS_GPIO_FUNC_ALT0,
         .scl_pin = OS_GPIO_I2C1_SCL,
         .scl_func = OS_GPIO_FUNC_ALT0,
-        .addresses = { 0 },
-        .nb_addresses = 0,
         .mutex = OS_INIT_MUTEX,
     }
 };
@@ -190,6 +186,14 @@ int OS_i2c_write_data (t_os_i2c_device i_id, t_uint32 i_address, t_uint8 *i_data
     }
 
     /* Length cannot be more than 16 bytes */
+    if (0 == ret)
+    {
+        if (i_length > OS_I2C_MAX_LENGTH)
+        {
+            LOG_WNG("OS : data buffer is too big, cannot fit everything in the FIFO");
+            i_length = OS_I2C_MAX_LENGTH;
+        }
+    }
 
     /* Take mutex */
     if (0 == ret)
@@ -243,6 +247,14 @@ int OS_i2c_read_data (t_os_i2c_device i_id, t_uint32 i_address, t_uint8 *i_data,
     }
 
     /* Length cannot be more than 16 bytes */
+    if (0 == ret)
+    {
+        if (i_length > OS_I2C_MAX_LENGTH)
+        {
+            LOG_WNG("OS : data buffer is too big, cannot fit everything in the FIFO");
+            i_length = OS_I2C_MAX_LENGTH;
+        }
+    }
 
     /* Take mutex */
     if (0 == ret)

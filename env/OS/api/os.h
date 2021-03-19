@@ -279,9 +279,6 @@ int OS_spi_set_mode (t_os_spi_device i_spi_id, t_os_spi_mode i_mode);
 int OS_spi_set_bits_per_word (t_os_spi_device i_spi_id, t_os_spi_bpw i_bpw);
 
 /* About I2C */
-int OS_i2c_open_device(t_os_i2c_device i_i2c_id, int i_address);
-int OS_i2c_close_device(t_os_i2c_device i_i2c_id);
-
 int OS_i2c_init_device (t_os_i2c_device i_i2c_id);
 int OS_i2c_set_clock   (t_os_i2c_device i_id, t_os_i2c_clock i_clock);
 
