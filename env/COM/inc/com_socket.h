@@ -38,6 +38,4 @@ int com_bind_socket_inet(int fd, void *data, size_t size_data);
 int com_connect_unix(int fd, char *data, size_t size_data);
 int com_connect_inet(int fd, void *data, size_t size_data);
 
-int com_add_fd_to_list(int i_fd, int i_id);
-
 #endif /* COM_SOCKET_H_ */

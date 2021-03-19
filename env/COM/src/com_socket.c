@@ -350,29 +350,6 @@ int COM_receive_data(int i_sock, t_com_msg *o_m, int *o_size)
     return ret;
 }
 
-int COM_register_socket(int i_fd, int *i_list, int i_size)
-{
-    int ret = 0, ii;
-
-    if (i_size > COM_MAX_NB_MSG)
-    {
-        LOG_ERR("COM : too many messages to listen to, nb = %d", i_size);
-        ret = -1;
-    }
-    else
-    {
-        // Creation du tableau pour stocker les messages à ecouter
-
-        // Ajout des éléments là où il faut
-        for (ii = 0; ii < i_size; ii++)
-        {
-            com_add_fd_to_list(i_fd, *(i_list + ii));
-        }
-    }
-
-    return ret;
-}
-
 int COM_close_socket(int i_fd)
 {
     int ret = 0;
@@ -452,9 +429,3 @@ int com_connect_inet(int fd, void *data, size_t size_data)
     return ret;
 }
 
-int com_add_fd_to_list(int i_fd, int i_id)
-{
-    int ret = 0;
-
-    return ret;
-}
