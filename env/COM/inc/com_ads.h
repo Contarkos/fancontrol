@@ -5,9 +5,8 @@
 /*                                  Defines                                  */
 /*****************************************************************************/
 
+/* Address for ADS1115 when ADDR plugged to GND */
 #define COM_ADS1115_ADDRESS             0x48
-
-#define COM_ADS_DEFAULT_SETUP           0x8483
 
 /* Registers addresses */
 #define COM_ADS_CONVERSION_REGISTER     0x00
@@ -46,10 +45,20 @@
 
 typedef union
 {
-    t_uint16 setup;
+    t_uint16 u16;
+    t_int16 i16;
+    struct {
+        t_uint8 lsb;
+        t_uint8 msb;
+    } u8;
+} t_com_ads_data;
+
+typedef union
+{
+    t_com_ads_data setup;
     struct
     {
-        t_uint16 comp:2;
+        t_uint16 comp_queue:2;
         t_uint16 comp_latch:1;
         t_uint16 comp_pol:1;
         t_uint16 comp_mode:1;
@@ -63,13 +72,13 @@ typedef union
 
 typedef union
 {
-    t_uint16 u16;
-    t_int16 i16;
-    struct {
-        t_uint8 lsb;
-        t_uint8 msb;
-    } u8;
-} t_com_ads_data;
+    t_com_ads_data raw;
+    struct
+    {
+        t_uint16 value:15;
+        t_uint16 mode:1;
+    } bits;
+} t_com_ads_threshold;
 
 /* Masks and shift for Lo_Thresh and Hi_Thresh registers */
 

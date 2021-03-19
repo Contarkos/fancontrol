@@ -47,6 +47,9 @@ extern "C" {
 
 #define COM_ADC_MAX_WAIT        (50U)       /* Number of 10ms waiting cycles (450ms = 9 cycles @ 20Hz) + safety margin */
 
+#define COM_ADS_MAX_VALUE       (0x7FFF)
+#define COM_ADS_MIN_VALUE       (0x0000)
+
 /*****************************************************************************/
 /*                                  Typedef                                  */
 /*****************************************************************************/
@@ -209,7 +212,19 @@ typedef enum
     COM_ADS_COMP_ASSERT_TWO = 1,
     COM_ADS_COMP_ASSERT_THREE = 2,
     COM_ADS_COMP_ASSERT_DISABLE = 3,
-} t_com_ads_comp;
+} t_com_ads_comp_queue;
+
+typedef enum
+{
+    COM_ADS_RDY_MODE_LOW = 0,
+    COM_ADS_RDY_MODE_HIGH = 1,
+} t_com_ads_rdy_value;
+
+typedef enum
+{
+    COM_ADS_RDY_MODE_ALERT = 0,
+    COM_ADS_RDY_MODE_READY = 1,
+} t_com_ads_rdy_mode;
 
 /*************************************/
 /* Socket types and structs */
@@ -267,8 +282,6 @@ int COM_send_mcast_data(t_com_socket *i_socket, t_uint32 i_id, void * i_data, si
 int COM_receive_data(int i_sock, t_com_msg *o_m, int *o_size);
 int COM_close_socket(int i_fd);
 
-int COM_register_socket(int i_fd, int *i_list, int i_size);
-
 int COM_msg_subscribe(t_com_id_modules i_module, t_uint32 i_msg);
 int COM_msg_subscribe_array(t_com_id_modules i_module, t_uint32* i_msg, t_uint32 i_size);
 int COM_msg_unsub(t_com_id_modules i_module, t_uint32 i_msg);
@@ -307,11 +320,23 @@ int COM_adc_set_clock_filter(t_os_spi_device i_device, t_com_adc_clock_filt i_fi
 /* ADS1115 handling                                                          */
 
 int COM_ads_init(t_os_i2c_device i_device, t_os_i2c_clock i_speed);
+
+int COM_ads_set_comp_queue(t_os_i2c_device i_dev, t_com_ads_comp_queue i_comp_queue);
+int COM_ads_set_comp_latch(t_os_i2c_device i_dev, t_com_ads_comp_latch i_comp_latch);
+int COM_ads_set_comp_pol(t_os_i2c_device i_dev, t_com_ads_comp_pol i_comp_pol);
+int COM_ads_set_comp_mode(t_os_i2c_device i_dev, t_com_ads_comp_mode i_comp_mode);
+int COM_ads_set_rate(t_os_i2c_device i_dev, t_com_ads_rate i_rate);
 int COM_ads_set_mode(t_os_i2c_device i_device, t_com_ads_mode i_mode);
+int COM_ads_set_gain(t_os_i2c_device i_dev, t_com_ads_gain i_gain);
 int COM_ads_set_pair (t_os_i2c_device i_dev, t_com_ads_pair i_pair);
 
 t_int16 COM_ads_read_result(t_os_i2c_device i_dev);
 t_uint16 COM_ads_read_value(t_os_i2c_device i_device, t_com_ads_pair i_pair);
+
+/** Config the ALRT/RDY pin to change on new value in the conversion register */
+int COM_ads_set_high_threshold(t_os_i2c_device i_dev, t_int16 i_value);
+int COM_ads_set_low_threshold(t_os_i2c_device i_dev, t_int16 i_value);
+int COM_ads_config_ready(t_os_i2c_device i_dev, t_com_ads_rdy_mode i_rdy_mode);
 
 #ifdef __cplusplus
 }
