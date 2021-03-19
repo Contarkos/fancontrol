@@ -27,11 +27,12 @@ PARALLEL = -j6
 MAKEFLAGS = --no-print-directory
 
 BIN = sw_local.bin
-INTEG_LOG_LEVEL = -DINTEGRATION_LOG_LEVEL=6
+INTEG_LOG_LEVEL = -DINTEGRATION_LOG_LEVEL=4
 
 PWD = $(shell pwd)
 SUBDIR_MAIN = env/MAIN
-SUBDIRS_ENV = $(filter-out $(SUBDIR_MAIN), $(wildcard env/* ))
+SUBDIR_BASE = env/BASE
+SUBDIRS_ENV = $(filter-out $(SUBDIR_MAIN) $(SUBDIR_BASE), $(wildcard env/* ))
 SUBDIRS_MOD = $(wildcard modules/*)
 SUBDIR_DATA = DATA
 SUBDIR_KERN = tools/modules
@@ -41,10 +42,10 @@ LIST_LIBENV = $(call _add_lib_suffix,$(SUBDIRS_ENV))
 LIST_LIBMOD = $(call _add_lib_suffix,$(SUBDIRS_MOD))
 
 # Create a list of rules to clean all the libs
-LIST_CLEAN_ENV = $(addprefix clean_, $(notdir $(SUBDIRS_ENV)))
+LIST_CLEAN_ENV = $(addprefix clean_, $(notdir $(SUBDIRS_ENV)) $(notdir $(SUBDIR_MAIN)))
 LIST_CLEAN_MOD = $(addprefix clean_, $(notdir $(SUBDIRS_MOD)))
 
-DIST_CLEAN_ENV = $(addprefix distclean_, $(notdir $(SUBDIRS_ENV)))
+DIST_CLEAN_ENV = $(addprefix distclean_, $(notdir $(SUBDIRS_ENV)) $(notdir $(SUBDIR_MAIN)))
 DIST_CLEAN_MOD = $(addprefix distclean_, $(notdir $(SUBDIRS_MOD)))
 
 # Get the list of all the objects file needed to compile the file
@@ -84,10 +85,10 @@ LIBS += $(patsubst modules/%, -l%, $(SUBDIRS_MOD))
 LIBS += $(patsubst env/%, -l%, $(SUBDIRS_ENV))
 LIBS += -lpthread #-lwiringPi -lwiringPiDev
 
+INCLUDES += $(patsubst %, -I$(PWD)/%/api, $(SUBDIR_BASE))
 INCLUDES += $(patsubst %, -I$(PWD)/%/api, $(SUBDIRS_MOD))
 INCLUDES += $(patsubst %, -I$(PWD)/%/api, $(SUBDIRS_ENV))
 INCLUDES += $(patsubst %, -I$(PWD)/%/api, $(SUBDIR_MAIN))
-INCLUDES += -I$(PWD)/tools/api
 INCLUDES += -I$(BIN_ROOTFS)
 
 C_CPLUS_FLAGS = -Wextra -Wall -Wundef -Wfloat-equal -Wshadow -Wpointer-arith -Wcast-align -Wstrict-overflow=5
@@ -120,6 +121,7 @@ all: $(OUTPUT_FILES) $(SUBDIR_DATA) | /tftpboot/
 	@echo "   CP $<"
 	@echo "   CP $(SUBDIR_DATA)"
 	@cp    $(SUBDIR_MAIN)/bin/$(BIN) /tftpboot/
+	@cp    $(SUBDIR_MAIN)/bin/$(BIN) /media/sf_partage_vm/
 	@cp -r $(SUBDIR_DATA)/			/tftpboot/
 	@echo "$(shell date)"
 	@echo "-----------------------------------"
@@ -218,8 +220,6 @@ distclean_%: env/% clean_%
 	@$(RM) $</lib
 
 clean: $(LIST_CLEAN_MOD) $(LIST_CLEAN_ENV)
-	@echo "   RM $(SUBDIR_MAIN)/obj"
-	@$(RM) $(SUBDIR_MAIN)/obj
 
 distclean: $(DIST_CLEAN_MOD) $(DIST_CLEAN_ENV)
 	@echo "   RM $(SUBDIR_MAIN)/bin"
@@ -230,7 +230,7 @@ distclean: $(DIST_CLEAN_MOD) $(DIST_CLEAN_ENV)
 # Compilation du module kernel
 kmodules:
 	@$(MAKE) $(PARALLEL) -C $(SUBDIR_KERN)
-	
+
 print-%:
 	@echo $* = $($(*))
 
