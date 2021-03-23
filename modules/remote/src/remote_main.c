@@ -13,7 +13,7 @@
 /*********************************************************************/
 /*                        Global variables                           */
 /*********************************************************************/
-t_mod_context remote_modules[NB_INSTANCES_REMOTE] =
+t_mod_context remote_modules[] =
 {
     /* Only module of REMOTE */
     {
@@ -37,8 +37,14 @@ t_mod_context remote_modules[NB_INSTANCES_REMOTE] =
         .stop_module  = &remote_stop_module,
         .init_after_wait = &remote_init_after_wait,
         .exec_loop    = &remote_exec_loop,
+
+        /* Init message ID */
+        .init_msg = REMOTE_INIT,
     }
 };
+
+static const t_uint32 _remote_nb_modules = sizeof(remote_modules) / sizeof (remote_modules[0]);
+static       t_uint32 _remote_nb_modules_started = 0;
 
 /*********************************************************************/
 /*                         API functions                             */
@@ -48,28 +54,43 @@ t_mod_context remote_modules[NB_INSTANCES_REMOTE] =
 int REMOTE_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
 {
     int ret = 0;
-    static int ii = 0;
     char n[MOD_MAX_LENGTH_NAME];
 
-    if (ii < NB_INSTANCES_REMOTE)
+    if (0 == ret)
+    {
+       if (_remote_nb_modules_started < _remote_nb_modules)
+            LOG_INF1("%s : starting instance number %d", REMOTE_MODULE_NAME, _remote_nb_modules_started);
+       else
+       {
+          LOG_ERR("REMOTE : no instance available, %d > %d", _remote_nb_modules_started, _remote_nb_modules);
+          ret = -1;
+       }
+    }
+
+    if (0 == ret)
     {
         /* Creating instance name */
-        snprintf(n, MOD_MAX_LENGTH_NAME, "%s_tsk%d", REMOTE_MODULE_NAME, ii);
+        snprintf(n, MOD_MAX_LENGTH_NAME, "%s_tsk%d", REMOTE_MODULE_NAME, _remote_nb_modules_started);
 
         /* Instance configuration */
-        MODULE_config(&remote_modules[ii], n, m_main, m_mod);
+        ret = MODULE_config(&remote_modules[_remote_nb_modules_started], n, m_main, m_mod);
 
-        /* Thread creation */
-        OS_create_thread(&remote_modules[ii].thread, (void *) &(remote_modules[ii]));
-
-        /* Increasing number of instances started */
-        ii++;
+        if (0 != ret)
+            LOG_ERR("REMOTE : could not configure module properly, ret = %d", ret);
     }
-    else
+
+    if (0 == ret)
     {
-        LOG_ERR("REMOTE : no instance available, %d > %d", ii, NB_INSTANCES_REMOTE);
-        ret = -1;
+        /* Thread creation */
+        ret = OS_create_thread(&remote_modules[_remote_nb_modules_started].thread, (void *) &(remote_modules[_remote_nb_modules_started]));
+
+        if (0 != ret)
+            LOG_ERR("REMOTE : could not create thread, ret = %d", ret);
     }
+
+    if (0 == ret)
+        /* Increasing number of instances started */
+        _remote_nb_modules_started++;
 
     return ret;
 }
@@ -77,20 +98,19 @@ int REMOTE_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
 int REMOTE_stop(void)
 {
     int ret = 0;
-    static int ii = 0;
 
     LOG_INF1("REMOTE : stopping module");
 
-    if (ii < NB_INSTANCES_REMOTE)
+    if (_remote_nb_modules_started > 0)
     {
+        /* Decreasing number of instances started */
+        _remote_nb_modules_started--;
+
         /* Stopping execution */
-        MODULE_exit( &(remote_modules[ii]) );
+        MODULE_exit( &(remote_modules[_remote_nb_modules_started]) );
 
         /* Reattaching thread to avoid zombies */
-        OS_joint_thread(&remote_modules[ii].thread, NULL);
-
-        /* Increasing number of instances stopped */
-        ii++;
+        ret = OS_joint_thread(&remote_modules[_remote_nb_modules_started].thread, NULL);
     }
 
     return ret;

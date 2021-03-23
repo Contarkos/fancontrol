@@ -11,6 +11,11 @@
 /*********************************************************************/
 
 #define TEMP_MODULE_NAME        "TEMP"
+#define TEMP_INSTANCE_0         0
+
+#define TEMP_I2C_MODULE         OS_I2C_DEVICE_1
+#define TEMP_I2C_CLOCK          OS_I2C_CLOCK_100KHZ
+
 #define TEMP_PIN_IN             (COM_ADC_PIN_RDY0)       /* /DRDY ADC */
 #define TEMP_PIN_OUT            (COM_ADC_PIN_ENB0)       /* Thermistor power control */
 #define TEMP_DEFAULT_PREC       (1024)
@@ -24,6 +29,10 @@
 #define TEMP_THERM_COMP         (10000)                 /* Comparison resistor */
 #define TEMP_VREF_ADC           (1.225F)                /* Voltage of reference for ADC powered in 3.3V */
 #define TEMP_VDD_ADC            (3.3F)                  /* Voltage of output GPIO */
+
+#define TEMP_MAX_VALUE_ADS      (0x8000)
+#define TEMP_VREF_ADS           (4.096F)
+#define TEMP_VDD_ADS            (3.3F)                  /* Voltage of output GPIO */
 
 #define TEMP_POLL_TIMEOUT       (100)
 
@@ -55,6 +64,7 @@ extern t_temp_value temp_fan;
 extern t_temp_value temp_room;
 
 extern t_uint32 temp_adc_gain;
+extern t_int32 temp_ads_gain;
 
 /*********************************************************************/
 /*                      Internal functions                           */

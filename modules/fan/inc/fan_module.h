@@ -12,6 +12,8 @@
 /*********************************************************************/
 
 #define FAN_MODULE_NAME         "FAN"
+#define FAN_INSTANCE_0          0
+
 #define FAN_PIN_PWM             (OS_GPIO_PWM_0)    /* Pin de sortie du signal PWM */
 #define FAN_PIN_IN              (OS_GPIO_BCM_23)   /* Pin non utilisee car gestion interruption */
 #define FAN_PIN_OUT             (OS_GPIO_BCM_24)   /* Activation/desactivation du relais de puissance */

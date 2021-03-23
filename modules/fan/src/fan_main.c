@@ -5,6 +5,7 @@
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
+#include "com_msg.h"
 #include "module_bis.h"
 
 #include "fan.h"
@@ -13,7 +14,7 @@
 /*********************************************************************/
 /*                        Global variables                           */
 /*********************************************************************/
-t_mod_context fan_modules[NB_INSTANCES_FAN] =
+t_mod_context fan_modules[] =
 {
     /* Only module of FAN */
     {
@@ -37,8 +38,17 @@ t_mod_context fan_modules[NB_INSTANCES_FAN] =
         .stop_module  = &fan_stop_module,
         .init_after_wait = &fan_init_after_wait,
         .exec_loop    = &fan_exec_loop,
+
+        /* Init message ID */
+        .init_msg = FAN_INIT,
+
+        /* Instance number */
+        .instance_number = FAN_INSTANCE_0,
     }
 };
+
+static const t_uint32 _fan_nb_modules = sizeof(fan_modules) / sizeof (fan_modules[0]);
+static       t_uint32 _fan_nb_modules_started = 0;
 
 /*********************************************************************/
 /*                         API functions                             */
@@ -48,28 +58,43 @@ t_mod_context fan_modules[NB_INSTANCES_FAN] =
 int FAN_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
 {
     int ret = 0;
-    static int ii = 0;
     char n[MOD_MAX_LENGTH_NAME];
 
-    if (ii < NB_INSTANCES_FAN)
+    if (0 == ret)
+    {
+        if (_fan_nb_modules_started < _fan_nb_modules)
+            LOG_INF1("%s : starting instance number %d", FAN_MODULE_NAME, _fan_nb_modules_started);
+        else
+        {
+            LOG_ERR ("%s : no available instance, %d > %d", FAN_MODULE_NAME, _fan_nb_modules_started, _fan_nb_modules);
+            ret = -1;
+        }
+    }
+
+    if (0 == ret)
     {
         /* Creating instance name */
-        snprintf(n, MOD_MAX_LENGTH_NAME, "%s_tsk%d", FAN_MODULE_NAME, ii);
+        snprintf(n, MOD_MAX_LENGTH_NAME, "%s_tsk%d", FAN_MODULE_NAME, _fan_nb_modules_started);
 
         /* Instance configuration */
-        MODULE_config(&fan_modules[ii], n, m_main, m_mod);
+        ret = MODULE_config(&fan_modules[_fan_nb_modules_started], n, m_main, m_mod);
 
-        /* Thread creation */
-        OS_create_thread(&fan_modules[ii].thread, (void *) &(fan_modules[ii]));
-
-        /* Increasing number of instances started */
-        ii++;
+        if (0 != ret)
+            LOG_ERR("FAN : could not configure module properly, ret = %d", ret);
     }
-    else
+
+    if (0 == ret)
     {
-        LOG_ERR("FAN : no available instance, %d > %d", ii, NB_INSTANCES_FAN);
-        ret = -1;
+        /* Thread creation */
+        ret = OS_create_thread(&fan_modules[_fan_nb_modules_started].thread, (void *) &(fan_modules[_fan_nb_modules_started]));
+
+        if (0 != ret)
+            LOG_ERR("FAN : could not create thread, ret = %d", ret);
     }
+
+    if (0 == ret)
+        /* Increasing number of instances started */
+        _fan_nb_modules_started++;
 
     return ret;
 }
@@ -77,20 +102,19 @@ int FAN_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
 int FAN_stop(void)
 {
     int ret = 0;
-    static int ii = 0;
 
     LOG_INF1("FAN : stopping module");
 
-    if (ii < NB_INSTANCES_FAN)
+    if (_fan_nb_modules_started > 0)
     {
+        /* Increasing number of instances stopped */
+        _fan_nb_modules_started--;
+
         /* Stopping execution */
-        MODULE_exit( &(fan_modules[ii]) );
+        MODULE_exit( &(fan_modules[_fan_nb_modules_started]) );
 
         /* Reattaching thread to avoid zombies */
-        OS_joint_thread(&fan_modules[ii].thread, NULL);
-
-        /* Increasing number of instances stopped */
-        ii++;
+        ret = OS_joint_thread(&fan_modules[_fan_nb_modules_started].thread, NULL);
     }
 
     return ret;

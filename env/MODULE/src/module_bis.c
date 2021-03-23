@@ -4,6 +4,8 @@
 /* Includes locaux */
 #include "os.h"
 #include "integ_log.h"
+#include "com.h"
+#include "com_msg.h"
 
 #include "module_bis.h"
 
@@ -116,10 +118,32 @@ int MODULE_wait_and_loop (t_mod_context *p_context)
     /* Specific start for the module */
     if (0 == ret)
     {
+        t_com_msg_init init_status;
         ret = p_context->start_module();
 
         if (0 != ret)
+        {
             LOG_ERR("MODULE : wrong start for %s, aborting", p_context->name);
+            init_status.status = -1;
+        }
+        else
+        {
+            LOG_INF3("MODULE : init OK for module %s, moving on", p_context->name);
+            init_status.status = 1;
+        }
+
+        /* Sending INIT from module */
+        if (p_context->init_msg != 0)
+        {
+            ret = COM_msg_send(p_context->init_msg, &init_status, sizeof(init_status));
+
+            if (0 != ret)
+               LOG_ERR("MODULE : could not send INIT message for %s", p_context->name);
+        }
+    }
+
+    if (0 == ret)
+    {
     }
 
     /* Unlocking MAIN thread */

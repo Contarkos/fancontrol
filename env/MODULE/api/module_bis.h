@@ -59,6 +59,12 @@ struct s_mod_context
     base_func       stop_module;
     base_func       init_after_wait;
     base_func       exec_loop;
+
+    /* ID of message to send after init */
+    t_uint32        init_msg;
+
+    /* Instance number for later ID */
+    t_uint32        instance_number;
 };
 
 

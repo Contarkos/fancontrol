@@ -1,12 +1,14 @@
-/* Includes globaux */
+/* Global includes */
+#include <string.h>
 
-/* Includes locaux */
+/* Local includes */
 #include "base.h"
 #include "base_typ.h"
 #include "integ_log.h"
 #include "os.h"
 #include "main_factory.h"
 #include "module.h"
+
 #include "fan.h"
 #include "temp.h"
 #include "remote.h"
@@ -20,12 +22,37 @@
 
 int main_is_running = 0;
 
-mod_type t_start[NB_MODULE] = {
-        {&FAN_start, &FAN_stop, OS_INIT_MUTEX, OS_INIT_MUTEX},
-        {&TEMP_start, &TEMP_stop, OS_INIT_MUTEX, OS_INIT_MUTEX},
-        {&REMOTE_start, &REMOTE_stop, OS_INIT_MUTEX, OS_INIT_MUTEX},
-        {&SHMD_start, &SHMD_stop, OS_INIT_MUTEX, OS_INIT_MUTEX},
+mod_type t_start[] = {
+        {&FAN_start, &FAN_stop, OS_INIT_MUTEX, OS_INIT_MUTEX, FAN_INIT},
+        {&TEMP_start, &TEMP_stop, OS_INIT_MUTEX, OS_INIT_MUTEX, TEMP_INIT},
+        {&REMOTE_start, &REMOTE_stop, OS_INIT_MUTEX, OS_INIT_MUTEX, REMOTE_INIT},
+        {&SHMD_start, &SHMD_stop, OS_INIT_MUTEX, OS_INIT_MUTEX, SHMD_INIT},
 };
+
+static const int _main_nb_module = sizeof(t_start) / sizeof (t_start[0]);
+
+static t_uint32 main_msg_array[] =
+{
+    MAIN_SHUTDOWN,
+    FAN_INIT,
+    TEMP_INIT,
+    SHMD_INIT,
+    REMOTE_INIT
+};
+
+static t_uint32 main_msg_array_size = sizeof(main_msg_array) / sizeof(main_msg_array[0]);
+
+static int main_sem_fd = -1;
+
+/*********************************************************************/
+/*                       Static prototypes                           */
+/*********************************************************************/
+
+static int _main_init_env   (void);
+static int _main_init       (void);
+static int _main_wait_modules (void);
+
+static int _main_stop       (void);
 
 /*********************************************************************/
 /*                       Fonctions internes                          */
@@ -34,21 +61,39 @@ mod_type t_start[NB_MODULE] = {
 int main_start_factory()
 {
     int ret, ret_temp, ii;
+    int init_status = 0;
 
     ret = 0;
+    ret_temp = 0;
 
     /* Init librairies */
-    ret_temp = main_init();
-
-    if (0 != ret_temp)
+    if (0 == ret)
     {
-        LOG_ERR("MAIN : error while loading environment, ret = %d", ret_temp);
-        ret = 1;
+        ret_temp = _main_init_env();
+
+        if (ret_temp != 0)
+        {
+            LOG_ERR("MAIN : error while loading environment, ret = %d", ret_temp);
+            ret = 1;
+        }
     }
-    else
+
+    /* Init of main */
+    if (0 == ret_temp)
+    {
+        ret_temp = _main_init();
+
+        if (ret_temp != 0)
+        {
+            LOG_ERR("MAIN : could not init MAIN");
+            ret = -1;
+        }
+    }
+
+    if (0 == ret_temp)
     {
         /* Starting modules. */
-        for (ii = 0; ii < NB_MODULE; ii++)
+        for (ii = 0; ii < _main_nb_module; ii++)
         {
             /* Locking mutexes for everyone */
             LOG_INF1("MAIN : lock for %d", ii);
@@ -65,14 +110,17 @@ int main_start_factory()
         }
 
         /* Waiting on modules to be initialised */
-        for (ii = 0; ii < NB_MODULE; ii++)
+        for (ii = 0; ii < _main_nb_module; ii++)
         {
             LOG_INF1("MAIN : locking on %d", ii);
             OS_mutex_lock(&(t_start[ii].mutex_main));
         }
 
+        /* Check status for every modules */
+        init_status = _main_wait_modules();
+
         /* All modules are ready so : GO ! */
-        for (ii = 0; ii < NB_MODULE; ii++)
+        for (ii = 0; ii < _main_nb_module; ii++)
         {
             LOG_INF1("MAIN : unlock for %d", ii);
             OS_mutex_unlock(&(t_start[ii].mutex_mod));
@@ -81,8 +129,7 @@ int main_start_factory()
         if (0 == ret)
         {
             /* TODO : send MAIN_START message to start everyone */
-            int dummy = 0;
-            ret = COM_msg_send(MAIN_START, &dummy, sizeof(dummy));
+            ret = COM_msg_send(MAIN_START, &init_status, sizeof(init_status));
         }
 
         /* Main is now running */
@@ -95,7 +142,7 @@ int main_start_factory()
     return ret;
 }
 
-int main_init(void)
+static int _main_init_env(void)
 {
     int ret = 0;
 
@@ -132,14 +179,83 @@ int main_init(void)
     return ret;
 }
 
+static int _main_init(void)
+{
+    int ret = 0;
+
+    if (0 == ret)
+    {
+        ret = COM_msg_register(COM_ID_MAIN, &main_sem_fd);
+
+        if (ret != 0)
+            LOG_ERR("MAIN : error while registering for messages");
+    }
+
+    if (0 == ret)
+    {
+        ret = COM_msg_subscribe_array(COM_ID_MAIN, main_msg_array, main_msg_array_size);
+
+        if (ret != 0)
+            LOG_ERR("MAIN : error while subscribing to messages");
+    }
+
+    return ret;
+}
+
+static int _main_wait_modules(void)
+{
+    int init_status = 0;
+    int ret, ii, jj;
+    t_com_msg_struct msg;
+    t_com_msg_init result;
+    int status[_main_nb_module] = { 0 };
+
+    ii = 0;
+
+    /* TODO : add a timer for a timeout */
+    while (ii < _main_nb_module)
+    {
+        /* Wait for messages */
+        ret = COM_msg_read(COM_ID_MAIN, &msg);
+
+        if (ret != 0)
+        {
+            LOG_ERR("MAIN : error receiving status from modules");
+            init_status = -1;
+            break;
+        }
+        else
+        {
+            for (jj = 0; jj < _main_nb_module; jj++)
+            {
+                /* We need to find a module with the same ID and no status returned yet */
+                if ( (msg.header.id == t_start[jj].msg_id) && (0 == status[jj]) )
+                {
+                    memcpy(&result, msg.body, sizeof(result));
+
+                    status[jj] = result.status;
+                    ii++;
+                    break;
+                }
+            }
+        }
+    }
+
+    for (ii = 0; ii < _main_nb_module; ii++)
+    {
+        if (status[ii] != 1)
+            init_status = -1;
+    }
+
+    return init_status;
+}
+
 int main_loop(void)
 {
     int ret = 0;
 
     while (main_is_running)
-    {
         CMD_read();
-    }
 
     return ret;
 }
@@ -162,29 +278,25 @@ int main_stop_factory()
         is_called = 1;
 
         /* On lance les demandes d'arrets */
-        for (ii = 0; ii < NB_MODULE; ii++)
-        {
+        for (ii = 0; ii < _main_nb_module; ii++)
             /* TODO envoi des messages MAIN_SHUTDOWN */
             t_start[ii].mod_stop();
-        }
 
         LOG_INF1("MAIN : Waiting on locks for the modules");
 
         /* On attend que tous les threads soient terminés */
-        for (ii = 0; ii < NB_MODULE; ii++)
-        {
+        for (ii = 0; ii < _main_nb_module; ii++)
             OS_mutex_lock(&(t_start[ii].mutex_mod));
-        }
 
         /* Arret des éléments du système */
         LOG_INF1("MAIN : Stopping system modules");
-        ret += main_stop();
+        ret += _main_stop();
     }
 
     return ret;
 }
 
-int main_stop(void)
+static int _main_stop(void)
 {
     int ret = 0;
 

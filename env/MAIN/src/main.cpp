@@ -21,17 +21,12 @@ static int main_config(int argc, char *argv[])
         LOG_INF1("MAIN : There is %d args which are : ", argc);
 
         for (ii = 0, a = argv[0]; ii < argc; ii++, a = argv[ii])
-        {
-            /* Traitement des arguments */
             printf("%s, ", a);
-        }
 
         printf(" WOAW.\n");
     }
     else
-    {
         printf("No args here...");
-    }
 
     /* Ajout des handlers pour les signaux systemes */
     main_add_handlers();
@@ -52,9 +47,7 @@ int main(int argc, char *argv[])
     ret = main_start_factory();
 
     if (BASE_E_OK != ret)
-    {
         LOG_ERR("MAIN : erreur de démarrage. EXIT (code %d)\n", ret);
-    }
 
     /* Arret du système */
     ret = main_stop_factory();

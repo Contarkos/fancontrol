@@ -5,6 +5,7 @@
 #include "base.h"
 #include "integ_log.h"
 #include "os.h"
+#include "com_msg.h"
 #include "module_bis.h"
 
 #include "temp.h"
@@ -13,7 +14,7 @@
 /*********************************************************************/
 /*                        Global variables                           */
 /*********************************************************************/
-t_mod_context temp_modules[NB_INSTANCES_TEMP] =
+t_mod_context temp_modules[] =
 {
     /* Only module of TEMP */
     {
@@ -37,8 +38,17 @@ t_mod_context temp_modules[NB_INSTANCES_TEMP] =
         .stop_module  = &temp_stop_module,
         .init_after_wait = &temp_init_after_wait,
         .exec_loop    = &temp_exec_loop,
+
+        /* Init message ID */
+        .init_msg = TEMP_INIT,
+
+        /* Instance number */
+        .instance_number = TEMP_INSTANCE_0,
     }
 };
+
+static const t_uint32 _temp_nb_modules = sizeof(temp_modules) / sizeof (temp_modules[0]);
+static       t_uint32 _temp_nb_modules_started = 0;
 
 /*********************************************************************/
 /*                         API functions                             */
@@ -48,28 +58,45 @@ t_mod_context temp_modules[NB_INSTANCES_TEMP] =
 int TEMP_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
 {
     int ret = 0;
-    static int ii = 0;
     char n[MOD_MAX_LENGTH_NAME];
 
-    if (ii < NB_INSTANCES_TEMP)
+    if (0 == ret)
+    {
+        if (_temp_nb_modules_started < _temp_nb_modules)
+        {
+            LOG_INF1("%s : starting instance number %d", TEMP_MODULE_NAME, _temp_nb_modules_started);
+        }
+        else
+        {
+            LOG_ERR ("%s : no available instance, %d > %d", TEMP_MODULE_NAME, _temp_nb_modules_started, _temp_nb_modules);
+            ret = -1;
+        }
+    }
+
+    if (0 == ret)
     {
         /* Creating instance name */
-        snprintf(n, MOD_MAX_LENGTH_NAME, "%s_tsk%d", TEMP_MODULE_NAME, ii);
+        snprintf(n, MOD_MAX_LENGTH_NAME, "%s_tsk%d", TEMP_MODULE_NAME, _temp_nb_modules_started);
 
         /* Instance configuration */
-        MODULE_config(&temp_modules[ii], n, m_main, m_mod);
+        ret = MODULE_config(&temp_modules[_temp_nb_modules_started], n, m_main, m_mod);
 
-        /* Thread creation */
-        OS_create_thread(&temp_modules[ii].thread, (void *) &(temp_modules[ii]));
-
-        /* Increasing number of instances started */
-        ii++;
+        if (0 != ret)
+            LOG_ERR("TEMP : could not configure module properly, ret = %d", ret);
     }
-    else
+
+    if (0 == ret)
     {
-        LOG_ERR("TEMP : no available instance, %d > %d", ii, NB_INSTANCES_TEMP);
-        ret = -1;
+        /* Thread creation */
+        ret = OS_create_thread(&temp_modules[_temp_nb_modules_started].thread, (void *) &(temp_modules[_temp_nb_modules_started]));
+
+        if (0 != ret)
+            LOG_ERR("TEMP : could not create thread, ret = %d", ret);
     }
+
+    if (0 == ret)
+        /* Increasing number of instances started */
+        _temp_nb_modules_started++;
 
     return ret;
 }
@@ -77,20 +104,19 @@ int TEMP_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
 int TEMP_stop(void)
 {
     int ret = 0;
-    static int ii = 0;
 
     LOG_INF1("TEMP : stopping module");
 
-    if (ii < NB_INSTANCES_TEMP)
+    if (_temp_nb_modules_started > 0)
     {
+        /* Decreasing number of instances started */
+        _temp_nb_modules_started--;
+
         /* Stopping execution */
-        MODULE_exit( &(temp_modules[ii]) );
+        MODULE_exit( &(temp_modules[_temp_nb_modules_started]) );
 
         /* Reattaching thread to avoid zombies */
-        OS_joint_thread(&temp_modules[ii].thread, NULL);
-
-        /* Increasing number of instances stopped */
-        ii++;
+        ret = OS_joint_thread(&temp_modules[_temp_nb_modules_started].thread, NULL);
     }
 
     return ret;

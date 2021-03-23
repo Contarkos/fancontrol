@@ -2,9 +2,12 @@
 /* Global includes */
 
 /* Local includes */
-#include "shmd.h"
+#include "base_typ.h"
+#include "com.h"
+#include "com_msg.h"
 #include "integ_log.h"
 
+#include "shmd.h"
 /*********************************************************************/
 /*                       Variables globales                          */
 /*********************************************************************/
@@ -27,23 +30,46 @@ int SHMD_start(OS_mutex_t *m_main, OS_mutex_t *m_mod)
 {
     int ret = 0;
 
-    /* Blocage du MAIN jusqu'a la fin de l'init */
-    OS_mutex_lock(m_main);
-
-    if (NULL == m_mod)
+    /* Locking MAIN until end of init */
+    if (0 == ret)
     {
-        LOG_ERR("SHMD : bad mutex pointer at start up");
-        ret = -1;
+        ret = OS_mutex_lock(m_main);
+
+        if (0 != ret)
+            LOG_ERR("SHMD : could not lock MAIN mutex");
     }
+
+    if (0 == ret)
+    {
+        if (NULL == m_mod)
+        {
+            LOG_ERR("SHMD : bad mutex pointer at start up");
+            ret = -1;
+        }
+        else
+            shmd_mutex_mod = m_mod;
+    }
+
+    /* Init of semaphores if needed */
+    if (0 == ret)
+    {
+        ;
+    }
+
+    /* Sending init message for SHMD module */
+    t_com_msg_init msg = { .status = 0, };
+    if (0 == ret)
+        msg.status = 1;
     else
-    {
-        shmd_mutex_mod = m_mod;
-    }
+        msg.status = -1;
 
-    /* Init des semaphores si besoin */
+    ret = COM_msg_send(SHMD_INIT, &msg, sizeof(msg));
 
-    /* Deblocage du main */
-    OS_mutex_unlock(m_main);
+    if (0 != ret)
+        LOG_ERR("SHMD : could not send INIT message");
+
+    /* Unlocking main */
+    ret = OS_mutex_unlock(m_main);
 
     return ret;
 }
@@ -63,7 +89,10 @@ int SHMD_stop(void)
     }
     else
     {
-        OS_mutex_unlock(shmd_mutex_mod);
+        ret = OS_mutex_unlock(shmd_mutex_mod);
+
+        if (ret != 0)
+           LOG_ERR("SHMD : could not unlock mutex properly");
     }
 
     return ret;
