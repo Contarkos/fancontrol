@@ -103,6 +103,15 @@ int temp_start_module()
         }
     }
 
+    if (0 == ret)
+    {
+        /* Init ADS1115 on the I2C1 device @100kHz */
+        ret = COM_ads_init(TEMP_I2C_MODULE, TEMP_I2C_CLOCK);
+
+        if (0 != ret)
+            LOG_ERR("TEMP: could not init I2C device, ret = %d", ret);
+    }
+
     /* init of the module's queue */
     if (0 == ret)
     {
