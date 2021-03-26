@@ -19,7 +19,6 @@
 /* ================ */
 #if defined(INTEGRATION_LOG_LEVEL) && (INTEGRATION_LOG_LEVEL >= 2)
     #include <errno.h>  /* errno */
-    #include <unistd.h> /* usleep */
     #define LOG_ERR(...)                                                   \
     do {                                                                               \
         (void)printf("### ERR  ### - %-25s line %4d: ", __FILE__ , __LINE__);          \
@@ -32,8 +31,8 @@
         (void)printf(__VA_ARGS__); (void)printf("\n"); (void)fflush(stdout);           \
     } while (0)
 #else
-    #define LOG_ERR(...)
-    #define LOG_ERR_CODE(code, ...)
+    #define LOG_ERR(...)                do { ; } while(0)
+    #define LOG_ERR_CODE(code, ...)     do { ; } while(0)
 #endif
 
 /* ================ */
@@ -46,7 +45,7 @@
         (void)printf(__VA_ARGS__); (void)printf("\n"); (void)fflush(stdout);           \
     } while (0)
 #else
-    #define LOG_WNG(...)
+    #define LOG_WNG(...)                do { ; } while(0)
 #endif
 
 /* ================ */
@@ -59,7 +58,7 @@
         (void)printf(__VA_ARGS__); (void)printf("\n"); (void)fflush(stdout);           \
     } while (0)
 #else
-    #define LOG_INF1(...)
+    #define LOG_INF1(...)               do { ; } while(0)
 #endif
 
 /* ================ */
@@ -72,7 +71,7 @@
         (void)printf(__VA_ARGS__); (void)printf("\n"); (void)fflush(stdout);           \
     } while (0)
 #else
-    #define LOG_INF2(...)
+    #define LOG_INF2(...)               do { ; } while(0)
 #endif
 
 /* ================ */
@@ -85,7 +84,7 @@
         (void)printf(__VA_ARGS__); (void)printf("\n"); (void)fflush(stdout);           \
     } while (0)
 #else
-    #define LOG_INF3(...)
+    #define LOG_INF3(...)               do { ; } while(0)
 #endif
 
 #endif /* INTEG_LOG_H_ */

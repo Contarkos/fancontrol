@@ -2,6 +2,7 @@
 
 // Global includes
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <regex.h>
 #include <poll.h>
