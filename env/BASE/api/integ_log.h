@@ -1,6 +1,15 @@
 #ifndef INTEG_LOG_H_
 #define INTEG_LOG_H_
 
+/*****************************************************************************/
+/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+/*                                                                           */
+/* The main value is defined in the Makefile and can be manually overriden   */
+/* in each file by defining INTEGRATION_LOG_LEVEL before including this      */
+/* header.                                                                   */
+/*                                                                           */
+/*****************************************************************************/
+
 /* We use for INTEGRATION_LOG_LEVEL the same values as in the "LOG" module: */
 /*   * LOG_LVL_SYSERR = 0 // System error */
 /*   * LOG_LVL_SYSWNG = 1 // System warning */
