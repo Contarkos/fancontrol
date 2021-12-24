@@ -42,9 +42,6 @@ static inline float compute_duty_speed  (t_uint32 i_speed);
 
 int fan_compute_duty(void)
 {
-    static float d = 0;
-    static float sign = 1;
-
     int ret = 0;
     float duty = 0;
 
@@ -93,7 +90,11 @@ int fan_compute_duty(void)
         duty = BASE_BORNE(duty, OS_MIN_PERCENT_PWM, OS_MAX_PERCENT_PWM);
 
         /* Debug log */
-        LOG_INF3("FAN : current dutycycle = %f", duty);
+        LOG_INF3("FAN : current dutycycle = %.2f", duty);
+
+#if 0
+        static float d = 0;
+        static float sign = 1;
 
         if (d >= 100.0F)
             sign = -1;
@@ -104,7 +105,7 @@ int fan_compute_duty(void)
 
         duty = d;
         LOG_INF3("FAN : current dutycycle = %f", duty);
-
+#endif
         ret = OS_pwm_set_dutycycle(duty);
     }
 
@@ -233,6 +234,8 @@ static float compute_duty_differential (float i_ref, float i_current)
 
     /* Temperature based dutycycle */
     d = (( i_current - i_ref ) * OS_MAX_PERCENT_PWM) / FAN_ECART_MAX_TEMP;
+    LOG_INF1("FAN : fan %.2fC, room %.2fC, speed = %.2f%%", i_current, i_ref, d);
+
     return d;
 }
 

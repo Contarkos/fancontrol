@@ -59,6 +59,15 @@ int fan_start_module (void)
 
     LOG_INF1("FAN : Starting module class");
 
+    /* Init module values */
+    if (0 == ret)
+    {
+        ret = fan_init_data();
+
+        if (0 != ret)
+            LOG_ERR("FAN : could not init data for module");
+    }
+
     /* Creating timer for the loop */
     if (0 == ret)
     {
@@ -262,6 +271,23 @@ int fan_stop_module (void)
     }
 
     LOG_INF3("FAN : end of stop_module, ret = %d", ret);
+    return ret;
+}
+
+int fan_init_data(void)
+{
+    int ret = 0;
+
+    fan_current_mode = FAN_MODE_AUTO;
+    fan_current_power_mode = FAN_POWER_MODE_OFF;
+
+    fan_consigne_speed = 0;
+    fan_consigne_temp = 0;
+    fan_current_temp = 0;
+    fan_room_temp = 0;
+
+    fan_current_speed = 0;
+
     return ret;
 }
 

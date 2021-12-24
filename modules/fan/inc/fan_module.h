@@ -84,6 +84,9 @@ int fan_stop_module     (void);
 int fan_init_after_wait (void);
 int fan_exec_loop       (void);
 
+/* Internal functions */
+int fan_init_data       (void);
+
 /* Specific functions */
 int fan_set_pwm         (void);
 int fan_set_power       (fan_e_power_mode i_mode);
