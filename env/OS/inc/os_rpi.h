@@ -24,8 +24,8 @@ extern struct bcm2835_peripheral os_periph_spi;
 #define GPIO_BASE               (BCM2708_PERI_BASE + 0x200000) /* GPIO controller */
 #define PWM_BASE                (BCM2708_PERI_BASE + 0x20C000) /* PWM controller */
 #define I2C0_BASE               (BCM2708_PERI_BASE + 0x205000) /* I2C0 controller */
-#define I2C1_BASE               (BCM2708_PERI_BASE + 0x804000) /* I2C0 controller */
-#define SPI_BASE                (BCM2708_PERI_BASE + 0x214000) /* SPI controller */
+#define I2C1_BASE               (BCM2708_PERI_BASE + 0x804000) /* I2C1 controller */
+#define SPI0_BASE               (BCM2708_PERI_BASE + 0x204000) /* SPI0 controller */
 #define CLOCK_BASE              (BCM2708_PERI_BASE + 0x101000) /* CLOCK controller */
 
 #define BLOCK_SIZE              (4*1024)
@@ -52,6 +52,77 @@ extern struct bcm2835_peripheral os_periph_spi;
 #define GPIO_READ(g)             ( (volatile int) (GPIO_READ_REGISTER & (t_uint32) (1 << (g))) >> (g) )
 
 #define GPIO_MAX_NB              27U
+
+/* SPI registers, masks and shifts */
+typedef volatile struct
+{
+    t_uint32 cs;
+    t_uint32 fifo;
+    t_uint32 cdiv;
+    t_uint32 dlen;
+    t_uint32 loth;
+    t_uint32 dc;
+} t_os_spi_register;
+
+#define SPI_CS_CHIPSELCT_MASK   ((t_uint32) 0x00000003)
+#define SPI_CS_CHIPSELECT_SHIFT 0U
+#define SPI_CS_CPHA_MASK        ((t_uint32) 0x00000004)
+#define SPI_CS_CPHA_SHIFT       2U
+#define SPI_CS_CPOL_MASK        ((t_uint32) 0x00000008)
+#define SPI_CS_CPOL_SHIFT       3U
+#define SPI_CS_CLEAR_MASK       ((t_uint32) 0x00000030)
+#define SPI_CS_CLEAR_SHIFT      4U
+#define SPI_CS_CSPOL_MASK       ((t_uint32) 0x00000040)
+#define SPI_CS_CSPOL_SHIFT      6U
+#define SPI_CS_TA_MASK          ((t_uint32) 0x00000080)
+#define SPI_CS_TA_SHIFT         7U
+#define SPI_CS_DMAEN_MASK       ((t_uint32) 0x00000100)
+#define SPI_CS_DMAEN_SHIFT      8U
+#define SPI_CS_INTD_MASK        ((t_uint32) 0x00000200)
+#define SPI_CS_INTD_SHIFT       9U
+#define SPI_CS_INTR_MASK        ((t_uint32) 0x00000400)
+#define SPI_CS_INTR_SHIFT       10U
+#define SPI_CS_ADCS_MASK        ((t_uint32) 0x00000800)
+#define SPI_CS_ADCS_SHIFT       11U
+#define SPI_CS_REN_MASK         ((t_uint32) 0x00001000)
+#define SPI_CS_REN_SHIFT        12U
+#define SPI_CS_LEN_MASK         ((t_uint32) 0x00002000)
+#define SPI_CS_LEN_SHIFT        13U
+#define SPI_CS_DONE_MASK        ((t_uint32) 0x00010000)
+#define SPI_CS_DONE_SHIFT       16U
+#define SPI_CS_RXD_MASK         ((t_uint32) 0x00020000)
+#define SPI_CS_RXD_SHIFT        17U
+#define SPI_CS_TXD_MASK         ((t_uint32) 0x00040000)
+#define SPI_CS_TXD_SHIFT        18U
+#define SPI_CS_RXR_MASK         ((t_uint32) 0x00080000)
+#define SPI_CS_RXR_SHIFT        19U
+#define SPI_CS_RXF_MASK         ((t_uint32) 0x00100000)
+#define SPI_CS_RXF_SHIFT        20U
+#define SPI_CS_CSPOL0_MASK      ((t_uint32) 0x00200000)
+#define SPI_CS_CSPOL0_SHIFT     21U
+#define SPI_CS_CSPOL1_MASK      ((t_uint32) 0x00400000)
+#define SPI_CS_CSPOL1_SHIFT     22U
+#define SPI_CS_CSPOL2_MASK      ((t_uint32) 0x00800000)
+#define SPI_CS_CSPOL2_SHIFT     23U
+#define SPI_CS_DMALEN_MASK      ((t_uint32) 0x01000000)
+#define SPI_CS_DMALEN_SHIFT     24U
+#define SPI_CS_LONG_MASK        ((t_uint32) 0x02000000)
+#define SPI_CS_LONG_SHIFT       25U
+
+#define SPI_CDIV_MASK           ((t_uint32) 0x0000FFFF)
+#define SPI_CDIV_SHIFT          0U
+
+#define SPI_LTOH_MASK           ((t_uint32) 0x00000007)
+#define SPI_LTOH_SHIFT          0U
+
+#define SPI_DC_TDREQ_MASK       ((t_uint32) 0x000000FF)
+#define SPI_DC_TDREQ_SHIFT      0U
+#define SPI_DC_TPANIC_MASK      ((t_uint32) 0x0000FF00)
+#define SPI_DC_TPANIC_SHIFT     8U
+#define SPI_DC_RDREQ_MASK       ((t_uint32) 0x00FF0000)
+#define SPI_DC_RDREQ_SHIFT      16U
+#define SPI_DC_RPANIC_MASK      ((t_uint32) 0xFF000000)
+#define SPI_DC_RPANIC_SHIFT     24U
 
 /* I2C registers, masks and shifts */
 typedef volatile struct

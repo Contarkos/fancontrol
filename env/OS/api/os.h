@@ -213,6 +213,12 @@ typedef enum
 #define OS_GPIO_SPI0_SCLK       OS_GPIO_BCM_11
 #define OS_GPIO_SPI0_CE0        OS_GPIO_BCM_8
 #define OS_GPIO_SPI0_CE1        OS_GPIO_BCM_7
+#define OS_GPIO_SPI1_MISO       OS_GPIO_BCM_19
+#define OS_GPIO_SPI1_MOSI       OS_GPIO_BCM_20
+#define OS_GPIO_SPI1_SCLK       OS_GPIO_BCM_21
+#define OS_GPIO_SPI1_CE0        OS_GPIO_BCM_18
+#define OS_GPIO_SPI1_CE1        OS_GPIO_BCM_17
+#define OS_GPIO_SPI1_CE2        OS_GPIO_BCM_16
 #define OS_GPIO_I2C0_SDA        OS_GPIO_BCM_0
 #define OS_GPIO_I2C0_SCL        OS_GPIO_BCM_1
 #define OS_GPIO_I2C1_SDA        OS_GPIO_BCM_2
